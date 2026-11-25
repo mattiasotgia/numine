@@ -1,0 +1,533 @@
+--- CV_FNAL_10_31_00_01//nuedis_g4_step1.dump	2026-11-25 17:03:16.796811973 +0100
++++ CV_CNAF_RicDev//nuedis_g4_step1.dump	2026-11-25 17:02:01.445787368 +0100
+@@ -1,152 +1,152 @@
+ # Produced from 'fhicl-dump' using:
+ #   Input  : fcl/cv/nuedis_g4_step1.fcl
+ #   Policy : cet::filepath_maker
+ #   Path   : "FHICL_FILE_PATH"
+ 
+ outputs: {
+    rootoutput: {
+       compressionLevel: 1
+       dataTier: "simulated"
+       fileName: "%ifb_%tc-%p.root"
+       module_type: "RootOutput"
+       saveMemoryObjectThreshold: 0
+    }
+ }
+ physics: {
+    end_paths: [
+       "stream1"
+    ]
+    producers: {
+       genericcrt: {
+          EnergyUnitsScale: "GeV"
+          LArG4Label: "largeant"
+          module_type: "GenericCRT"
+       }
+       ionization: {
+          ISCalcAlg: "Correlated"
+          Instances: "LArG4DetectorServicevolTPCActive;LArG4DetectorServicevolTPCPlaneU;LArG4DetectorServicevolTPCPlaneV;LArG4DetectorServicevolTPCPlaneY"
+          SavePriorSCE: true
+          module_type: "IonAndScint"
+       }
+       largeant: {
+          StoreDroppedMCParticles: false
+          enableVisualization: false
+          macroPath: ".:./macros"
+          module_type: "larg4Main"
+          visMacro: "vis.mac"
+       }
+       loader: {
+          module_type: "PhysListLoader"
+       }
+       pdfastsim: {
+          DoSlowComponent: true
+          IncludePropTime: true
+          ScintTimeTool: {
+             FastDecayTime: 6
+             FastRisingTime: 0
+             LogLevel: 1
+             SlowDecayTime: 1300
+             SlowRisingTime: 0
+             tool_type: "ScintTimeLAr"
+          }
+-         SimulationLabel: "ionization:priorSCE"
++         SimulationLabel: "ionization"
+          VISTiming: {
+             Cut_off: [
+                [
+                   [
+                      1.08879e2,
+                      1.17713e2,
+                      1.26561e2,
+                      1.35013e2,
+                      1.38019e2,
+                      1.47266e2,
+                      1.48173e2,
+                      1.51039e2,
+                      1.56576e2,
+                      1.57368e2
+                   ],
+                   [
+                      1.07123e2,
+                      1.17204e2,
+                      1.26197e2,
+                      1.32051e2,
+                      1.38645e2,
+                      1.43567e2,
+                      1.4871e2,
+                      1.50631e2,
+                      1.52873e2,
+                      1.53062e2
+                   ],
+                   [
+                      1.01158e2,
+                      1.10499e2,
+                      1.1897e2,
+                      1.25651e2,
+                      1.31928e2,
+                      1.37559e2,
+                      1.40803e2,
+                      1.44461e2,
+                      1.48055e2,
+                      1.4767e2
+                   ],
+                   [
+                      9.5743e1,
+                      1.05422e2,
+                      1.13131e2,
+                      1.20794e2,
+                      1.26101e2,
+                      1.3175e2,
+                      1.36817e2,
+                      1.40403e2,
+                      1.44638e2,
+                      1.44621e2
+                   ],
+                   [
+                      9.0199e1,
+                      9.9504e1,
+                      1.07253e2,
+                      1.1439e2,
+                      1.20331e2,
+                      1.25562e2,
+                      1.30335e2,
+                      1.34945e2,
+                      1.37119e2,
+                      1.37499e2
+                   ],
+                   [
+                      8.06139e1,
+                      8.94706e1,
+                      9.61147e1,
+                      1.05681e2,
+                      1.11707e2,
+                      1.16878e2,
+                      1.18331e2,
+                      1.29243e2,
+                      1.30337e2,
+                      1.32494e2
+                   ]
+                ],
+                [
+                   [
+                      1.10859e2,
+                      1.19899e2,
+                      1.27787e2,
+                      1.32744e2,
+                      1.40344e2,
+                      1.46117e2,
+                      1.49407e2,
+                      1.53365e2,
+                      1.56509e2,
+                      1.55408e2
+                   ],
+                   [
+                      1.0929e2,
+                      1.18677e2,
+                      1.2658e2,
+                      1.32996e2,
+                      1.38773e2,
+                      1.4469e2,
+                      1.4872e2,
+                      1.51492e2,
+                      1.53446e2,
+                      1.53059e2
+@@ -1603,374 +1603,372 @@
+                   -1.48935e-1,
+                   -1.26243e-1,
+                   -1.0837e-1,
+                   -8.60558e-2,
+                   -7.59728e-2,
+                   -7.06126e-2,
+                   -6.72814e-2,
+                   -6.22897e-2,
+                   -5.77351e-2,
+                   -5.46709e-2,
+                   -5.46709e-2,
+                   -5.46709e-2,
+                   -5.46709e-2,
+                   -5.46709e-2
+                ],
+                [
+                   -1.69274e-1,
+                   -1.69274e-1,
+                   -1.19906e-1,
+                   -9.83691e-2,
+                   -7.81793e-2,
+                   -6.59805e-2,
+                   -5.87059e-2,
+                   -5.45288e-2,
+                   -5.14041e-2,
+                   -4.89773e-2,
+                   -4.7259e-2,
+                   -4.54668e-2,
+                   -4.39597e-2,
+                   -4.15122e-2,
+                   -3.96851e-2,
+                   -3.78005e-2
+                ]
+             ]
+             Width: [
+                [
+                   1.98303e-1,
+                   1.98303e-1,
+                   3.47397e-1,
+                   5.62874e-1,
+                   7.50881e-1,
+                   9.98318e-1,
+                   1.2622,
+                   1.55553,
+                   1.79799,
+                   2.05579,
+                   2.3295,
+                   2.57611,
+                   2.57611,
+                   2.57611,
+                   2.57611,
+                   2.57611,
+                   2.57611,
+                   2.57611,
+                   2.57611,
+                   2.57611,
+                   2.57611,
+                   2.57611,
+                   2.57611
+                ],
+                [
+                   3.05766e-1,
+                   3.05766e-1,
+                   5.08544e-1,
+                   7.47765e-1,
+                   1.12059,
+                   1.57047,
+                   2.07501,
+                   2.54661,
+                   3.09789,
+                   3.79078,
+                   4.19731,
+                   4.74438,
+                   5.09894,
+                   5.83702,
+                   6.36225,
+                   6.80253,
+                   8.278,
+                   8.717,
+                   9.2568,
+                   9.7239,
+                   1.05865e1,
+                   1.13262e1,
+                   1.18423e1
+                ]
+             ]
+             angle_bin_timing_vuv: 45
+             inflexion_point_distance: 400
+             max_d: 2500
+             min_d: 25
+             step_size: 1
+             vuv_vgroup_max: 18
+             vuv_vgroup_mean: 1.35e1
+          }
+          module_type: "PDFastSimPVS"
+       }
+       rns: {
+          module_type: "RandomNumberSaver"
+       }
+       sedlite: {
+-         ElectronDriftVel: 1.6e-1
+          SimEnergyDepositLabel: "largeant:LArG4DetectorServicevolTPCActive"
+          VoxelSizeX: 3e-1
+          VoxelSizeY: 3e-1
+          VoxelSizeZ: 3e-1
+          module_type: "G4InfoReducer"
+          useOrigTrackID: true
+       }
+       simdrift: {
+          SimulationLabel: "ionization:priorSCE"
+          module_type: "SimDriftElectrons"
+       }
+       simplemerge: {
+          InputSourcesLabels: [
+             "largeant",
+             "largeant:droppedMCParticles"
+          ]
+          ResetMotherIDs: [
+             1e7,
+             2e7
+          ]
+          module_type: "SimpleMerge"
+       }
+    }
+    simulate: [
+       "rns",
+       "loader",
+       "largeant"
+    ]
+    stream1: [
+       "rootoutput"
+    ]
+    trigger_paths: [
+       "simulate"
+    ]
+ }
+ process_name: "G4Step1"
+ services: {
+    ActionHolder: {}
+    AuxDetGeometry: {
+       GDML: "icarus_refactored_nounderscore_20230918.gdml"
+       Name: "icarus_v4"
+       SortingParameters: {
+          tool_type: "AuxDetGeoObjectSorterICARUS"
+       }
+       SurfaceY: 690
+    }
+    DetectorClocksService: {
+       ClockSpeedExternal: 3.125e1
+       ClockSpeedOptical: 500
+       ClockSpeedTPC: 2.5
+       ClockSpeedTrigger: 16
+       DefaultBeamTime: 1500
+       DefaultTrigTime: 1500
+       FramePeriod: 1.6384e3
+       G4RefTime: -1500
+       InheritClockConfig: true
+-      TrigModuleName: "shifted"
++      TrigModuleName: "daqTrigger"
+       TriggerOffsetTPC: -340
+       service_provider: "DetectorClocksServiceStandard"
+    }
+    DetectorHolder: {}
+    DetectorPropertiesService: {
+       DriftVelFudgeFactor: 9.9733e-1
+       Efield: [
+          4.938e-1,
+          7.33e-1,
+          9.33e-1
+       ]
+       Electronlifetime: 3000
+       ElectronsToADC: 1.208041e-3
+       IncludeInterPlanePitchInXTickOffsets: false
+       InheritNumberTimeSamples: true
+       NumberTimeSamples: 4096
+       ReadOutWindowSize: 4096
+       SimpleBoundaryProcess: false
+       SternheimerA: 1.956e-1
+       SternheimerCbar: 5.2146
+       SternheimerK: 3
+       SternheimerX0: 2e-1
+       SternheimerX1: 3
+       Temperature: 8.75e1
+       TimeOffsetU: 0
+       TimeOffsetV: 0
+       TimeOffsetY: 0
+       TimeOffsetZ: 0
+       UseIcarusMicrobooneDriftModel: true
+       service_provider: "DetectorPropertiesServiceStandard"
+    }
+    DuplicateEventTracker: {}
+    FileCatalogMetadata: {
+       fileType: "mc"
+       group: "icarus"
+       runType: "physics"
+    }
+    Geometry: {
+       GDML: "icarus_refactored_nounderscore_20230918.gdml"
+       Name: "icarus_v4"
+       SortingParameters: {
+          tool_type: "GeoObjectSorterPMTasTPC"
+       }
+       SurfaceY: 690
+    }
+    GeometryConfigurationWriter: {}
+    LArG4Detector: {
+       category: "world"
+       gdmlFileName_: "icarus_refactored_nounderscore_20230918.gdml"
+    }
+    LArG4Parameters: {
+       CosmogenicK0Bias: 0
+       CosmogenicXSMNBiasFactor: 1
+       CosmogenicXSMNBiasOn: 0
+       DisableWireplanes: false
+       ElectronClusterSize: 20
+       EllipsModBoxA: 9.04e-1
+       EllipsModBoxB: 2.04e-1
+       EllipsModBoxR: 1.25
+       EnabledPhysics: [
+          "Em",
+          "SynchrotronAndGN",
+          "Ion",
+          "Hadron",
+          "Decay",
+          "HadronElastic",
+          "Stopping",
+          "FastOptical"
+       ]
+       FillSimEnergyDeposits: true
+       IonAndScintCalculator: "Correlated"
+       KeepEMShowerDaughters: false
+       LarqlAlpha: 3.72e-2
+       LarqlBeta: 1.24e-2
+       LarqlChi0A: 3.38427e-3
+       LarqlChi0B: -6.57037
+       LarqlChi0C: 1.88418
+       LarqlChi0D: 1.29379e-4
+       LongitudinalDiffusion: 4e-9
+       MinNumberOfElCluster: 0
+       ModBoxA: 9.3e-1
+       ModBoxB: 2.12e-1
+       ModifyProtonCut: false
+       NewProtonCut: 0
+       OpticalParamModels: [
+          "OverlaidWireplanes"
+       ]
+       OpticalParamOrientations: [
+          0
+       ]
+       OpticalParamParameters: [
+          [
+             [
+                60,
+                3,
+                1.5e-1
+             ],
+             [
+                -60,
+                3,
+                1.5e-1
+             ],
+             [
+                0,
+                3,
+                1.5e-1
+             ]
+          ]
+       ]
+       OpticalParamVolumes: [
+          "volTPCPlaneVert_PV"
+       ]
+       OpticalSimVerbosity: 0
+       ParticleKineticEnergyCut: 1e-5
+-      QAlpha: 4.3e-1
+-      QProton: 1
++      QAlpha: 7.2e-1
+       RecombA: 8e-1
+       Recombk: 4.86e-2
+       SkipWireSignalInTPCs: []
+       StoreTrajectories: true
+       TransverseDiffusion: 8.8e-9
+       UseCustomPhysics: true
+       UseEllipsModBoxRecomb: true
+       UseLitePhotons: false
+       UseModBoxRecomb: false
+       UseModLarqlRecomb: true
+       VisualizationEnergyCut: 1e-2
+       VisualizeNeutrals: false
+       Wph: 1.95e1
+    }
+    LArPropertiesService: {
+       AbsLengthEnergies: [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+       ]
+       AbsLengthSpectrum: [
+          8000,
+          8000,
+          8000,
+          8000,
+          8000,
+          2000,
+          2000,
+          2000
+       ]
+       AlphaScintYield: 16800
+       AlphaScintYieldRatio: 5.6e-1
+       Argon39DecayRate: 0
+       AtomicMass: 3.9948e1
+       AtomicNumber: 18
+       ElectronScintYield: 20000
+       ElectronScintYieldRatio: 2.7e-1
+       EnableCerenkovLight: false
+       ExcitationEnergy: 188
+       FastScintEnergies: [
+          7.2,
+          7.9,
+          8.3,
+          8.6,
+          8.9,
+          9.1,
+          9.3,
+          9.6,
+          9.7,
+          9.8,
+          10,
+          1.02e1,
+          1.03e1,
+          1.06e1,
+          11,
+          1.16e1,
+          1.19e1
+       ]
+       FastScintSpectrum: [
+          0,
+          4e-2,
+          1.2e-1,
+          2.7e-1,
+          4.4e-1,
+          6.2e-1,
+          8e-1,
+          9.1e-1,
+          9.2e-1,
+          8.5e-1,
+          7e-1,
+          5e-1,
+          3.1e-1,
+          1.3e-1,
+          4e-2,
+          1e-2,
+          0
+       ]
+       KaonScintYield: 24000
+       KaonScintYieldRatio: 2.3e-1
+       LoadExtraMatProperties: false
+       MuonScintYield: 24000
+       MuonScintYieldRatio: 2.3e-1
+       PionScintYield: 24000
+       PionScintYieldRatio: 2.3e-1
+       ProtonScintYield: 19200
+       ProtonScintYieldRatio: 2.9e-1
+       RIndexEnergies: [
+          1.18626,
+          1.68626,
+          2.18626,
+          2.68626,
+          3.18626,
+          3.68626,
+          4.18626,
+          4.68626,

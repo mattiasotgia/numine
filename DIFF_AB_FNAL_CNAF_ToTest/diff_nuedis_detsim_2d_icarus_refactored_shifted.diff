@@ -1,0 +1,817 @@
+--- CV_FNAL_10_31_00_01//nuedis_detsim_2d_icarus_refactored_shifted.dump	2026-11-25 17:03:16.310806009 +0100
++++ CV_CNAF_RicDev//nuedis_detsim_2d_icarus_refactored_shifted.dump	2026-11-25 17:02:01.229293310 +0100
+@@ -1,343 +1,289 @@
+ # Produced from 'fhicl-dump' using:
+ #   Input  : fcl/cv/nuedis_detsim_2d_icarus_refactored_shifted.fcl
+ #   Policy : cet::filepath_maker
+ #   Path   : "FHICL_FILE_PATH"
+ 
+ outputs: {
+    rootoutput: {
+       compressionLevel: 1
+       dataTier: "simulated"
+       fileName: "%ifb_%tc-%p.root"
+       module_type: "RootOutput"
+       outputCommands: [
+          "keep *",
+          "drop raw::OpDetWaveform*_opdaq_*_*"
+       ]
+       saveMemoryObjectThreshold: 0
+    }
+ }
+ physics: {
+    producers: {
+       crtdaq: {
+          DetSimAlg: {
+             ApplyCoincidenceC: true
+             ApplyCoincidenceD: true
+             ApplyCoincidenceM: true
+             ApplyStripCoincidenceC: true
+             BiasTime: 50
+             DeadTime: 22000
+             GlobalT0Offset: 1.6e6
+             Kbirks: 1.26e1
+             LayerCoincidenceWindowC: 30
+             LayerCoincidenceWindowD: 30
+             LayerCoincidenceWindowM: 50
+             PropDelay: 5.23e-2
+             PropDelayError: 7e-3
+             Q0: 1.891e-3
+             QMax: 4080
+             QPed: 6.36e1
+             QRMS: 10
+             QSlope: 70
+             QThresholdC: 169
+             QThresholdD: 169
+             QThresholdM: 379
+             StripCoincidenceWindow: 50
+             TDelayNorm: 4.12574e3
+             TDelayOffset: -1.525
+             TDelayRMSExpNorm: 1.6544
+             TDelayRMSExpScale: 7.93543e1
+             TDelayRMSExpShift: 7.56183e1
+             TDelayRMSGausNorm: 2.09138
+             TDelayRMSGausShift: 7.23993
+             TDelayRMSGausSigma: 1.70027e2
+             TDelayShift: -3.0031e2
+             TDelaySigma: 9.0392e1
+             TResInterpolator: 1.268
+             UltraVerbose: false
+             UseBirks: true
+             UseEdep: true
+             Verbose: false
+          }
+          G4ModuleLabel: "shifted"
+          module_type: "icaruscode/CRT/CRTDetSim"
+       }
+       daq: {
+          module_type: "WireCellToolkit"
+          wcls_main: {
+             apps: [
+                "Pgrapher"
+             ]
+             configs: [
+-               "pgrapher/experiment/icarus/wcls-multitpc-sim-drift-simchannel-yzsim-refactored.jsonnet"
++               "pgrapher/experiment/icarus/wcls-multitpc-sim-drift-simchannel-refactored.jsonnet"
+             ]
+             inputers: [
+                "wclsSimDepoSetSource:electron"
+             ]
+             outputers: [
++               "wclsDepoSetSimChannelSink:postdriftold",
+                "wclsDepoFluxWriter:postdrift",
+                "wclsFrameSaver:simdigits0",
+                "wclsFrameSaver:simdigits1",
+                "wclsFrameSaver:simdigits2",
+                "wclsFrameSaver:simdigits3"
+             ]
+             params: {
+-               DBFileName: "tpc_elifetime_data"
+-               DBTag: "v3r1"
+                SimEnergyDepositLabel: "shifted"
+-               YZMapJson: "yzmap_icarus_v3_run2.json"
+-               YZScaleMapJson: "yzmap_gain_icarus_v4_run2.json"
+                cathode_input_format: "array"
+                file_rcresp: "icarus_fnal_rc_tail.json"
+                files_fields: "icarus_fnal_fit_ks_P0nom.json.bz2"
+             }
+             plugins: [
+                "WireCellPgraph",
+                "WireCellGen",
+                "WireCellSio",
+                "WireCellRoot",
+                "WireCellLarsoft",
+                "WireCellHio"
+             ]
+             structs: {
+                DL: 4e-9
+                DT: 8.8e-9
+                coh_noise_scale: 1
+-               gain0: 1.80839e1
+-               gain1: 1.22379e1
+-               gain2: 1.38819e1
++               gain0: 1.705212e1
++               gain1: 1.26181926e1
++               gain2: 1.30261362e1
+                int_noise_scale: 1
+                lifetime: 3000
+                overlay_drifter: false
+                shaping0: 1.3
+                shaping1: 1.45
+                shaping2: 1.3
+-               time_offset_u: 2.53
+-               time_offset_v: 2.41
+-               time_offset_y: 2.53
++               time_offset_u: 0
++               time_offset_v: 0
++               time_offset_y: 0
+             }
+             tool_type: "WCLS"
+          }
+       }
+-      emuTrigger: {
+-         BeamGateReference: "Trigger"
+-         BeamGates: "shifted"
+-         EmitEmpty: true
+-         ExtraInfo: true
+-         Pattern: {
+-            inMainWindow: 3
+-            sumOfOppositeWindows: 5
+-         }
+-         Thresholds: [
+-            390
+-         ]
+-         TriggerDelay: "345 ns"
+-         TriggerGatesTag: "pmttriggerwindows"
+-         TriggerTimeResolution: "8 ns"
+-         module_type: "TriggerSimulationOnGates"
+-      }
+       emuTriggerUnshifted: {
+-         BeamGateReference: "Simulation"
+          BeamGates: "triggersimgatesinit"
+          EmitEmpty: true
+          ExtraInfo: true
+          Pattern: {
+             inMainWindow: 3
+             sumOfOppositeWindows: 5
+          }
+          Thresholds: [
+-            390
++            400
+          ]
+-         TriggerDelay: "345 ns"
+          TriggerGatesTag: "pmttriggerwindowsinit"
+          TriggerTimeResolution: "8 ns"
+          module_type: "TriggerSimulationOnGates"
+       }
+       opdaq: {
+-         ApplyTimingDelays: false
+          BeamGateTriggerNReps: 10
+          BeamGateTriggerRepPeriod: "2.0 us"
+          CreateBeamGateTriggers: true
+          DarkNoiseRate: "1.6 kHz"
+          DiscrimAlgo: "AboveThreshold"
+-         DistanceSurvival: {
+-            Apply: true
+-            BinEdges: [
+-               150,
+-               200,
+-               250,
+-               300,
+-               350,
+-               400,
+-               450
+-            ]
+-            Factors: [
+-               9.7e-1,
+-               8.7e-1,
+-               8.2e-1,
+-               8.2e-1,
+-               8.2e-1,
+-               8.5e-1
+-            ]
+-         }
+          FluctuateGain: true
+          InputModule: "pdfastsim"
+          PMTspecs: {
+             DynodeK: 7.5e-1
+-            Gain: 7e6
++            Gain: 7.5e6
+             VoltageDistribution: [
+-               3,
++               1.74e1,
+                3.4,
+                5,
+                3.33,
+                1.67,
+                1,
+                1.2,
+                1.5,
+                2.2,
+                3
+             ]
+          }
+          Pedestal: {
+             NoiseGenerator: {
+-               RMS: 2.6
++               RMS: 3
+                tool_type: "PMTfastGausNoiseGeneratorTool"
+             }
+-            Pedestal: 15000
++            Pedestal: 1.49995e4
+             tool_type: "PMTconstantPedestalGeneratorTool"
+          }
+          PreTrigFraction: 2.5e-1
+          PulsePolarity: -1
+          QE: 7.3e-2
+          ReadoutEnablePeriod: "2.0 ms"
+          ReadoutWindowSize: 2000
+          SinglePhotonResponse: {
+-            BiasRatio: 1.5332
+-            Gain: 7e6
+-            TransitTime: "14.0 ns"
+-            WaveformData: "Responses/SPRisolHitRun9271.txt"
++            Gain: 7.5e6
++            TransitTime: "55.1 ns"
++            WaveformData: "Responses/SPR202202.txt"
+             tool_type: "SampledWaveformFunctionTool"
+          }
+-         TailSuppression: {
+-            Apply: true
+-            Epsilon: 2.7e-1
+-            Tau: 500
+-         }
+          ThresholdADC: 15
+          TriggerOffsetPMT: "-1.0 ms"
+-         UseChannelStatusDatabase: false
+-         UseGainDatabase: false
+          module_type: "SimPMTIcarus"
+       }
+       pmtfixedthrinit: {
+-         Baselines: "opdaq"
++         Baseline: 1.49995e4
+          NChannels: 360
+          OpticalWaveforms: "opdaq"
+          OutputCategory: "DiscriminatePMTwaveforms"
+-         SelectThresholds: [
+-            390
+-         ]
+          TriggerGateBuilder: {
+             ChannelThresholds: [
+                18,
+                300,
+-               390,
++               400,
+                600
+             ]
+             GateDuration: "160 ns"
+             tool_type: "FixedTriggerGateBuilderTool"
+          }
+          module_type: "DiscriminatePMTwaveforms"
+       }
+       pmtlvdsgatesinit: {
+          ChannelPairing: [
+             [
+                0,
+                2
+             ],
+             [
+                1,
+                4
+             ],
+             [
+                3,
+                6
+             ],
+             [
+                5,
+                8
+             ],
+             [
+                7,
+                9
+             ],
+             [
+                10,
+                12
+             ],
+             [
+                11,
+                14
+             ],
+             [
+                13
+             ],
+             [
+                15,
+                18
+             ],
+             [
+                16
+             ],
+             [
+                17,
+                19
+             ],
+             [
+                20,
+                22
+             ],
+             [
+                21,
+                24
+             ],
+             [
+                23,
+                26
+             ],
+             [
+                25,
+                28
+             ],
+             [
+                27,
+                29
+             ],
+             [
+                30,
+                32
+             ],
+             [
+                31,
+                34
+             ],
+             [
+                33,
+                36
+             ],
+             [
+                35,
+                38
+             ],
+             [
+                37,
+                39
+             ],
+             [
+                40,
+                42
+             ],
+             [
+                41,
+                44
+             ],
+             [
+@@ -913,442 +859,414 @@
+                319
+             ],
+             [
+                320,
+                322
+             ],
+             [
+                321,
+                324
+             ],
+             [
+                323,
+                326
+             ],
+             [
+                325,
+                328
+             ],
+             [
+                327,
+                329
+             ],
+             [
+                330,
+                332
+             ],
+             [
+                331,
+                334
+             ],
+             [
+                333,
+                336
+             ],
+             [
+                335,
+                338
+             ],
+             [
+                337,
+                339
+             ],
+             [
+                340,
+                342
+             ],
+             [
+                341,
+                344
+             ],
+             [
+                343
+             ],
+             [
+                345,
+                348
+             ],
+             [
+                346
+             ],
+             [
+                347,
+                349
+             ],
+             [
+                350,
+                352
+             ],
+             [
+                351,
+                354
+             ],
+             [
+                353,
+                356
+             ],
+             [
+                355,
+                358
+             ],
+             [
+                357,
+                359
+             ]
+          ]
+          CombinationMode: "OR"
+          IgnoreChannels: [
+             70,
+             106,
+             217,
+             54,
+             58,
+             67,
+             98,
+             112,
+             153,
+             254
+          ]
+          LogCategory: "LVDSgates"
+          Thresholds: [
+-            390
++            400
+          ]
+          TriggerGatesTag: "pmtfixedthrinit"
+          module_type: "LVDSgates"
+       }
+       pmttriggerwindowsinit: {
+          MissingChannels: [
+             70,
+             106,
+             217,
+             54,
+             58,
+             67,
+             98,
+             112,
+             153,
+             254
+          ]
+          Stride: 15
+          Thresholds: [
+-            390
++            400
+          ]
+          TriggerGatesTag: "pmtlvdsgatesinit"
+          WindowSize: 30
+          module_type: "SlidingWindowTrigger"
+       }
+       rns: {
+          module_type: "RandomNumberSaver"
+       }
+       shifted: {
+          AdditionalOffset: 0
+-         BindWaveformBaselines: "opdaq"
+          InitAuxDetSimChannelLabel: "genericcrt"
+          InitBeamGateInfoLabel: "triggersimgatesinit"
+          InitSimEnergyDepositLabel: "ionization"
+          InitSimEnergyDepositLiteLabel: "sedlite"
+          InitSimPhotonsLabel: "pdfastsim"
+          InitWaveformLabel: "opdaq"
+          InputTriggerLabel: "emuTriggerUnshifted"
+          ShiftAuxDetIDEs: true
+          ShiftBeamGateInfo: true
+          ShiftSimEnergyDepositLites: true
+          ShiftSimEnergyDeposits: true
+          ShiftSimPhotons: true
+          ShiftWaveforms: true
+          module_type: "AdjustSimForTrigger"
+       }
+       shiftedpriorSCE: {
+          AdditionalOffset: 0
+-         DropTriggerProduct: true
+          InitAuxDetSimChannelLabel: ""
+          InitBeamGateInfoLabel: ""
+          InitSimEnergyDepositLabel: "ionization:priorSCE"
+          InitSimPhotonsLabel: ""
+          InitWaveformLabel: ""
+          InputTriggerLabel: "emuTriggerUnshifted"
+          ShiftAuxDetIDEs: false
+          ShiftBeamGateInfo: false
+          ShiftSimEnergyDeposits: true
+          ShiftSimPhotons: false
+          ShiftWaveforms: false
+          module_type: "AdjustSimForTrigger"
+       }
+       triggersimgatesinit: {
+          BeamGateTag: "beamgate"
+          Changes: [
+             {
+                Select: {
+                   Types: [
+                      "BNB"
+                   ]
+                }
+                Start: {
+-                  SetTo: "+0.100 us"
++                  SetTo: "-0.2 us"
+                }
+                Width: {
+-                  SetTo: "2.1 us"
++                  Add: "0.5 us"
++                  SetTo: "1.6 us"
+                }
+             },
+             {
+                Select: {
+                   Types: [
+                      "NuMI"
+                   ]
+                }
+                Start: {
+-                  SetTo: "+0.065 us"
++                  SetTo: "-0.2 us"
+                }
+                Width: {
+-                  SetTo: "10.0 us"
++                  Add: "0.6 us"
++                  SetTo: "9.5 us"
+                }
+             }
+          ]
+          module_type: "FixBeamGateInfo"
+       }
+    }
+    simulate: [
+       "rns",
+       "opdaq",
+       "pmtfixedthrinit",
+       "pmtlvdsgatesinit",
+       "pmttriggerwindowsinit",
+       "triggersimgatesinit",
+       "emuTriggerUnshifted",
+       "shifted",
+       "shiftedpriorSCE",
+       "daq",
+       "crtdaq"
+    ]
+    stream: [
+       "rootoutput"
+    ]
+ }
+ process_name: "DetSim"
+ services: {
+    AuxDetGeometry: {
+       GDML: "icarus_refactored_nounderscore_20230918.gdml"
+       Name: "icarus_v4"
+       SortingParameters: {
+          tool_type: "AuxDetGeoObjectSorterICARUS"
+       }
+       SurfaceY: 690
+    }
+    ChannelStatusService: {
+       ChannelStatusProvider: {
+          AlgName: "SIOVChannelStatusProvider"
+          DatabaseRetrievalAlg: {
+             AlgName: "DatabaseRetrievalAlg"
+             DBFolderName: "tpc_channelstatus_data"
+-            DBTag: "v4r0"
++            DBTag: "v3r2"
+             DBUrl: "https://dbdata0vm.fnal.gov:9443/icarus_con_prod/app/"
+             UseSQLite: true
+          }
+          UseDB: true
+          UseFile: false
+       }
+       service_provider: "SIOVChannelStatusICARUSService"
+    }
+    DetPedestalService: {
+       DetPedestalRetrievalAlg: {
+          AlgName: "DetPedestalRetrievalAlg"
+          DatabaseRetrievalAlg: {
+             AlgName: "DatabaseRetrievalAlg"
+             DBFolderName: ""
+             DBTag: ""
+             DBUrl: ""
+          }
+          DefaultCollMean: 400
+          DefaultCollRms: 3e-1
+          DefaultIndMean: 2048
+          DefaultIndRms: 3e-1
+          DefaultMeanErr: 0
+          DefaultRmsErr: 0
+          UseDB: false
+          UseFile: false
+       }
+       service_provider: "SIOVDetPedestalService"
+    }
+    DetectorClocksService: {
+       ClockSpeedExternal: 3.125e1
+       ClockSpeedOptical: 500
+       ClockSpeedTPC: 2.5
+       ClockSpeedTrigger: 16
+       DefaultBeamTime: 1500
+       DefaultTrigTime: 1500
+       FramePeriod: 1.6384e3
+       G4RefTime: -1500
+       InheritClockConfig: true
+-      TrigModuleName: "shifted"
++      TrigModuleName: "daqTrigger"
+       TriggerOffsetTPC: -340
+       service_provider: "DetectorClocksServiceStandard"
+    }
+    DetectorPropertiesService: {
+       DriftVelFudgeFactor: 9.9733e-1
+       Efield: [
+          4.938e-1,
+          7.33e-1,
+          9.33e-1
+       ]
+       Electronlifetime: 3000
+       ElectronsToADC: 1.208041e-3
+       IncludeInterPlanePitchInXTickOffsets: false
+       InheritNumberTimeSamples: true
+       NumberTimeSamples: 4096
+       ReadOutWindowSize: 4096
+       SimpleBoundaryProcess: false
+       SternheimerA: 1.956e-1
+       SternheimerCbar: 5.2146
+       SternheimerK: 3
+       SternheimerX0: 2e-1
+       SternheimerX1: 3
+       Temperature: 8.75e1
+       TimeOffsetU: 0
+       TimeOffsetV: 0
+       TimeOffsetY: 0
+       TimeOffsetZ: 0
+       UseIcarusMicrobooneDriftModel: true
+       service_provider: "DetectorPropertiesServiceStandard"
+    }
+    DuplicateEventTracker: {}
+    FileCatalogMetadata: {
+       fileType: "mc"
+       group: "icarus"
+       runType: "physics"
+    }
+    Geometry: {
+       GDML: "icarus_refactored_nounderscore_20230918.gdml"
+       Name: "icarus_v4"
+       SortingParameters: {
+          tool_type: "GeoObjectSorterPMTasTPC"
+       }
+       SurfaceY: 690
+    }
+    GeometryConfigurationWriter: {}
+-   IPMTChannelStatusService: {
+-      DBname: "pmt_voltage_data"
+-      DefaultStatus: 0
+-      DefaultVoltage: 1500
+-      LogCategory: "PMTChannelStatusProvider"
+-      OverrideRunNumber: -1
+-      StatusTag: "v1r3"
+-      Verbose: false
+-      service_provider: "PMTChannelStatusService"
+-   }
+-   IPMTTimingCorrectionService: {
+-      CorrectionTags: {
+-         CablesTag: "v2r5"
+-         CosmicsTag: "v2r3"
+-         LaserTag: "v2r3"
+-      }
+-      OverrideRunNumber: -1
+-      Verbose: false
+-      service_provider: "PMTTimingCorrectionService"
+-   }
+-   IPhotonCalibratorService: {
+-      AreaTag: "v1r2"
+-      Defaults: {
+-         SPEArea: 1.5201e2
+-      }
+-      OverrideRunNumber: -1
+-      service_provider: "ICARUSPhotonCalibratorServiceFromDB"
+-   }
+    LArPropertiesService: {
+       AbsLengthEnergies: [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+       ]
+       AbsLengthSpectrum: [
+          8000,
+          8000,
+          8000,
+          8000,
+          8000,
+          2000,
+          2000,
+          2000
+       ]
+       AlphaScintYield: 16800
+       AlphaScintYieldRatio: 5.6e-1
+       Argon39DecayRate: 0
+       AtomicMass: 3.9948e1
+       AtomicNumber: 18
+       ElectronScintYield: 20000
+       ElectronScintYieldRatio: 2.7e-1
+       EnableCerenkovLight: false
+       ExcitationEnergy: 188
+       FastScintEnergies: [
+          7.2,
+          7.9,
+          8.3,
+          8.6,
+          8.9,
+          9.1,
+          9.3,
+          9.6,
+          9.7,
+          9.8,
+          10,
+          1.02e1,
+          1.03e1,
+          1.06e1,
+          11,
+          1.16e1,
+          1.19e1
+       ]
+       FastScintSpectrum: [
+          0,
+          4e-2,
+          1.2e-1,
+          2.7e-1,
+          4.4e-1,
+          6.2e-1,
+          8e-1,
+          9.1e-1,
+          9.2e-1,
+          8.5e-1,
+          7e-1,
+          5e-1,
+          3.1e-1,
+          1.3e-1,
+          4e-2,
+          1e-2,
+          0
+       ]
+       KaonScintYield: 24000
+       KaonScintYieldRatio: 2.3e-1
+       LoadExtraMatProperties: false
+       MuonScintYield: 24000
+       MuonScintYieldRatio: 2.3e-1
+       PionScintYield: 24000
+       PionScintYieldRatio: 2.3e-1
+       ProtonScintYield: 19200
+       ProtonScintYieldRatio: 2.9e-1
+       RIndexEnergies: [
+          1.18626,
+          1.68626,
+          2.18626,
+          2.68626,
+          3.18626,
+          3.68626,
+          4.18626,
+          4.68626,
+          5.18626,
+          5.68626,
+          6.18626,
+          6.68626,
+          7.18626,
+          7.68626,
+          8.18626,
+          8.68626,
+          9.18626,
+          9.68626,
+          1.01863e1,
+          1.06863e1,
+          1.11863e1
+       ]
