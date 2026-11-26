@@ -1,30 +1,6 @@
---- CV_FNAL_10_31_00_01//nuedis_cafmakerjob_icarus_detsim2d_systtools_and_fluxwgt_noyzsim_NuGraphReco.dump	2026-11-25 17:03:16.068803039 +0100
+--- CV_FNAL_10_31_00_01//nuedis_cafmakerjob_icarus_detsim2d_systtools_and_fluxwgt_noyzsim_NuGraphReco.dump	2026-11-26 10:27:06.649394201 +0100
 +++ CV_CNAF_RicDev//nuedis_cafmakerjob_icarus_detsim2d_systtools_and_fluxwgt_noyzsim_NuGraphReco.dump	2026-11-25 17:02:00.465045936 +0100
-@@ -1,206 +1,269 @@
- # Produced from 'fhicl-dump' using:
- #   Input  : fcl/cv/nuedis_cafmakerjob_icarus_detsim2d_systtools_and_fluxwgt_noyzsim_NuGraphReco.fcl
- #   Policy : cet::filepath_maker
- #   Path   : "FHICL_FILE_PATH"
- 
- outputs: {
-    outpid: {
-       dataTier: "cafana"
-       fileName: "stage2_r%r_s%s.root"
-       module_type: "RootOutput"
-       saveMemoryObjectThreshold: 0
-       streamName: "out1"
-    }
- }
- physics: {
-    analyzers: {
-       caloskimE: {
-          SimChannelproducer: "daq:simpleSC"
-       }
-       caloskimW: {
-          SimChannelproducer: "daq:simpleSC"
-       }
-    }
-    end_paths: [
+@@ -25,6 +25,78 @@
        "stream1"
     ]
     producers: {
@@ -103,17 +79,7 @@
        ShowerCosmicDistCryoE: {
           MinShowerEnergy: 100
           PandoraLabel: "pandoraGausCryoE"
-          ShowerLabel: "SBNShowerGausCryoE"
-          module_type: "ShowerCosmicDistance"
-       }
-       ShowerCosmicDistCryoW: {
-          MinShowerEnergy: 100
-          PandoraLabel: "pandoraGausCryoW"
-          ShowerLabel: "SBNShowerGausCryoW"
-          module_type: "ShowerCosmicDistance"
-       }
-       cafmaker: {
-          CAFFilename: ""
+@@ -42,7 +114,6 @@
           CRTHitLabel: "crthit"
           CRTHitMatchInfoLabel: "CRTT0Tagging"
           CRTHitMatchLabel: "CRTT0Tagging"
@@ -121,23 +87,7 @@
           CRTTrackLabel: "crttrack"
           CRTTrackMatchLabel: ""
           CreateBlindedCAF: false
-          DataTier: "caf"
-          FileExtension: ".caf.root"
-          FlashMatchLabel: "fmatch"
-          FlashMatchOpDetSuffixes: [
-             "",
-             "op"
-          ]
-          FlashMatchSCECryoSuffixes: [
-             "CryoE",
-             "CryoW"
-          ]
-          FlashTrigLabel: ""
-          G4Label: "largeant"
-          GenLabel: "generator"
-          GeneratorInput: "generator"
-          HitLabel: "cluster3D"
-          NuGraphFilterLabel: "ngfilteredhits:filter"
+@@ -66,13 +137,6 @@
           NuGraphSemanticLabel: "ngfilteredhits:semantic"
           NuGraphSlicesLabel: "NCCSlices"
           OpFlashLabel: "opflash"
@@ -151,10 +101,7 @@
           PFParticleLabel: "pandoraGausNuGraphReco"
           PandoraTagSuffixes: [
              "CryoE",
-             "CryoW"
-          ]
-          RecoShowerLabel: "SBNShowerGaus"
-          RecoShowerSelectionLabel: ""
+@@ -83,7 +147,6 @@
           RecoTrackLabel: "pandoraTrackGaus"
           ReferencePMTFromTriggerToBeam: true
           SaveGENIEEventRecord: true
@@ -162,7 +109,7 @@
           ShowerCosmicDistLabel: "ShowerCosmicDist"
           ShowerRazzleLabel: ""
           SimChannelLabel: "daq:simpleSC"
-          StrictMode: false
+@@ -91,7 +154,6 @@
           StubLabel: "vertexStub"
           SystWeightLabels: [
              "systtools",
@@ -170,12 +117,7 @@
              "fluxweight"
           ]
           TPCPMTBarycenterMatchLabel: "tpcpmtbarycentermatch"
-          TrackCaloLabel: "pandoraCaloGaus"
-          TrackChi2PidLabel: "pandoraPidGaus"
-          TrackDazzleLabel: ""
-          TrackHitFillRREndCut: 30
-          TrackMCSLabel: "pandoraTrackMCS"
-          TrackRangeLabel: "pandoraTrackRange"
+@@ -104,6 +166,7 @@
           TrackScatterClosestApproachLabel: ""
           TrackStoppingChi2FitLabel: ""
           TriggerLabel: "emuTrigger"
@@ -183,201 +125,7 @@
           UsePandoraAfterNuGraph: true
           module_type: "CAFMaker"
        }
-       fluxweight: {
-          AllowMissingTruth: true
-          expskin: {
-             CentralValue_hist_file: "beamData/BNBdata/UnisimHists/may06_10kpot_ntrd1000_flux.root"
-             NegativeSystematicVariation_hist_file: "beamData/BNBdata/UnisimHists/expskin_nrtd1000_flux.root"
-             PositiveSystematicVariation_hist_file: "beamData/BNBdata/UnisimHists/expskin_nrtd1000_flux.root"
-             calc_type: "Unisim"
-             mode: "multisim"
-             number_of_multisims: 1000
-             parameter_list: [
-                "expskin"
-             ]
-             random_seed: 14
-             scale_factor_neg: 1
-             scale_factor_pos: 1
-             type: "Flux"
-          }
-          generator_module_label: "generator"
-          horncurrent: {
-             CentralValue_hist_file: "beamData/BNBdata/UnisimHists/may06_10kpot_ntrd1000_flux.root"
-             NegativeSystematicVariation_hist_file: "beamData/BNBdata/UnisimHists/may06_horn173ka_rgen610.6_flux.root"
-             PositiveSystematicVariation_hist_file: "beamData/BNBdata/UnisimHists/may06_horn175ka_rgen610.6_flux.root"
-             calc_type: "Unisim"
-             mode: "multisim"
-             number_of_multisims: 1000
-             parameter_list: [
-                "horncurrent"
-             ]
-             random_seed: 7
-             scale_factor_neg: 1
-             scale_factor_pos: 1
-             type: "Flux"
-          }
-          kminus: {
-             PrimaryHadronGeantCode: [
-                -321
-             ]
-             calc_type: "PrimaryHadronNormalization"
-             mode: "multisim"
-             number_of_multisims: 1000
-             parameter_list: [
-                "kminus"
-             ]
-             parameter_sigma: [
-                1
-             ]
-             random_seed: 6
-             scale_factor_pos: 1
-             type: "Flux"
-          }
-          kplus: {
-             ExternalData: "beamData/BNBdata/ExternalData/BNBExternalData_uBooNE.root"
-             PrimaryHadronGeantCode: [
-                321
-             ]
-             calc_type: "PrimaryHadronFeynmanScaling"
-             mode: "multisim"
-             number_of_multisims: 1000
-             parameter_list: [
-                "kplus"
-             ]
-             parameter_sigma: [
-                1
-             ]
-             random_seed: 4
-             scale_factor_pos: 1
-             type: "Flux"
-          }
-          kzero: {
-             ExternalData: "beamData/BNBdata/ExternalData/BNBExternalData_uBooNE.root"
-             PrimaryHadronGeantCode: [
-                130,
-                310,
-                311
-             ]
-             calc_type: "PrimaryHadronSanfordWang"
-             mode: "multisim"
-             number_of_multisims: 1000
-             parameter_list: [
-                "kzero"
-             ]
-             parameter_sigma: [
-                1
-             ]
-             random_seed: 5
-             scale_factor_pos: 1
-             type: "Flux"
-          }
-          module_type: "SBNEventWeight"
-          nucleoninexsec: {
-             CentralValue_hist_file: "beamData/BNBdata/UnisimHists/may06_10kpot_ntrd1000_flux.root"
-             NegativeSystematicVariation_hist_file: "beamData/BNBdata/UnisimHists/may06_nucleoninexsec_down_rgen610.6_flux.root"
-             PositiveSystematicVariation_hist_file: "beamData/BNBdata/UnisimHists/may06_nucleoninexsec_up_rgen610.6_flux.root"
-             calc_type: "Unisim"
-             mode: "multisim"
-             number_of_multisims: 1000
-             parameter_list: [
-@@ -258,520 +321,200 @@
-             ]
-             random_seed: 3
-             scale_factor_pos: 1
-             type: "Flux"
-          }
-          pioninexsec: {
-             CentralValue_hist_file: "beamData/BNBdata/UnisimHists/may06_10kpot_ntrd1000_flux.root"
-             NegativeSystematicVariation_hist_file: "beamData/BNBdata/UnisimHists/may06_pioninexsec_down_rgen610.6_flux.root"
-             PositiveSystematicVariation_hist_file: "beamData/BNBdata/UnisimHists/may06_pioninexsec_up_rgen610.6_flux.root"
-             calc_type: "Unisim"
-             mode: "multisim"
-             number_of_multisims: 1000
-             parameter_list: [
-                "pioninexsec"
-             ]
-             random_seed: 8
-             scale_factor_neg: 1
-             scale_factor_pos: 1
-             type: "Flux"
-          }
-          pionqexsec: {
-             CentralValue_hist_file: "beamData/BNBdata/UnisimHists/may06_10kpot_ntrd1000_flux.root"
-             NegativeSystematicVariation_hist_file: "beamData/BNBdata/UnisimHists/may06_pionqexsec_down_rgen610.6_flux.root"
-             PositiveSystematicVariation_hist_file: "beamData/BNBdata/UnisimHists/may06_pionqexsec_up_rgen610.6_flux.root"
-             calc_type: "Unisim"
-             mode: "multisim"
-             number_of_multisims: 1000
-             parameter_list: [
-                "pionqexsec"
-             ]
-             random_seed: 12
-             scale_factor_neg: 5.85e-1
-             scale_factor_pos: 2.92e-1
-             type: "Flux"
-          }
-          piontotxsec: {
-             CentralValue_hist_file: "beamData/BNBdata/UnisimHists/may06_10kpot_ntrd1000_flux.root"
-             NegativeSystematicVariation_hist_file: "beamData/BNBdata/UnisimHists/may06_piontotxsec_down_rgen610.6_flux.root"
-             PositiveSystematicVariation_hist_file: "beamData/BNBdata/UnisimHists/may06_piontotxsec_up_rgen610.6_flux.root"
-             calc_type: "Unisim"
-             mode: "multisim"
-             number_of_multisims: 1000
-             parameter_list: [
-                "piontotxsec"
-             ]
-             random_seed: 13
-             scale_factor_neg: 1
-             scale_factor_pos: 1
-             type: "Flux"
-          }
-          piplus: {
-             ExternalData: "beamData/BNBdata/ExternalData/BNBExternalData_uBooNE_SplinesHARP.root"
-             ExternalFit: "beamData/BNBdata/ExternalData/BNBExternalData_uBooNE.root"
-             PrimaryHadronGeantCode: [
-                211
-             ]
-             calc_type: "PrimaryHadronSWCentralSplineVariation"
-             mode: "multisim"
-             number_of_multisims: 1000
-             parameter_list: [
-                "piplus"
-             ]
-             parameter_sigma: [
-                1
-             ]
-             random_seed: 2
-             scale_factor_pos: 1
-             type: "Flux"
-          }
-          weight_functions: [
-             "horncurrent",
-             "expskin",
-             "pioninexsec",
-             "pionqexsec",
-             "piontotxsec",
-             "nucleoninexsec",
-             "nucleonqexsec",
-             "nucleontotxsec",
-             "kplus",
-             "kminus",
-             "kzero",
-             "piplus",
-             "piminus"
-          ]
-          weight_functions_flux: [
-             "horncurrent",
-             "expskin",
-             "pioninexsec",
-             "pionqexsec",
-             "piontotxsec",
-             "nucleoninexsec",
-             "nucleonqexsec",
-             "nucleontotxsec",
-             "kplus",
-             "kminus",
-             "kzero",
-             "piplus",
+@@ -355,326 +418,6 @@
              "piminus"
           ]
        }
@@ -704,201 +452,7 @@
        genieweight: {
           AhtBY_multisigma: {
              mode: "multisigma"
-             parameter_list: [
-                "AhtBY"
-             ]
-             parameter_sigma: [
-                -1,
-                1,
-                -2,
-                2,
-                -3,
-                3
-             ]
-             type: "Genie"
-          }
-          AllowMissingTruth: true
-          BhtBY_multisigma: {
-             mode: "multisigma"
-             parameter_list: [
-                "BhtBY"
-             ]
-             parameter_sigma: [
-                -1,
-                1,
-                -2,
-                2,
-                -3,
-                3
-             ]
-             type: "Genie"
-          }
-          CV1uBY_multisigma: {
-             mode: "multisigma"
-             parameter_list: [
-                "CV1uBY"
-             ]
-             parameter_sigma: [
-                -1,
-                1,
-                -2,
-                2,
-                -3,
-                3
-             ]
-             type: "Genie"
-          }
-          CV2uBY_multisigma: {
-             mode: "multisigma"
-             parameter_list: [
-                "CV2uBY"
-             ]
-             parameter_sigma: [
-                -1,
-                1,
-                -2,
-                2,
-                -3,
-                3
-             ]
-             type: "Genie"
-          }
-          EtaNCEL_multisigma: {
-             mode: "multisigma"
-             parameter_list: [
-                "EtaNCEL"
-             ]
-             parameter_sigma: [
-                -1,
-                1,
-                -2,
-                2,
-                -3,
-                3
-             ]
-             type: "Genie"
-          }
-          FormZone_multisigma: {
-             mode: "multisigma"
-             parameter_list: [
-                "FormZone"
-             ]
-             parameter_sigma: [
-                -1,
-                1,
-                -2,
-                2,
-                -3,
-                3
-             ]
-             type: "Genie"
-          }
-          FrAbs_N_multisigma: {
-             mode: "multisigma"
-             parameter_list: [
-                "FrAbs_N"
-             ]
-             parameter_sigma: [
-                -1,
-                1,
-@@ -1318,247 +1061,274 @@
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1
-             ]
-             random_seed: 100
-             type: "Genie"
-          }
-          weight_functions: [
-             "multisim",
-             "MaCCQE_multisigma",
-             "MaCCRES_multisigma",
-             "MvCCRES_multisigma",
-             "MaNCRES_multisigma",
-             "MvNCRES_multisigma",
-             "NonRESBGvpCC1pi_multisigma",
-             "NonRESBGvbarnCC1pi_multisigma",
-             "NonRESBGvpNC1pi_multisigma",
-             "NonRESBGvbarnNC1pi_multisigma",
-             "NonRESBGvnCC1pi_multisigma",
-             "NonRESBGvbarpCC1pi_multisigma",
-             "NonRESBGvnNC1pi_multisigma",
-             "NonRESBGvbarpNC1pi_multisigma",
-             "NonRESBGvpCC2pi_multisigma",
-             "NonRESBGvbarnCC2pi_multisigma",
-             "NonRESBGvpNC2pi_multisigma",
-             "NonRESBGvbarpNC2pi_multisigma",
-             "NonRESBGvnCC2pi_multisigma",
-             "NonRESBGvbarpCC2pi_multisigma",
-             "NonRESBGvnNC2pi_multisigma",
-             "NonRESBGvbarnNC2pi_multisigma",
-             "MaNCEL_multisigma",
-             "EtaNCEL_multisigma",
-             "AhtBY_multisigma",
-             "BhtBY_multisigma",
-             "CV1uBY_multisigma",
-             "CV2uBY_multisigma",
-             "FormZone_multisigma",
-             "MFP_N_multisigma",
-             "FrCEx_N_multisigma",
-             "FrInel_N_multisigma",
-             "FrAbs_N_multisigma",
-             "FrPiProd_N_multisigma",
-             "MFP_pi_multisigma",
-             "FrCEx_pi_multisigma",
-             "FrInel_pi_multisigma",
-             "FrAbs_pi_multisigma",
-             "FrPiProd_pi_multisigma"
-          ]
-          weight_functions_genie: [
-             "multisim",
-             "MaCCQE_multisigma",
-             "MaCCRES_multisigma",
-             "MvCCRES_multisigma",
-             "MaNCRES_multisigma",
-             "MvNCRES_multisigma",
-             "NonRESBGvpCC1pi_multisigma",
-             "NonRESBGvbarnCC1pi_multisigma",
-             "NonRESBGvpNC1pi_multisigma",
-             "NonRESBGvbarnNC1pi_multisigma",
-             "NonRESBGvnCC1pi_multisigma",
-             "NonRESBGvbarpCC1pi_multisigma",
-             "NonRESBGvnNC1pi_multisigma",
-             "NonRESBGvbarpNC1pi_multisigma",
-             "NonRESBGvpCC2pi_multisigma",
-             "NonRESBGvbarnCC2pi_multisigma",
-             "NonRESBGvpNC2pi_multisigma",
-             "NonRESBGvbarpNC2pi_multisigma",
-             "NonRESBGvnCC2pi_multisigma",
-             "NonRESBGvbarpCC2pi_multisigma",
-             "NonRESBGvnNC2pi_multisigma",
-             "NonRESBGvbarnNC2pi_multisigma",
-             "MaNCEL_multisigma",
-             "EtaNCEL_multisigma",
-             "AhtBY_multisigma",
-             "BhtBY_multisigma",
-             "CV1uBY_multisigma",
-             "CV2uBY_multisigma",
-             "FormZone_multisigma",
-             "MFP_N_multisigma",
-             "FrCEx_N_multisigma",
-             "FrInel_N_multisigma",
-             "FrAbs_N_multisigma",
-             "FrPiProd_N_multisigma",
-             "MFP_pi_multisigma",
-             "FrCEx_pi_multisigma",
-             "FrInel_pi_multisigma",
-             "FrAbs_pi_multisigma",
-             "FrPiProd_pi_multisigma"
-          ]
+@@ -1415,7 +1158,34 @@
        }
        mcreco: {
           MCParticleLabel: "largeant"
@@ -933,9 +487,7 @@
        }
        pandoraCaloGausCryoE: {
           AssocHitModuleLabel: ""
-          CaloAlg: {
-             CalAmpConstants: [
-                5.88726e-4,
+@@ -1425,9 +1195,9 @@
                 1.18998e-3
              ]
              CalAreaConstants: [
@@ -948,31 +500,7 @@
              ]
              CaloDoLifeTimeCorrection: true
              CaloLifeTimeForm: 0
-             CaloUseModBox: true
-             ModBoxA: 9.04e-1
-             ModBoxBParam: [
-                2.04e-1,
-                1.25
-             ]
-             ModBoxBTF1: "[0]/TMath::Sqrt(TMath::Sin(x*TMath::Pi()/180)**2 + TMath::Cos(x*TMath::Pi()/180)**2/[1]**2)"
-          }
-          ChargeMethod: 1
-          Cryostat: 0
-          FieldDistortion: true
-          FieldDistortionCorrectionXSign: 1
-          FieldDistortionEfield: true
-          NormTools: []
-          PFPModuleLabel: ""
-          T0ModuleLabel: ""
-          TrackIsFieldDistortionCorrected: true
-          TrackModuleLabel: "pandoraTrackGausCryoE"
-          module_type: "GnocchiCalorimetry"
-       }
-       pandoraCaloGausCryoW: {
-          AssocHitModuleLabel: ""
-          CaloAlg: {
-             CalAmpConstants: [
-                5.88726e-4,
+@@ -1459,9 +1229,9 @@
                 1.18998e-3
              ]
              CalAreaConstants: [
@@ -985,201 +513,7 @@
              ]
              CaloDoLifeTimeCorrection: true
              CaloLifeTimeForm: 0
-             CaloUseModBox: true
-             ModBoxA: 9.04e-1
-             ModBoxBParam: [
-                2.04e-1,
-                1.25
-             ]
-             ModBoxBTF1: "[0]/TMath::Sqrt(TMath::Sin(x*TMath::Pi()/180)**2 + TMath::Cos(x*TMath::Pi()/180)**2/[1]**2)"
-          }
-          ChargeMethod: 1
-          Cryostat: 1
-          FieldDistortion: true
-          FieldDistortionCorrectionXSign: 1
-          FieldDistortionEfield: true
-          NormTools: []
-          PFPModuleLabel: ""
-          T0ModuleLabel: ""
-          TrackIsFieldDistortionCorrected: true
-          TrackModuleLabel: "pandoraTrackGausCryoW"
-          module_type: "GnocchiCalorimetry"
-       }
-       pandoraPidGausCryoE: {
-          CalorimetryModuleLabel: "pandoraCaloGausCryoE"
-          Chi2PIDAlg: {
-             TemplateFile: "dEdxrestemplates.root"
-             UseMedian: true
-          }
-          TrackModuleLabel: "pandoraTrackGausCryoE"
-          module_type: "Chi2ParticleID"
-       }
-       pandoraPidGausCryoW: {
-          CalorimetryModuleLabel: "pandoraCaloGausCryoW"
-          Chi2PIDAlg: {
-             TemplateFile: "dEdxrestemplates.root"
-             UseMedian: true
-          }
-          TrackModuleLabel: "pandoraTrackGausCryoW"
-          module_type: "Chi2ParticleID"
-       }
-       pandoraTrackMCSCryoE: {
-          MCS: {
-             excludeVolumes: []
-             fiducialVolumeInsets: []
-          }
-          TrackLabel: "pandoraTrackGausCryoE"
-          module_type: "MCSFitAllPID"
-       }
-       pandoraTrackMCSCryoW: {
-          MCS: {
-             excludeVolumes: []
-             fiducialVolumeInsets: []
-          }
-          TrackLabel: "pandoraTrackGausCryoW"
-          module_type: "MCSFitAllPID"
-       }
-       pandoraTrackRangeCryoE: {
-          MinTrackLength: 10
-          TrackLabel: "pandoraTrackGausCryoE"
-          module_type: "RangePAllPID"
-       }
-       pandoraTrackRangeCryoW: {
-          MinTrackLength: 10
-          TrackLabel: "pandoraTrackGausCryoW"
-          module_type: "RangePAllPID"
-       }
-       rns: {
-          module_type: "RandomNumberSaver"
-       }
-       systtools: {
-          AllowMissingTruth: false
-          DebugMode: false
-          GeneratorModuleLabel: "generator"
-          generated_systematic_provider_configuration: {
-             GENIEReWeight_SBN_v1_multisigma: {
-                AhtBY: {
-                   centralParamValue: 0
-                   paramVariations: [
-                      -1,
-                      1,
-                      -2,
-                      2,
-                      -3,
-                      3
-                   ]
-                   prettyName: "AhtBY"
-                   systParamId: 38
-                }
-                BhtBY: {
-                   centralParamValue: 0
-                   paramVariations: [
-                      -1,
-                      1,
-                      -2,
-                      2,
-                      -3,
-                      3
-                   ]
-                   prettyName: "BhtBY"
-@@ -8805,415 +8575,415 @@
-                      2,
-                      -3,
-                      3
-                   ]
-                   prettyName: "NR_nubar_p_CC_3Pi"
-                   systParamId: 132
-                }
-                NR_nubar_p_NC_1Pi: {
-                   centralParamValue: 0
-                   paramVariations: [
-                      -1,
-                      1,
-                      -2,
-                      2,
-                      -3,
-                      3
-                   ]
-                   prettyName: "NR_nubar_p_NC_1Pi"
-                   systParamId: 136
-                }
-                NR_nubar_p_NC_2Pi: {
-                   centralParamValue: 0
-                   paramVariations: [
-                      -1,
-                      1,
-                      -2,
-                      2,
-                      -3,
-                      3
-                   ]
-                   prettyName: "NR_nubar_p_NC_2Pi"
-                   systParamId: 137
-                }
-                NR_nubar_p_NC_3Pi: {
-                   centralParamValue: 0
-                   paramVariations: [
-                      -1,
-                      1,
-                      -2,
-                      2,
-                      -3,
-                      3
-                   ]
-                   prettyName: "NR_nubar_p_NC_3Pi"
-                   systParamId: 138
-                }
-                instance_name: "SBN_v1"
-                parameter_headers: [
-                   "NR_nu_n_CC_2Pi",
-                   "NR_nu_n_CC_3Pi",
-                   "NR_nu_p_CC_2Pi",
-                   "NR_nu_p_CC_3Pi",
-                   "NR_nu_np_CC_1Pi",
-                   "NR_nu_n_NC_1Pi",
-                   "NR_nu_n_NC_2Pi",
-                   "NR_nu_n_NC_3Pi",
-                   "NR_nu_p_NC_1Pi",
-                   "NR_nu_p_NC_2Pi",
-                   "NR_nu_p_NC_3Pi",
-                   "NR_nubar_n_CC_1Pi",
-                   "NR_nubar_n_CC_2Pi",
-                   "NR_nubar_n_CC_3Pi",
-                   "NR_nubar_p_CC_1Pi",
-                   "NR_nubar_p_CC_2Pi",
-                   "NR_nubar_p_CC_3Pi",
-                   "NR_nubar_n_NC_1Pi",
-                   "NR_nubar_n_NC_2Pi",
-                   "NR_nubar_n_NC_3Pi",
-                   "NR_nubar_p_NC_1Pi",
-                   "NR_nubar_p_NC_2Pi",
-                   "NR_nubar_p_NC_3Pi"
-                ]
-                tool_options: {
-                   HighWResponse: 5.00000000000000027756e-2
-                   OneSigmaResponse: 5e-1
-                   WBegin: 0
-                   WEnd: 5
-                   WTransition: 3
-                   fill_valid_tree: false
-                }
-                tool_type: "NOvAStyleNonResPionNorm"
-             }
-             syst_providers: [
-                "GENIEReWeight_SBN_v1_multisigma",
-                "GENIEReWeight_SBN_v1_multisim",
-                "MINERvAE2p2h_SBN_v1",
-                "MINERvAq0q3Weighting_SBN_v1",
-                "MiscInteractionSysts_SBN_v1",
-                "NOvAStyleNonResPionNorm_SBN_v1"
-             ]
-          }
-          module_type: "SystToolsEventWeight"
-       }
-       vertexChargeCryoE: {
-          CaloAlg: {
-             CalAmpConstants: [
-                5.88726e-4,
+@@ -8902,9 +8672,9 @@
                 1.18998e-3
              ]
              CalAreaConstants: [
@@ -1192,27 +526,7 @@
              ]
              CaloDoLifeTimeCorrection: true
              CaloLifeTimeForm: 0
-             CaloUseModBox: true
-             ModBoxA: 9.04e-1
-             ModBoxBParam: [
-                2.04e-1,
-                1.25
-             ]
-             ModBoxBTF1: "[0]/TMath::Sqrt(TMath::Sin(x*TMath::Pi()/180)**2 + TMath::Cos(x*TMath::Pi()/180)**2/[1]**2)"
-          }
-          CorrectSCE: false
-          HitVacuumRadius: 5
-          PFParticleLabel: "pandoraGausCryoE"
-          PositionsAreSCECorrected: false
-          SelectNeutrino: true
-          TrackLabel: "pandoraTrackGausCryoE"
-          UseTrackSPRecovery: true
-          module_type: "VertexChargeVacuum"
-       }
-       vertexChargeCryoW: {
-          CaloAlg: {
-             CalAmpConstants: [
-                5.88726e-4,
+@@ -8932,9 +8702,9 @@
                 1.18998e-3
              ]
              CalAreaConstants: [
@@ -1225,27 +539,7 @@
              ]
              CaloDoLifeTimeCorrection: true
              CaloLifeTimeForm: 0
-             CaloUseModBox: true
-             ModBoxA: 9.04e-1
-             ModBoxBParam: [
-                2.04e-1,
-                1.25
-             ]
-             ModBoxBTF1: "[0]/TMath::Sqrt(TMath::Sin(x*TMath::Pi()/180)**2 + TMath::Cos(x*TMath::Pi()/180)**2/[1]**2)"
-          }
-          CorrectSCE: false
-          HitVacuumRadius: 5
-          PFParticleLabel: "pandoraGausCryoW"
-          PositionsAreSCECorrected: false
-          SelectNeutrino: true
-          TrackLabel: "pandoraTrackGausCryoW"
-          UseTrackSPRecovery: true
-          module_type: "VertexChargeVacuum"
-       }
-       vertexStubCryoE: {
-          CaloAlg: {
-             CalAmpConstants: [
-                5.88726e-4,
+@@ -8962,9 +8732,9 @@
                 1.18998e-3
              ]
              CalAreaConstants: [
@@ -1258,33 +552,7 @@
              ]
              CaloDoLifeTimeCorrection: true
              CaloLifeTimeForm: 0
-             CaloUseModBox: true
-             ModBoxA: 9.04e-1
-             ModBoxBParam: [
-                2.04e-1,
-                1.25
-             ]
-             ModBoxBTF1: "[0]/TMath::Sqrt(TMath::Sin(x*TMath::Pi()/180)**2 + TMath::Cos(x*TMath::Pi()/180)**2/[1]**2)"
-          }
-          CorrectSCE: false
-          MergeTools: [
-             {
-                StubDotCut: -1
-                tool_type: "PlaneStubMerge"
-             }
-          ]
-          OneWiredQdxCut: 100000
-          PFPLabel: "pandoraGausCryoE"
-          PositionsAreSCECorrected: false
-          TrackLabel: "pandoraTrackGausCryoE"
-          VertexChargeLabel: "vertexChargeCryoE"
-          dQdxCut: 200000
-          module_type: "VertexStubTracker"
-       }
-       vertexStubCryoW: {
-          CaloAlg: {
-             CalAmpConstants: [
-                5.88726e-4,
+@@ -8998,9 +8768,9 @@
                 1.18998e-3
              ]
              CalAreaConstants: [
@@ -1297,28 +565,7 @@
              ]
              CaloDoLifeTimeCorrection: true
              CaloLifeTimeForm: 0
-             CaloUseModBox: true
-             ModBoxA: 9.04e-1
-             ModBoxBParam: [
-                2.04e-1,
-                1.25
-             ]
-             ModBoxBTF1: "[0]/TMath::Sqrt(TMath::Sin(x*TMath::Pi()/180)**2 + TMath::Cos(x*TMath::Pi()/180)**2/[1]**2)"
-          }
-          CorrectSCE: false
-          MergeTools: [
-             {
-                StubDotCut: -1
-                tool_type: "PlaneStubMerge"
-             }
-          ]
-          OneWiredQdxCut: 100000
-          PFPLabel: "pandoraGausCryoW"
-          PositionsAreSCECorrected: false
-          TrackLabel: "pandoraTrackGausCryoW"
-          VertexChargeLabel: "vertexChargeCryoW"
-          dQdxCut: 200000
-          module_type: "VertexStubTracker"
+@@ -9029,6 +8799,7 @@
        }
     }
     runprod: [
@@ -1326,16 +573,7 @@
        "pandoraCaloGausCryoE",
        "pandoraCaloGausCryoW",
        "pandoraPidGausCryoE",
-       "pandoraPidGausCryoW",
-       "vertexChargeCryoE",
-       "vertexChargeCryoW",
-       "vertexStubCryoE",
-       "vertexStubCryoW",
-       "pandoraTrackMCSCryoE",
-       "pandoraTrackMCSCryoW",
-       "pandoraTrackRangeCryoE",
-       "pandoraTrackRangeCryoW",
-       "ShowerCosmicDistCryoE",
+@@ -9045,7 +8816,6 @@
        "ShowerCosmicDistCryoW",
        "rns",
        "systtools",
@@ -1343,31 +581,7 @@
        "fluxweight",
        "cafmaker"
     ]
-    stream1: []
-    trigger_paths: [
-       "runprod"
-    ]
- }
- process_name: "CAFmaker"
- services: {
-    AuxDetGeometry: {
-       GDML: "icarus_refactored_nounderscore_20230918.gdml"
-       Name: "icarus_v4"
-       SortingParameters: {
-          tool_type: "AuxDetGeoObjectSorterICARUS"
-       }
-       SurfaceY: 690
-    }
-    BackTrackerService: {
-       BackTracker: {
-          G4ModuleLabel: "largeant"
-          MinimumHitEnergyFraction: 1e-1
-          SimChannelModuleLabel: "daq:simpleSC"
-       }
-    }
-    ChannelStatusService: {
-       ChannelStatusProvider: {
-          AlgName: "SIOVChannelStatusProvider"
+@@ -9077,7 +8847,7 @@
           DatabaseRetrievalAlg: {
              AlgName: "DatabaseRetrievalAlg"
              DBFolderName: "tpc_channelstatus_data"
@@ -1376,38 +590,7 @@
              DBUrl: "https://dbdata0vm.fnal.gov:9443/icarus_con_prod/app/"
              UseSQLite: true
           }
-          UseDB: true
-          UseFile: false
-       }
-       service_provider: "SIOVChannelStatusICARUSService"
-    }
-    DetPedestalService: {
-       DetPedestalRetrievalAlg: {
-          AlgName: "DetPedestalRetrievalAlg"
-          DatabaseRetrievalAlg: {
-             AlgName: "DatabaseRetrievalAlg"
-             DBFolderName: ""
-             DBTag: ""
-             DBUrl: ""
-          }
-          DefaultCollMean: 400
-          DefaultCollRms: 3e-1
-          DefaultIndMean: 2048
-          DefaultIndRms: 3e-1
-          DefaultMeanErr: 0
-          DefaultRmsErr: 0
-          UseDB: false
-          UseFile: false
-       }
-       service_provider: "SIOVDetPedestalService"
-    }
-    DetectorClocksService: {
-       ClockSpeedExternal: 3.125e1
-       ClockSpeedOptical: 500
-       ClockSpeedTPC: 2.5
-       ClockSpeedTrigger: 16
-       DefaultBeamTime: 1500
-       DefaultTrigTime: 1500
+@@ -9116,7 +8886,7 @@
        FramePeriod: 1.6384e3
        G4RefTime: -1500
        InheritClockConfig: true
@@ -1416,201 +599,7 @@
        TriggerOffsetTPC: -340
        service_provider: "DetectorClocksServiceStandard"
     }
-    DetectorPropertiesService: {
-       DriftVelFudgeFactor: 9.9733e-1
-       Efield: [
-          4.938e-1,
-          7.33e-1,
-          9.33e-1
-       ]
-       Electronlifetime: 3000
-       ElectronsToADC: 1.208041e-3
-       IncludeInterPlanePitchInXTickOffsets: false
-       InheritNumberTimeSamples: true
-       NumberTimeSamples: 4096
-       ReadOutWindowSize: 4096
-       SimpleBoundaryProcess: false
-       SternheimerA: 1.956e-1
-       SternheimerCbar: 5.2146
-       SternheimerK: 3
-       SternheimerX0: 2e-1
-       SternheimerX1: 3
-       Temperature: 8.75e1
-       TimeOffsetU: 0
-       TimeOffsetV: 0
-       TimeOffsetY: 0
-       TimeOffsetZ: 0
-       UseIcarusMicrobooneDriftModel: true
-       service_provider: "DetectorPropertiesServiceStandard"
-    }
-    DuplicateEventTracker: {}
-    FileCatalogMetadata: {
-       fileType: "mc"
-       group: "icarus"
-       runType: "physics"
-    }
-    Geometry: {
-       GDML: "icarus_refactored_nounderscore_20230918.gdml"
-       Name: "icarus_v4"
-       SortingParameters: {
-          tool_type: "GeoObjectSorterPMTasTPC"
-       }
-       SurfaceY: 690
-    }
-    GeometryConfigurationWriter: {}
-    LArPropertiesService: {
-       AbsLengthEnergies: [
-          4,
-          5,
-          6,
-          7,
-          8,
-          9,
-          10,
-          11
-       ]
-       AbsLengthSpectrum: [
-          8000,
-          8000,
-          8000,
-          8000,
-          8000,
-          2000,
-          2000,
-          2000
-       ]
-       AlphaScintYield: 16800
-       AlphaScintYieldRatio: 5.6e-1
-       Argon39DecayRate: 0
-       AtomicMass: 3.9948e1
-       AtomicNumber: 18
-       ElectronScintYield: 20000
-       ElectronScintYieldRatio: 2.7e-1
-       EnableCerenkovLight: false
-       ExcitationEnergy: 188
-       FastScintEnergies: [
-          7.2,
-          7.9,
-          8.3,
-          8.6,
-          8.9,
-          9.1,
-          9.3,
-          9.6,
-          9.7,
-          9.8,
-          10,
-          1.02e1,
-          1.03e1,
-          1.06e1,
-          11,
-          1.16e1,
-          1.19e1
-       ]
-       FastScintSpectrum: [
-          0,
-          4e-2,
-          1.2e-1,
-          2.7e-1,
-          4.4e-1,
-@@ -9719,100 +9489,105 @@
-             Filter: {
-                FilterFunction: "(x>0.0) ? gaus(0) : 0.0"
-                FilterParametersVec: [
-                   1,
-                   0,
-                   100
-                ]
-                FilterWidthCorrectionFactor: 1
-                Plane: 2
-                tool_type: "Filter"
-             }
-             Plane: 2
-             TimeScaleFactor: 1
-             UseEmpiricalOffsets: true
-             tool_type: "Response"
-          }
-       }
-       StoreHistograms: true
-    }
-    SpaceChargeService: {
-       EnableCalEfieldSCE: false
-       EnableCalSpatialSCE: false
-       EnableCorrSCE: false
-       EnableSimEfieldSCE: false
-       EnableSimSpatialSCE: false
-       InputFilename: "SCEoffsets/SCEoffsets_ICARUS_E500_voxelTH3.root"
-       RepresentationType: "Voxelized_TH3"
-       service_provider: "SpaceChargeServiceICARUS"
-    }
-    TFileService: {
-       fileName: "Supplemental-%ifb_%tc-%p.root"
-    }
-    TimeTracker: {
-       dbOutput: {
-          filename: "TimingReport.db"
-          overwrite: true
-       }
-       printSummary: true
-    }
-    WireReadout: {
-       Mapper: {
-          WirelessChannels: {
-             CollectionEvenPostChannels: 96
-             CollectionEvenPreChannels: 64
-             CollectionOddPostChannels: 64
-             CollectionOddPreChannels: 96
-             FirstInductionPostChannels: 96
-             FirstInductionPreChannels: 0
-             SecondInductionEvenPostChannels: 64
-             SecondInductionEvenPreChannels: 96
-             SecondInductionOddPostChannels: 96
-             SecondInductionOddPreChannels: 64
-          }
-       }
-       SortingParameters: {
-          tool_type: "WireReadoutSorterStandard"
-       }
-       service_provider: "WireReadoutICARUS"
-    }
-    message: {
-       destinations: {
-          LogErrorFile: {
-             append: false
-             categories: {
-                default: {}
- }
-             filename: "errors.log"
-             threshold: "WARNING"
-             type: "file"
- }
-          LogSeeds: {
-             append: false
-             categories: {
-                NuRandomService: {
-                   limit: -1
-                }
-                default: {
-                   limit: 0
-                }
-             }
-             filename: "randomseeds.log"
-             threshold: "INFO"
-             type: "file"
-          }
-          LogStandardOut: {
-             categories: {
-                NuRandomService: {
-                   limit: 0
-                }
-                default: {}
- }
-             threshold: "INFO"
-             type: "cout"
- }
- }
- }
-    scheduler: {
+@@ -9816,3 +9586,8 @@
        defaultExceptions: false
     }
  }
