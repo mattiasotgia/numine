@@ -1,6 +1,103 @@
 --- CV_FNAL_10_31_00_01//nuedis_stage0_run2_icarus_noyzsim_mc.dump	2026-11-26 10:27:06.722297850 +0100
 +++ CV_CNAF_RicDev//nuedis_stage0_run2_icarus_noyzsim_mc.dump	2026-11-25 17:02:02.255809441 +0100
-@@ -590,7 +590,7 @@
+@@ -493,201 +493,201 @@
+                      Channel: 12306
+                      ChannelIndex: 15
+                      InstanceName: "EW"
+                      OnlyOnGlobalTrigger: true
+                   }
+                ]
+             },
+             {
+                Name: "icaruspmteetop03"
+                SpecialChannels: [
+                   {
+                      Channel: 8211
+                      ChannelIndex: 15
+                      InstanceName: "RWM"
+                      OnlyOnGlobalTrigger: true
+                   }
+                ]
+             },
+             {
+                Name: "icaruspmteebot01"
+                SpecialChannels: [
+                   {
+                      Channel: 24577
+                      ChannelIndex: 15
+                      InstanceName: "globtrg"
+                      OnlyOnGlobalTrigger: true
+                   }
+                ]
+             },
+             {
+                Name: "icaruspmteebot02"
+                SpecialChannels: [
+                   {
+                      Channel: 12290
+                      ChannelIndex: 15
+                      InstanceName: "EW"
+                      OnlyOnGlobalTrigger: true
+                   }
+                ]
+             },
+             {
+                Name: "icaruspmteebot03"
+                SpecialChannels: [
+                   {
+                      Channel: 8195
+                      ChannelIndex: 15
+                      InstanceName: "RWM"
+                      OnlyOnGlobalTrigger: true
+                   }
+                ]
+             }
+          ]
+          DebugTrees: false
+          EWlabel: "daqPMT:EW"
+          RWMlabel: "daqPMT:RWM"
+          SaveWaveforms: false
+          TriggerCorrectionLabel: "daqPMT:globtrg"
+          TriggerLabel: "daqTrigger"
+          module_type: "PMTBeamSignalsExtractor"
+       }
+       crthit: {
+          CrtModuleLabel: "crtdaq"
+          HitAlg: {
+             CSVFile: "data.csv"
+             CoinWindow: 150
+             CrtWindow: 3e6
+             Data: false
+             GlobalT0Offset: 1.6e6
+             PEThresh: 7.5
+             PropDelay: 6.2e-2
+             QPed: 60
+             QSlope: 70
+             SiPMtoFEBdelay: 0
+             UseReadoutWindow: false
+             Verbose: false
+             outCSVFile: false
+             topGain: 110
+             topPed: 160
+          }
+          TriggerLabel: "daqTrigger"
+          module_type: "icaruscode/CRT/CRTSimHitProducer"
+       }
+       crtpmt: {
+          BNBBeamGateMax: 2300
+          BNBBeamGateMin: -550
+          BNBinBeamMax: 1300
+          BNBinBeamMin: -300
+          CrtHitModuleLabel: "crthit"
+          GlobalT0Offset: 1.599957e6
+          MatchBottomCRT: false
+          NuMIBeamGateMax: 10000
+          NuMIBeamGateMin: -550
+          NuMIinBeamMax: 9100
+          NuMIinBeamMin: -300
+          OpFlashModuleLabels: [
+             "opflashCryoE",
+             "opflashCryoW"
           ]
           PMTADCThresh: 400
           TimeOfFlightInterval: 100
@@ -9,7 +106,201 @@
           module_type: "icaruscode/CRT/CRTPMTMatchingProducer"
           nOpHitToTrigger: 5
        }
-@@ -2336,7 +2336,6 @@
+       crttrack: {
+          DataLabelHits: "crthit"
+          StoreTrack: 1
+          TrackAlg: {
+             AverageHitDistance: 30
+             DistanceLimit: 25
+             TimeLimit: 1e-1
+          }
+          TrackMethodType: 4
+          UseTopPlane: false
+          module_type: "icaruscode/CRT/CRTTrackProducer"
+       }
+       daqCRT: {
+          FEB_delay_side: [
+             [
+                31,
+                240
+             ],
+             [
+                32,
+                260
+             ],
+             [
+                33,
+                280
+             ],
+             [
+                34,
+                330
+             ],
+             [
+                35,
+                350
+             ],
+             [
+                36,
+                370
+             ],
+             [
+                25,
+                240
+             ],
+             [
+                26,
+                260
+             ],
+             [
+                27,
+                280
+             ],
+             [
+                28,
+                330
+             ],
+             [
+                29,
+                350
+             ],
+             [
+                30,
+                370
+             ],
+             [
+                43,
+                230
+             ],
+             [
+                44,
+                250
+             ],
+             [
+                45,
+                270
+             ],
+             [
+                46,
+                316
+             ],
+             [
+                47,
+                336
+             ],
+             [
+                48,
+                356
+             ],
+             [
+                37,
+                230
+             ],
+             [
+                38,
+                250
+             ],
+             [
+                39,
+                270
+@@ -2239,1471 +2239,1417 @@
+                ind_threshold_factor: 3
+                raw_input_label: "MCDecodeTPCROI:PHYSCRATEDATATPCWE"
+                reality: "data"
+                signal_output_form: "dense"
+                tpc_volume_label: 2
+             }
+             plugins: [
+                "WireCellGen",
+                "WireCellSigProc",
+                "WireCellRoot",
+                "WireCellPgraph",
+                "WireCellLarsoft",
+                "WireCellHio",
+                "WireCellPytorch"
+             ]
+             structs: {
+                Gaus_wide_sigma: 6e-2
+                Wiener_tight_U_power: 4.4
+                Wiener_tight_U_sigma: 6.5e-2
+                Wiener_tight_V_power: 2.6
+                Wiener_tight_V_sigma: 6.5e-2
+                Wiener_tight_W_power: 3.4
+                Wiener_tight_W_sigma: 7e-2
+                Wire_col_sigma: 2.2
+                Wire_ind_sigma: 4e-1
+                gain0: 1.705212e1
+                gain1: 1.21420344e1
+                gain2: 1.30261362e1
+                gain_ADC_per_e: 1.214e-2
+                shaping0: 1.3
+                shaping1: 1.45
+                shaping2: 1.3
+             }
+             tool_type: "WCLS"
+          }
+       }
+       decon2droiWW: {
+          module_type: "WireCellToolkit"
+          wcls_main: {
+             apps: [
+                "Pgrapher"
+             ]
+             configs: [
+                "pgrapher/experiment/icarus/wcls-decode-to-sig-twofaced.jsonnet"
+             ]
+             inputers: [
+                "wclsRawFrameSource:rfsrc3"
+             ]
+             loglevels: [
+                "debug",
+                "pgraph:info"
+             ]
+             logsinks: [
+                "stdout"
+             ]
+             outputers: [
+                "wclsFrameSaver:spsaver3"
+             ]
+             params: {
+                col_threshold_factor: 3
+                epoch: "after"
+                file_rcresp: "icarus_fnal_rc_tail.json"
+                files_fields: "icarus_fnal_fit_ks_P0nom.json.bz2"
+                ind_threshold_factor: 3
+                raw_input_label: "MCDecodeTPCROI:PHYSCRATEDATATPCWW"
+                reality: "data"
+                signal_output_form: "dense"
+                tpc_volume_label: 3
+             }
+             plugins: [
+                "WireCellGen",
+                "WireCellSigProc",
+                "WireCellRoot",
+                "WireCellPgraph",
+                "WireCellLarsoft",
+                "WireCellHio",
+                "WireCellPytorch"
+             ]
+             structs: {
+                Gaus_wide_sigma: 6e-2
+                Wiener_tight_U_power: 4.4
+                Wiener_tight_U_sigma: 6.5e-2
+                Wiener_tight_V_power: 2.6
+                Wiener_tight_V_sigma: 6.5e-2
+                Wiener_tight_W_power: 3.4
+                Wiener_tight_W_sigma: 7e-2
+                Wire_col_sigma: 2.2
+                Wire_ind_sigma: 4e-1
+                gain0: 1.705212e1
+                gain1: 1.21420344e1
+                gain2: 1.30261362e1
+                gain_ADC_per_e: 1.214e-2
+                shaping0: 1.3
+                shaping1: 1.45
+                shaping2: 1.3
+             }
+             tool_type: "WCLS"
           }
        }
        emuTrigger: {
@@ -17,7 +308,8 @@
           BeamGates: "shifted"
           EmitEmpty: true
           ExtraInfo: true
-@@ -2345,9 +2344,8 @@
+          Pattern: {
+             inMainWindow: 3
              sumOfOppositeWindows: 5
           }
           Thresholds: [
@@ -28,7 +320,13 @@
           TriggerGatesTag: "pmttriggerwindows"
           TriggerTimeResolution: "8 ns"
           module_type: "TriggerSimulationOnGates"
-@@ -2361,18 +2359,14 @@
+       }
+       gaushit1dTPCEE: {
+          AllHitsInstanceName: ""
+          AreaMethod: 0
+          AreaNorms: [
+             1,
+             1,
              1
           ]
           CalDataModuleLabel: "decon1droi"
@@ -51,7 +349,9 @@
              ]
              MinPulseSigma: [
                 1,
-@@ -2382,45 +2376,41 @@
+                1,
+                1
+             ]
           }
           HitFinderToolVec: {
              CandidateHitsPlane0: {
@@ -108,7 +408,17 @@
              tool_type: "PeakFitterMrqdt"
           }
           PulseHeightCuts: [
-@@ -2438,7 +2428,8 @@
+             3,
+             3,
+             3
+          ]
+          PulseRatioCuts: [
+             3.5e-1,
+             4e-1,
+             2e-1
+          ]
+          PulseWidthCuts: [
+             2,
              1.5,
              1
           ]
@@ -118,7 +428,10 @@
        }
        gaushit1dTPCEW: {
           AllHitsInstanceName: ""
-@@ -2449,18 +2440,14 @@
+          AreaMethod: 0
+          AreaNorms: [
+             1,
+             1,
              1
           ]
           CalDataModuleLabel: "decon1droi"
@@ -141,7 +454,9 @@
              ]
              MinPulseSigma: [
                 1,
-@@ -2470,45 +2457,41 @@
+                1,
+                1
+             ]
           }
           HitFinderToolVec: {
              CandidateHitsPlane0: {
@@ -198,7 +513,17 @@
              tool_type: "PeakFitterMrqdt"
           }
           PulseHeightCuts: [
-@@ -2526,7 +2509,8 @@
+             3,
+             3,
+             3
+          ]
+          PulseRatioCuts: [
+             3.5e-1,
+             4e-1,
+             2e-1
+          ]
+          PulseWidthCuts: [
+             2,
              1.5,
              1
           ]
@@ -208,7 +533,10 @@
        }
        gaushit1dTPCWE: {
           AllHitsInstanceName: ""
-@@ -2537,18 +2521,14 @@
+          AreaMethod: 0
+          AreaNorms: [
+             1,
+             1,
              1
           ]
           CalDataModuleLabel: "decon1droi"
@@ -231,7 +559,9 @@
              ]
              MinPulseSigma: [
                 1,
-@@ -2558,45 +2538,41 @@
+                1,
+                1
+             ]
           }
           HitFinderToolVec: {
              CandidateHitsPlane0: {
@@ -288,7 +618,17 @@
              tool_type: "PeakFitterMrqdt"
           }
           PulseHeightCuts: [
-@@ -2614,7 +2590,8 @@
+             3,
+             3,
+             3
+          ]
+          PulseRatioCuts: [
+             3.5e-1,
+             4e-1,
+             2e-1
+          ]
+          PulseWidthCuts: [
+             2,
              1.5,
              1
           ]
@@ -298,7 +638,10 @@
        }
        gaushit1dTPCWW: {
           AllHitsInstanceName: ""
-@@ -2625,18 +2602,14 @@
+          AreaMethod: 0
+          AreaNorms: [
+             1,
+             1,
              1
           ]
           CalDataModuleLabel: "decon1droi"
@@ -321,7 +664,9 @@
              ]
              MinPulseSigma: [
                 1,
-@@ -2646,45 +2619,41 @@
+                1,
+                1
+             ]
           }
           HitFinderToolVec: {
              CandidateHitsPlane0: {
@@ -378,7 +723,17 @@
              tool_type: "PeakFitterMrqdt"
           }
           PulseHeightCuts: [
-@@ -2702,7 +2671,8 @@
+             3,
+             3,
+             3
+          ]
+          PulseRatioCuts: [
+             3.5e-1,
+             4e-1,
+             2e-1
+          ]
+          PulseWidthCuts: [
+             2,
              1.5,
              1
           ]
@@ -388,7 +743,10 @@
        }
        gaushit2dTPCEE: {
           AllHitsInstanceName: ""
-@@ -2713,18 +2683,14 @@
+          AreaMethod: 0
+          AreaNorms: [
+             1,
+             1,
              1
           ]
           CalDataModuleLabel: "decon1droi"
@@ -411,7 +769,9 @@
              ]
              MinPulseSigma: [
                 1,
-@@ -2734,45 +2700,41 @@
+                1,
+                1
+             ]
           }
           HitFinderToolVec: {
              CandidateHitsPlane0: {
@@ -468,7 +828,17 @@
              tool_type: "PeakFitterMrqdt"
           }
           PulseHeightCuts: [
-@@ -2790,7 +2752,8 @@
+             3,
+             3,
+             3
+          ]
+          PulseRatioCuts: [
+             3.5e-1,
+             4e-1,
+             2e-1
+          ]
+          PulseWidthCuts: [
+             2,
              1.5,
              1
           ]
@@ -478,7 +848,10 @@
        }
        gaushit2dTPCEW: {
           AllHitsInstanceName: ""
-@@ -2801,18 +2764,14 @@
+          AreaMethod: 0
+          AreaNorms: [
+             1,
+             1,
              1
           ]
           CalDataModuleLabel: "decon1droi"
@@ -501,7 +874,9 @@
              ]
              MinPulseSigma: [
                 1,
-@@ -2822,45 +2781,41 @@
+                1,
+                1
+             ]
           }
           HitFinderToolVec: {
              CandidateHitsPlane0: {
@@ -558,7 +933,17 @@
              tool_type: "PeakFitterMrqdt"
           }
           PulseHeightCuts: [
-@@ -2878,7 +2833,8 @@
+             3,
+             3,
+             3
+          ]
+          PulseRatioCuts: [
+             3.5e-1,
+             4e-1,
+             2e-1
+          ]
+          PulseWidthCuts: [
+             2,
              1.5,
              1
           ]
@@ -568,7 +953,10 @@
        }
        gaushit2dTPCWE: {
           AllHitsInstanceName: ""
-@@ -2889,18 +2845,14 @@
+          AreaMethod: 0
+          AreaNorms: [
+             1,
+             1,
              1
           ]
           CalDataModuleLabel: "decon1droi"
@@ -591,7 +979,9 @@
              ]
              MinPulseSigma: [
                 1,
-@@ -2910,45 +2862,41 @@
+                1,
+                1
+             ]
           }
           HitFinderToolVec: {
              CandidateHitsPlane0: {
@@ -648,7 +1038,17 @@
              tool_type: "PeakFitterMrqdt"
           }
           PulseHeightCuts: [
-@@ -2966,7 +2914,8 @@
+             3,
+             3,
+             3
+          ]
+          PulseRatioCuts: [
+             3.5e-1,
+             4e-1,
+             2e-1
+          ]
+          PulseWidthCuts: [
+             2,
              1.5,
              1
           ]
@@ -658,7 +1058,10 @@
        }
        gaushit2dTPCWW: {
           AllHitsInstanceName: ""
-@@ -2977,18 +2926,14 @@
+          AreaMethod: 0
+          AreaNorms: [
+             1,
+             1,
              1
           ]
           CalDataModuleLabel: "decon1droi"
@@ -681,7 +1084,9 @@
              ]
              MinPulseSigma: [
                 1,
-@@ -2998,45 +2943,41 @@
+                1,
+                1
+             ]
           }
           HitFinderToolVec: {
              CandidateHitsPlane0: {
@@ -738,7 +1143,17 @@
              tool_type: "PeakFitterMrqdt"
           }
           PulseHeightCuts: [
-@@ -3054,7 +2995,8 @@
+             3,
+             3,
+             3
+          ]
+          PulseRatioCuts: [
+             3.5e-1,
+             4e-1,
+             2e-1
+          ]
+          PulseWidthCuts: [
+             2,
              1.5,
              1
           ]
@@ -748,7 +1163,15 @@
        }
        gausshitTPCEE: {
           AllHitsInstanceName: ""
-@@ -3070,9 +3012,9 @@
+          AreaMethod: 0
+          AreaNorms: [
+             1,
+             1,
+             1
+          ]
+          CalDataModuleLabel: "caldata"
+          Chi2NDF: 500
+          FilterHits: false
           HitFilterAlg: {
              AlgName: "HitFilterAlg"
              MinPulseHeight: [
@@ -761,7 +1184,9 @@
              ]
              MinPulseSigma: [
                 1,
-@@ -3082,21 +3024,18 @@
+                1,
+                1
+             ]
           }
           HitFinderToolVec: {
              CandidateHitsPlane0: {
@@ -788,7 +1213,9 @@
                 tool_type: "CandHitStandard"
              }
           }
-@@ -3106,14 +3045,15 @@
+          LongMaxHits: [
+             25,
+             25,
              25
           ]
           LongPulseWidth: [
@@ -808,7 +1235,36 @@
              PeakAmpRange: 2
              PeakRangeFact: 2
              tool_type: "PeakFitterMrqdt"
-@@ -3150,9 +3090,9 @@
+          }
+          PulseHeightCuts: [
+             3,
+             3,
+             3
+          ]
+          PulseRatioCuts: [
+             3.5e-1,
+             4e-1,
+             2e-1
+          ]
+          PulseWidthCuts: [
+             2,
+             1.5,
+             1
+          ]
+          TryNplus1Fits: false
+          module_type: "GaussHitFinderSBN"
+       }
+       gausshitTPCEW: {
+          AllHitsInstanceName: ""
+          AreaMethod: 0
+          AreaNorms: [
+             1,
+             1,
+             1
+          ]
+          CalDataModuleLabel: "caldata"
+          Chi2NDF: 500
+          FilterHits: false
           HitFilterAlg: {
              AlgName: "HitFilterAlg"
              MinPulseHeight: [
@@ -821,7 +1277,9 @@
              ]
              MinPulseSigma: [
                 1,
-@@ -3162,21 +3102,18 @@
+                1,
+                1
+             ]
           }
           HitFinderToolVec: {
              CandidateHitsPlane0: {
@@ -848,7 +1306,9 @@
                 tool_type: "CandHitStandard"
              }
           }
-@@ -3186,14 +3123,15 @@
+          LongMaxHits: [
+             25,
+             25,
              25
           ]
           LongPulseWidth: [
@@ -868,7 +1328,36 @@
              PeakAmpRange: 2
              PeakRangeFact: 2
              tool_type: "PeakFitterMrqdt"
-@@ -3230,9 +3168,9 @@
+          }
+          PulseHeightCuts: [
+             3,
+             3,
+             3
+          ]
+          PulseRatioCuts: [
+             3.5e-1,
+             4e-1,
+             2e-1
+          ]
+          PulseWidthCuts: [
+             2,
+             1.5,
+             1
+          ]
+          TryNplus1Fits: false
+          module_type: "GaussHitFinderSBN"
+       }
+       gausshitTPCWE: {
+          AllHitsInstanceName: ""
+          AreaMethod: 0
+          AreaNorms: [
+             1,
+             1,
+             1
+          ]
+          CalDataModuleLabel: "caldata"
+          Chi2NDF: 500
+          FilterHits: false
           HitFilterAlg: {
              AlgName: "HitFilterAlg"
              MinPulseHeight: [
@@ -881,7 +1370,9 @@
              ]
              MinPulseSigma: [
                 1,
-@@ -3242,21 +3180,18 @@
+                1,
+                1
+             ]
           }
           HitFinderToolVec: {
              CandidateHitsPlane0: {
@@ -908,7 +1399,9 @@
                 tool_type: "CandHitStandard"
              }
           }
-@@ -3266,14 +3201,15 @@
+          LongMaxHits: [
+             25,
+             25,
              25
           ]
           LongPulseWidth: [
@@ -928,7 +1421,36 @@
              PeakAmpRange: 2
              PeakRangeFact: 2
              tool_type: "PeakFitterMrqdt"
-@@ -3310,9 +3246,9 @@
+          }
+          PulseHeightCuts: [
+             3,
+             3,
+             3
+          ]
+          PulseRatioCuts: [
+             3.5e-1,
+             4e-1,
+             2e-1
+          ]
+          PulseWidthCuts: [
+             2,
+             1.5,
+             1
+          ]
+          TryNplus1Fits: false
+          module_type: "GaussHitFinderSBN"
+       }
+       gausshitTPCWW: {
+          AllHitsInstanceName: ""
+          AreaMethod: 0
+          AreaNorms: [
+             1,
+             1,
+             1
+          ]
+          CalDataModuleLabel: "caldata"
+          Chi2NDF: 500
+          FilterHits: false
           HitFilterAlg: {
              AlgName: "HitFilterAlg"
              MinPulseHeight: [
@@ -941,7 +1463,9 @@
              ]
              MinPulseSigma: [
                 1,
-@@ -3322,21 +3258,18 @@
+                1,
+                1
+             ]
           }
           HitFinderToolVec: {
              CandidateHitsPlane0: {
@@ -968,7 +1492,9 @@
                 tool_type: "CandHitStandard"
              }
           }
-@@ -3346,14 +3279,15 @@
+          LongMaxHits: [
+             25,
+             25,
              25
           ]
           LongPulseWidth: [
@@ -988,7 +1514,24 @@
              PeakAmpRange: 2
              PeakRangeFact: 2
              tool_type: "PeakFitterMrqdt"
-@@ -3378,8 +3312,8 @@
+          }
+          PulseHeightCuts: [
+             3,
+             3,
+             3
+          ]
+          PulseRatioCuts: [
+             3.5e-1,
+             4e-1,
+             2e-1
+          ]
+          PulseWidthCuts: [
+             2,
+             1.5,
+             1
+          ]
+          TryNplus1Fits: false
+          module_type: "GaussHitFinderSBN"
        }
        mcophit: {
           MergePeriod: 1e-2
@@ -999,7 +1542,9 @@
           SimPhotonsProducer: "shifted"
           module_type: "ICARUSMCOpHit"
        }
-@@ -3389,7 +3323,7 @@
+       opdetonbeam: {
+          SelectInterval: {
+             Duration: "26 us"
              Start: "-7 us"
           }
           TimeReference: "BeamGate"
@@ -1008,7 +1553,10 @@
           Waveforms: "shifted"
           module_type: "CopyBeamTimePMTwaveforms"
        }
-@@ -3400,12 +3334,12 @@
+       opflashCryoE: {
+          AlgoConfig: {
+             DebugMode: false
+             HitVetoRangeEnd: []
              HitVetoRangeStart: []
              IntegralTime: 1
              MinMultCoinc: 5
@@ -1023,7 +1571,7 @@
              PEThresholdHit: 1
              PreSample: 2e-2
              TimeResolution: 1e-2
-@@ -3413,6 +3347,9 @@
+             VetoSize: 1
           }
           FlashFinderAlgo: "SimpleFlashAlgo"
           OpHitProducer: "ophit"
@@ -1033,7 +1581,9 @@
           module_type: "ICARUSFlashFinder"
        }
        opflashCryoW: {
-@@ -3422,12 +3359,12 @@
+          AlgoConfig: {
+             DebugMode: false
+             HitVetoRangeEnd: []
              HitVetoRangeStart: []
              IntegralTime: 1
              MinMultCoinc: 5
@@ -1048,7 +1598,7 @@
              PEThresholdHit: 1
              PreSample: 2e-2
              TimeResolution: 1e-2
-@@ -3435,6 +3372,9 @@
+             VetoSize: 1
           }
           FlashFinderAlgo: "SimpleFlashAlgo"
           OpHitProducer: "ophit"
@@ -1058,7 +1608,17 @@
           module_type: "ICARUSFlashFinder"
        }
        ophit: {
-@@ -3452,10 +3392,11 @@
+          AreaToPE: true
+          ChannelMasks: []
+          GenModule: "generator"
+          HitAlgoPset: {
+             ADCThreshold: 10
+             EndADCThreshold: 2
+             EndNSigmaThreshold: 1
+             MinPulseWidth: 5
+             NSigmaThreshold: 3
+             Name: "SlidingWindow"
+             NumPostSample: 10
              NumPreSample: 5
              PositivePolarity: false
              TailADCThreshold: 6
@@ -1071,7 +1631,16 @@
           InputModule: "shifted"
           PedAlgoPset: {
              DiffADCCounts: 2
-@@ -3472,12 +3413,13 @@
+             DiffBetweenGapsThreshold: 2
+             MaxSigma: 5
+             NPrePostSamples: 5
+             Name: "RollingMean"
+             PedRangeMax: 16000
+             PedRangeMin: 14000
+             SampleSize: 20
+             Threshold: 1.5
+          }
+          RiseTimeCalculator: {
              PeakRatio: 1.5e-1
              tool_type: "RiseTimeThreshold"
           }
@@ -1089,7 +1658,25 @@
        }
        ophitfull: {
           CorrectCosmics: true
-@@ -3503,10 +3445,11 @@
+          CorrectLaser: true
+          InputLabels: [
+             "ophitfulluncorrected"
+          ]
+          Verbose: false
+          module_type: "OpHitTimingCorrection"
+       }
+       ophitfulluncorrected: {
+          AreaToPE: true
+          ChannelMasks: []
+          GenModule: "generator"
+          HitAlgoPset: {
+             ADCThreshold: 10
+             EndADCThreshold: 2
+             EndNSigmaThreshold: 1
+             MinPulseWidth: 5
+             NSigmaThreshold: 3
+             Name: "SlidingWindow"
+             NumPostSample: 10
              NumPreSample: 5
              PositivePolarity: false
              TailADCThreshold: 6
@@ -1102,7 +1689,17 @@
           InputModule: "daqPMT"
           OutputFile: "ophit_debug.root"
           PedAlgoPset: {
-@@ -3524,12 +3467,13 @@
+             DiffADCCounts: 2
+             DiffBetweenGapsThreshold: 2
+             MaxSigma: 5
+             NPrePostSamples: 5
+             Name: "RollingMean"
+             PedRangeMax: 16000
+             PedRangeMin: 14000
+             SampleSize: 20
+             Threshold: 1.5
+          }
+          RiseTimeCalculator: {
              PeakRatio: 1.5e-1
              tool_type: "RiseTimeThreshold"
           }
@@ -1119,7 +1716,16 @@
        }
        ophituncorrected: {
           AreaToPE: true
-@@ -3546,10 +3490,11 @@
+          ChannelMasks: []
+          GenModule: "generator"
+          HitAlgoPset: {
+             ADCThreshold: 10
+             EndADCThreshold: 2
+             EndNSigmaThreshold: 1
+             MinPulseWidth: 5
+             NSigmaThreshold: 3
+             Name: "SlidingWindow"
+             NumPostSample: 10
              NumPreSample: 5
              PositivePolarity: false
              TailADCThreshold: 6
@@ -1132,7 +1738,16 @@
           InputModule: "daqPMT"
           PedAlgoPset: {
              DiffADCCounts: 2
-@@ -3566,12 +3511,13 @@
+             DiffBetweenGapsThreshold: 2
+             MaxSigma: 5
+             NPrePostSamples: 5
+             Name: "RollingMean"
+             PedRangeMax: 16000
+             PedRangeMin: 14000
+             SampleSize: 20
+             Threshold: 1.5
+          }
+          RiseTimeCalculator: {
              PeakRatio: 1.5e-1
              tool_type: "RiseTimeThreshold"
           }
@@ -1150,7 +1765,26 @@
        }
        pmtbaselines: {
           AlgoParams: {
-@@ -3598,7 +3544,7 @@
+             AcceptedSampleRangeRMS: 5
+             ExcessSampleLimit: 4
+          }
+          ExcludeSpillTimeIfMoreThan: 8
+          OpticalWaveforms: "shifted"
+          PlotBaselines: false
+          PretriggerBufferFractionForBaseline: 5e-1
+          PretriggerBufferSize: 500
+          module_type: "PMTWaveformBaselinesFromChannelData"
+       }
+       pmtconfig: {
+          AssignOfflineChannelIDs: true
+          module_type: "PMTconfigurationExtraction"
+       }
+       pmtconfigbaselines: {
+          OpticalWaveforms: "daqPMT"
+          OutputCategory: "PMTWaveformBaselines"
+          PMTconfigurationTag: "pmtconfig"
+          PlotBaselines: false
+          PrintBaselines: false
           module_type: "PMTWaveformBaselinesFromReadoutConfiguration"
        }
        pmtfixedthr: {
@@ -1159,7 +1793,7 @@
           NChannels: 360
           OpticalWaveforms: "shifted"
           OutputCategory: "DiscriminatePMTwaveforms"
-@@ -3606,7 +3552,7 @@
+          TriggerGateBuilder: {
              ChannelThresholds: [
                 18,
                 300,
@@ -1168,7 +1802,201 @@
                 600
              ]
              GateDuration: "160 ns"
-@@ -4376,7 +4322,7 @@
+             tool_type: "FixedTriggerGateBuilderTool"
+          }
+          module_type: "DiscriminatePMTwaveforms"
+       }
+       pmtlvdsgates: {
+          ChannelPairing: [
+             [
+                0,
+                2
+             ],
+             [
+                1,
+                4
+             ],
+             [
+                3,
+                6
+             ],
+             [
+                5,
+                8
+             ],
+             [
+                7,
+                9
+             ],
+             [
+                10,
+                12
+             ],
+             [
+                11,
+                14
+             ],
+             [
+                13
+             ],
+             [
+                15,
+                18
+             ],
+             [
+                16
+             ],
+             [
+                17,
+                19
+             ],
+             [
+                20,
+                22
+             ],
+             [
+                21,
+                24
+             ],
+             [
+                23,
+                26
+             ],
+             [
+                25,
+                28
+             ],
+             [
+                27,
+                29
+             ],
+             [
+                30,
+                32
+             ],
+             [
+                31,
+                34
+             ],
+             [
+                33,
+                36
+             ],
+             [
+                35,
+                38
+             ],
+             [
+                37,
+                39
+             ],
+             [
+                40,
+                42
+             ],
+             [
+                41,
+                44
+             ],
+             [
+@@ -4279,614 +4225,597 @@
+                319
+             ],
+             [
+                320,
+                322
+             ],
+             [
+                321,
+                324
+             ],
+             [
+                323,
+                326
+             ],
+             [
+                325,
+                328
+             ],
+             [
+                327,
+                329
+             ],
+             [
+                330,
+                332
+             ],
+             [
+                331,
+                334
+             ],
+             [
+                333,
+                336
+             ],
+             [
+                335,
+                338
+             ],
+             [
+                337,
+                339
+             ],
+             [
+                340,
+                342
+             ],
+             [
+                341,
+                344
+             ],
+             [
+                343
+             ],
+             [
+                345,
+                348
+             ],
+             [
+                346
+             ],
+             [
+                347,
+                349
+             ],
+             [
+                350,
+                352
+             ],
+             [
+                351,
+                354
+             ],
+             [
+                353,
+                356
+             ],
+             [
+                355,
+                358
+             ],
+             [
+                357,
+                359
+             ]
+          ]
+          CombinationMode: "OR"
+          IgnoreChannels: [
+             70,
+             106,
+             217,
+             54,
+             58,
+             67,
+             98,
+             112,
+             153,
+             254
           ]
           LogCategory: "LVDSgates"
           Thresholds: [
@@ -1177,7 +2005,34 @@
           ]
           TriggerGatesTag: "pmtfixedthr"
           module_type: "LVDSgates"
-@@ -4411,7 +4357,7 @@
+       }
+       pmtthr: {
+          Baselines: "pmtconfigbaselines"
+          NChannels: 360
+          OpticalWaveforms: "daqPMT"
+          OutputCategory: "DiscriminatePMTwaveforms"
+          ThresholdsFromPMTconfig: "pmtconfig"
+          TriggerGateBuilder: {
+             ChannelThresholds: [
+                0
+             ]
+             GateDuration: "160 ns"
+             tool_type: "FixedTriggerGateBuilderTool"
+          }
+          module_type: "DiscriminatePMTwaveformsByChannel"
+       }
+       pmttriggerwindows: {
+          MissingChannels: [
+             70,
+             106,
+             217,
+             54,
+             58,
+             67,
+             98,
+             112,
+             153,
+             254
           ]
           Stride: 15
           Thresholds: [
@@ -1186,7 +2041,178 @@
           ]
           TriggerGatesTag: "pmtlvdsgates"
           WindowSize: 30
-@@ -4590,10 +4536,11 @@
+          module_type: "SlidingWindowTrigger"
+       }
+       purityana0: {
+          CryostatFCL: 0
+          FillAnaTuple: false
+          PersistPurityInfo: false
+          PlaneFCL: 2
+          RawModuleLabel: [
+             "MCDecodeTPCROI:PHYSCRATEDATATPCWW",
+             "MCDecodeTPCROI:PHYSCRATEDATATPCWE",
+             "MCDecodeTPCROI:PHYSCRATEDATATPCEW",
+             "MCDecodeTPCROI:PHYSCRATEDATATPCEE"
+          ]
+          ThresholdFCL: 3
+          ValoreTauFCL: 600000
+          module_type: "ICARUSPurityDQM"
+       }
+       purityana1: {
+          CryostatFCL: 1
+          FillAnaTuple: false
+          PersistPurityInfo: false
+          PlaneFCL: 2
+          RawModuleLabel: [
+             "MCDecodeTPCROI:PHYSCRATEDATATPCWW",
+             "MCDecodeTPCROI:PHYSCRATEDATATPCWE",
+             "MCDecodeTPCROI:PHYSCRATEDATATPCEW",
+             "MCDecodeTPCROI:PHYSCRATEDATATPCEE"
+          ]
+          ThresholdFCL: 3
+          ValoreTauFCL: 600000
+          module_type: "ICARUSPurityDQM"
+       }
+       roifinder1d: {
+          CorrectROIBaseline: false
+          DaignosticOutput: false
+          LeadTrail: 0
+          MaxSizeForCorrection: 512
+          MinSizeForCorrection: 12
+          OutInstanceLabelVec: [
+             "PHYSCRATEDATATPCWW",
+             "PHYSCRATEDATATPCWE",
+             "PHYSCRATEDATATPCEW",
+             "PHYSCRATEDATATPCEE"
+          ]
+          OutputHistograms: false
+          OutputMorphed: false
+          ROIFinderToolVec: {
+             ROIFinderPlane0: {
+                Plane: 0
+                StructuringElement: [
+                   25,
+                   5
+                ]
+                Threshold: [
+                   7.5,
+                   7.5,
+                   6
+                ]
+                tool_type: "ROIMorphological2D"
+             }
+             ROIFinderPlane1: {
+                Plane: 1
+                StructuringElement: [
+                   25,
+                   5
+                ]
+                Threshold: [
+                   7.5,
+                   7.5,
+                   6
+                ]
+                tool_type: "ROIMorphological2D"
+             }
+             ROIFinderPlane2: {
+                Plane: 2
+                StructuringElement: [
+                   25,
+                   5
+                ]
+                Threshold: [
+                   7.5,
+                   7.5,
+                   6
+                ]
+                tool_type: "ROIMorphological2D"
+             }
+          }
+          WireModuleLabelVec: [
+             "decon1droi:PHYSCRATEDATATPCWW",
+             "decon1droi:PHYSCRATEDATATPCWE",
+             "decon1droi:PHYSCRATEDATATPCEW",
+             "decon1droi:PHYSCRATEDATATPCEE"
+          ]
+          module_type: "ROIFinder"
+       }
+       roifinder2d: {
+          CorrectROIBaseline: false
+          DaignosticOutput: false
+          LeadTrail: 0
+          MaxSizeForCorrection: 512
+          MinSizeForCorrection: 12
+          OutInstanceLabelVec: [
+             "PHYSCRATEDATATPCWW",
+             "PHYSCRATEDATATPCWE",
+             "PHYSCRATEDATATPCEW",
+             "PHYSCRATEDATATPCEE"
+          ]
+          OutputHistograms: false
+          OutputMorphed: false
+          ROIFinderToolVec: {
+             ROIFinderPlane0: {
+                Plane: 0
+                ROILabelVec: [
+                   "roifinder1d:PHYSCRATEDATATPCWW",
+                   "roifinder1d:PHYSCRATEDATATPCWE",
+                   "roifinder1d:PHYSCRATEDATATPCEW",
+                   "roifinder1d:PHYSCRATEDATATPCEE"
+                ]
+                tool_type: "ROIFromDecoder"
+             }
+             ROIFinderPlane1: {
+                Plane: 1
+                ROILabelVec: [
+                   "roifinder1d:PHYSCRATEDATATPCWW",
+                   "roifinder1d:PHYSCRATEDATATPCWE",
+                   "roifinder1d:PHYSCRATEDATATPCEW",
+                   "roifinder1d:PHYSCRATEDATATPCEE"
+                ]
+                tool_type: "ROIFromDecoder"
+             }
+             ROIFinderPlane2: {
+                Plane: 2
+                ROILabelVec: [
+                   "roifinder1d:PHYSCRATEDATATPCWW",
+                   "roifinder1d:PHYSCRATEDATATPCWE",
+                   "roifinder1d:PHYSCRATEDATATPCEW",
+                   "roifinder1d:PHYSCRATEDATATPCEE"
+                ]
+                tool_type: "ROIFromDecoder"
+             }
+          }
+          WireModuleLabelVec: [
+             "decon2droiWW:looseLf",
+             "decon2droiWE:looseLf",
+             "decon2droiEW:looseLf",
+             "decon2droiEE:looseLf"
+          ]
+          module_type: "ROIFinder"
+       }
+       simChannelROI: {
+          DaignosticOutput: false
+          OutInstanceLabelVec: [
+             "All"
+          ]
+          SimChannelLabelVec: [
+             "daq:simpleSC"
+          ]
+          WireModuleLabelVec: [
+             "largeant"
+          ]
+          module_type: "SimChannelROI"
+       }
+       triggerconfig: {
+          module_type: "TriggerConfigurationExtraction"
+       }
+       triggersimgates: {
+          BeamGateTag: "beamgate"
+          Changes: [
+             {
+                Select: {
+                   Types: [
+                      "BNB"
                    ]
                 }
                 Start: {
@@ -1200,7 +2226,9 @@
                 }
              },
              {
-@@ -4603,10 +4550,11 @@
+                Select: {
+                   Types: [
+                      "NuMI"
                    ]
                 }
                 Start: {
@@ -1214,7 +2242,61 @@
                 }
              }
           ]
-@@ -4668,7 +4616,7 @@
+          module_type: "DummyProducer"
+       }
+       wire2channelroi: {
+          DiagnosticOutput: false
+          OutInstanceLabelVec: [
+             "PHYSCRATEDATATPCWW",
+             "PHYSCRATEDATATPCWE",
+             "PHYSCRATEDATATPCEW",
+             "PHYSCRATEDATATPCEE"
+          ]
+          WireModuleLabelVec: [
+             "roifinder1d:PHYSCRATEDATATPCWW",
+             "roifinder1d:PHYSCRATEDATATPCWE",
+             "roifinder1d:PHYSCRATEDATATPCEW",
+             "roifinder1d:PHYSCRATEDATATPCEE"
+          ]
+          module_type: "WireToChannelROI"
+       }
+       wire2channelroi2d: {
+          DiagnosticOutput: false
+          OutInstanceLabelVec: [
+             "PHYSCRATEDATATPCEE",
+             "PHYSCRATEDATATPCEW",
+             "PHYSCRATEDATATPCWE",
+             "PHYSCRATEDATATPCWW"
+          ]
+          WireModuleLabelVec: [
+             "decon2droiEE:gauss",
+             "decon2droiEW:gauss",
+             "decon2droiWE:gauss",
+             "decon2droiWW:gauss"
+          ]
+          module_type: "WireToChannelROI"
+       }
+    }
+    streamROOT: [
+       "rootOutput"
+    ]
+    trigger_paths: [
+       "path"
+    ]
+ }
+ process_name: "MCstage0"
+ services: {
+    AuxDetGeometry: {
+       GDML: "icarus_refactored_nounderscore_20230918.gdml"
+       Name: "icarus_v4"
+       SortingParameters: {
+          tool_type: "AuxDetGeoObjectSorterICARUS"
+       }
+       SurfaceY: 690
+    }
+    ChannelStatusService: {
+       ChannelStatusProvider: {
+          AlgName: "SIOVChannelStatusProvider"
           DatabaseRetrievalAlg: {
              AlgName: "DatabaseRetrievalAlg"
              DBFolderName: "tpc_channelstatus_data"
@@ -1223,7 +2305,93 @@
              DBUrl: "https://dbdata0vm.fnal.gov:9443/icarus_con_prod/app/"
              UseSQLite: true
           }
-@@ -4762,34 +4710,15 @@
+          UseDB: true
+          UseFile: false
+       }
+       service_provider: "SIOVChannelStatusICARUSService"
+    }
+    DetPedestalService: {
+       DetPedestalRetrievalAlg: {
+          AlgName: "DetPedestalRetrievalAlg"
+          DatabaseRetrievalAlg: {
+             AlgName: "DatabaseRetrievalAlg"
+             DBFolderName: ""
+             DBTag: ""
+             DBUrl: ""
+          }
+          DefaultCollMean: 400
+          DefaultCollRms: 3e-1
+          DefaultIndMean: 2048
+          DefaultIndRms: 3e-1
+          DefaultMeanErr: 0
+          DefaultRmsErr: 0
+          UseDB: false
+          UseFile: false
+       }
+       service_provider: "SIOVDetPedestalService"
+    }
+    DetectorClocksService: {
+       ClockSpeedExternal: 3.125e1
+       ClockSpeedOptical: 500
+       ClockSpeedTPC: 2.5
+       ClockSpeedTrigger: 16
+       DefaultBeamTime: 1500
+       DefaultTrigTime: 1500
+       FramePeriod: 1.6384e3
+       G4RefTime: -1500
+       InheritClockConfig: true
+       TrigModuleName: "daqTrigger"
+       TriggerOffsetTPC: -340
+       service_provider: "DetectorClocksServiceStandard"
+    }
+    DetectorPropertiesService: {
+       DriftVelFudgeFactor: 9.9733e-1
+       Efield: [
+          4.938e-1,
+          7.33e-1,
+          9.33e-1
+       ]
+       Electronlifetime: 3000
+       ElectronsToADC: 1.208041e-3
+       IncludeInterPlanePitchInXTickOffsets: false
+       InheritNumberTimeSamples: true
+       NumberTimeSamples: 4096
+       ReadOutWindowSize: 4096
+       SimpleBoundaryProcess: false
+       SternheimerA: 1.956e-1
+       SternheimerCbar: 5.2146
+       SternheimerK: 3
+       SternheimerX0: 2e-1
+       SternheimerX1: 3
+       Temperature: 8.75e1
+       TimeOffsetU: 0
+       TimeOffsetV: 0
+       TimeOffsetY: 0
+       TimeOffsetZ: 0
+       UseIcarusMicrobooneDriftModel: true
+       service_provider: "DetectorPropertiesServiceStandard"
+    }
+    DuplicateEventTracker: {}
+    FileCatalogMetadata: {
+       fileType: "mc"
+       group: "icarus"
+       runType: "physics"
+    }
+    Geometry: {
+       GDML: "icarus_refactored_nounderscore_20230918.gdml"
+       Name: "icarus_v4"
+       SortingParameters: {
+          tool_type: "GeoObjectSorterPMTasTPC"
+       }
+       SurfaceY: 690
+    }
+    GeometryConfigurationWriter: {}
+    IICARUSChannelMap: {
+       ChannelMappingTool: {
+          CalibDBFileName: "crt_gain_reco_data"
+          DBFileName: "ChannelMapICARUS_20240318.db"
+          Tag: "v1r0"
+       }
        DiagnosticOutput: false
        service_provider: "ICARUSChannelMapSQLite"
     }
@@ -1259,3 +2427,100 @@
     LArPropertiesService: {
        AbsLengthEnergies: [
           4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+       ]
+       AbsLengthSpectrum: [
+          8000,
+          8000,
+          8000,
+          8000,
+          8000,
+          2000,
+          2000,
+          2000
+       ]
+       AlphaScintYield: 16800
+       AlphaScintYieldRatio: 5.6e-1
+       Argon39DecayRate: 0
+       AtomicMass: 3.9948e1
+       AtomicNumber: 18
+       ElectronScintYield: 20000
+       ElectronScintYieldRatio: 2.7e-1
+       EnableCerenkovLight: false
+       ExcitationEnergy: 188
+       FastScintEnergies: [
+          7.2,
+          7.9,
+          8.3,
+          8.6,
+          8.9,
+          9.1,
+          9.3,
+          9.6,
+          9.7,
+          9.8,
+          10,
+          1.02e1,
+          1.03e1,
+          1.06e1,
+          11,
+          1.16e1,
+          1.19e1
+       ]
+       FastScintSpectrum: [
+          0,
+          4e-2,
+          1.2e-1,
+          2.7e-1,
+          4.4e-1,
+          6.2e-1,
+          8e-1,
+          9.1e-1,
+          9.2e-1,
+          8.5e-1,
+          7e-1,
+          5e-1,
+          3.1e-1,
+          1.3e-1,
+          4e-2,
+          1e-2,
+          0
+       ]
+       KaonScintYield: 24000
+       KaonScintYieldRatio: 2.3e-1
+       LoadExtraMatProperties: false
+       MuonScintYield: 24000
+       MuonScintYieldRatio: 2.3e-1
+       PionScintYield: 24000
+       PionScintYieldRatio: 2.3e-1
+       ProtonScintYield: 19200
+       ProtonScintYieldRatio: 2.9e-1
+       RIndexEnergies: [
+          1.18626,
+          1.68626,
+          2.18626,
+          2.68626,
+          3.18626,
+          3.68626,
+          4.18626,
+          4.68626,
+          5.18626,
+          5.68626,
+          6.18626,
+          6.68626,
+          7.18626,
+          7.68626,
+          8.18626,
+          8.68626,
+          9.18626,
+          9.68626,
+          1.01863e1,
+          1.06863e1,
+          1.11863e1
+       ]

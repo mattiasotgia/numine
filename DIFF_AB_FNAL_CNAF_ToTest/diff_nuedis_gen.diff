@@ -1,6 +1,57 @@
 --- CV_FNAL_10_31_00_01//nuedis_gen.dump	2026-11-26 10:27:06.685337000 +0100
 +++ CV_CNAF_RicDev//nuedis_gen.dump	2026-11-25 17:02:01.737965062 +0100
-@@ -52,10 +52,9 @@
+@@ -1,231 +1,241 @@
+ # Produced from 'fhicl-dump' using:
+ #   Input  : fcl/cv/nuedis_gen.fcl
+ #   Policy : cet::filepath_maker
+ #   Path   : "FHICL_FILE_PATH"
+ 
+ outputs: {
+    rootoutput: {
+       compressionLevel: 1
+       dataTier: "simulated"
+       fileName: "prodcorsika_genie_protononly_icarus_numi_%tc-%p.root"
+       module_type: "RootOutput"
+       saveMemoryObjectThreshold: 0
+    }
+ }
+ physics: {
+    end_paths: [
+       "outputstream"
+    ]
+    outputstream: [
+       "rootoutput"
+    ]
+    producers: {
+       beamgate: {
+          BeamGates: [
+             {
+                Duration: "9.5 us"
+                Type: "NuMI"
+             }
+          ]
+          module_type: "WriteBeamGateInfo"
+       }
+       cosmgen: {
+          BufferBox: [
+             -500,
+             500,
+             -300,
+             300,
+             -600,
+             600
+          ]
+          ProjectToHeight: 2000
+          RandomXZShift: 1000
+          SampleTime: 2.9e-3
+          ShowerAreaExtension: 1200
+          ShowerFluxConstants: [
+             18000
+          ]
+          ShowerInputFiles: [
+             "/cvmfs/sbn.osgstorage.org/pnfs/fnal.gov/usr/sbn/persistent/stash/physics/cosmics/Fermilab/CORSIKA/standard/p_*.db"
+          ]
+          TimeOffset: -1.5e-3
           module_type: "CORSIKAGen"
        }
        generator: {
@@ -13,7 +64,8 @@
              0
           ]
           BeamDirection: [
-@@ -64,6 +63,7 @@
+             0,
+             0,
              1
           ]
           BeamName: "numi"
@@ -21,7 +73,21 @@
           DebugFlags: 0
           DefinedVtxHistRange: false
           DetectorLocation: "icarus-numi"
-@@ -85,12 +85,22 @@
+          Environment: []
+          EventGeneratorList: "Default"
+          FiducialCut: "mbox: -378.49,-191.86,-904.950652270838,378.49,144.96,904.950652270838"
+          FluxFiles: [
+             "g4numi*.root"
+          ]
+          FluxSearchPaths: "/cvmfs/sbn.osgstorage.org/pnfs/fnal.gov/usr/sbn/persistent/stash/physics/beam/GENIE/NuMI/standard/v03_02/"
+          FluxType: "dk2nu"
+          GHepPrintLevel: 13
+          GenFlavors: [
+             12,
+             14,
+             -12,
+             -14
+          ]
           GlobalTimeOffset: 0
           MixerBaseline: 0
           MixerConfig: "none"
@@ -46,7 +112,37 @@
           XSecTable: "gxspl-FNALsmall.xml"
           module_type: "GENIEGen"
        }
-@@ -128,7 +138,7 @@
+       rns: {
+          module_type: "RandomNumberSaver"
+       }
+    }
+    simulate: [
+       "rns",
+       "generator",
+       "beamgate",
+       "cosmgen"
+    ]
+    trigger_paths: [
+       "simulate"
+    ]
+ }
+ process_name: "GenNuMIbkgr"
+ services: {
+    AuxDetGeometry: {
+       GDML: "icarus_refactored_nounderscore_20230918.gdml"
+       Name: "icarus_v4"
+       SortingParameters: {
+          tool_type: "AuxDetGeoObjectSorterICARUS"
+       }
+       SurfaceY: 690
+    }
+    DetectorClocksService: {
+       ClockSpeedExternal: 3.125e1
+       ClockSpeedOptical: 500
+       ClockSpeedTPC: 2.5
+       ClockSpeedTrigger: 16
+       DefaultBeamTime: 1500
+       DefaultTrigTime: 1500
        FramePeriod: 1.6384e3
        G4RefTime: -1500
        InheritClockConfig: true
@@ -55,3 +151,100 @@
        TriggerOffsetTPC: -340
        service_provider: "DetectorClocksServiceStandard"
     }
+    DetectorPropertiesService: {
+       DriftVelFudgeFactor: 9.9733e-1
+       Efield: [
+          4.938e-1,
+          7.33e-1,
+          9.33e-1
+       ]
+       Electronlifetime: 3000
+       ElectronsToADC: 1.208041e-3
+       IncludeInterPlanePitchInXTickOffsets: false
+       InheritNumberTimeSamples: true
+       NumberTimeSamples: 4096
+       ReadOutWindowSize: 4096
+       SimpleBoundaryProcess: false
+       SternheimerA: 1.956e-1
+       SternheimerCbar: 5.2146
+       SternheimerK: 3
+       SternheimerX0: 2e-1
+       SternheimerX1: 3
+       Temperature: 8.75e1
+       TimeOffsetU: 0
+       TimeOffsetV: 0
+       TimeOffsetY: 0
+       TimeOffsetZ: 0
+       UseIcarusMicrobooneDriftModel: true
+       service_provider: "DetectorPropertiesServiceStandard"
+    }
+    DuplicateEventTracker: {}
+    FileCatalogMetadata: {
+       fileType: "mc"
+       group: "icarus"
+       runType: "physics"
+    }
+    Geometry: {
+       GDML: "icarus_refactored_nounderscore_20230918.gdml"
+       Name: "icarus_v4"
+       SortingParameters: {
+          tool_type: "GeoObjectSorterPMTasTPC"
+       }
+       SurfaceY: 690
+    }
+    GeometryConfigurationWriter: {}
+    IFDH: {}
+    LArPropertiesService: {
+       AbsLengthEnergies: [
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+       ]
+       AbsLengthSpectrum: [
+          8000,
+          8000,
+          8000,
+          8000,
+          8000,
+          2000,
+          2000,
+          2000
+       ]
+       AlphaScintYield: 16800
+       AlphaScintYieldRatio: 5.6e-1
+       Argon39DecayRate: 0
+       AtomicMass: 3.9948e1
+       AtomicNumber: 18
+       ElectronScintYield: 20000
+       ElectronScintYieldRatio: 2.7e-1
+       EnableCerenkovLight: false
+       ExcitationEnergy: 188
+       FastScintEnergies: [
+          7.2,
+          7.9,
+          8.3,
+          8.6,
+          8.9,
+          9.1,
+          9.3,
+          9.6,
+          9.7,
+          9.8,
+          10,
+          1.02e1,
+          1.03e1,
+          1.06e1,
+          11,
+          1.16e1,
+          1.19e1
+       ]
+       FastScintSpectrum: [
+          0,
+          4e-2,
+          1.2e-1,
+          2.7e-1,
