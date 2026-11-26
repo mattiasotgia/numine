@@ -1,0 +1,4172 @@
+--- CV_FNAL_10_31_00_01_EXPANDED//nuedis_detsim_2d_icarus_refactored_shifted.expand	2026-11-26 10:27:06.774405117 +0100
++++ CV_CNAF_RicDev_EXPANDED//nuedis_detsim_2d_icarus_refactored_shifted.expand	2026-11-26 10:15:19.595252068 +0100
+@@ -1,62 +1,3 @@
+-# #include "services_icarus_simulation.fcl"
+-# #include "detsimmodules_wirecell_ICARUS.fcl"
+-# #include "opdetsim_pmt_icarus.fcl"
+-# #include "crtsimmodules_icarus.fcl"
+-# #include "trigger_emulation_icarus.fcl"
+-# #include "rootoutput_icarus.fcl"
+-
+-# process_name: DetSim
+-
+-# services: {
+-#   @table::icarus_detsim_services
+-#   #FileCatalogMetadata:  @local::art_file_catalog_mc
+-# } # services
+-
+-# physics: {
+-
+-#   producers: {
+-#     @table::icarus_shifting_triggersim.producers
+-    
+-#     crtdaq:         @local::icarus_crtsim
+-#      opdaq:         @local::icarus_simpmt
+-#        daq:         @local::icarus_simwire_wirecell_shifted
+-
+-#        rns:         { module_type: "RandomNumberSaver" }
+-#   } # producers
+-
+-#   simulate: [ rns, opdaq, @sequence::icarus_shifting_triggersim.path, daq, crtdaq ]
+-
+-#   # define the output stream, there could be more than one if using filters
+-#   stream:  [ rootoutput ]
+-
+-# } # physics
+-
+-# outputs: {
+-#   rootoutput: {
+-#     @table::icarus_rootoutput
+-#     outputCommands: [
+-#       "keep *"
+-#      # , "drop *_ionization_*_*"
+-#      # , "drop *_simdrift_*_*"
+-#      # , "drop *_pdfastsim_*_*"
+-#      , "drop raw::OpDetWaveform*_opdaq_*_*"
+-#      # , "drop sim::SimEnergyDeposits_largeant_*_*"
+-#      # , "drop sim::SimEnergyDepositLites_sedlite_*_*"
+-#      # , "drop sim::SimEnergyDeposits_shifted_*_*"
+-#      # , "drop *_pmtlvdsgatesinit_*_*"
+-#      # , "drop *_pmtfixedthrinit_*_*"
+-#      # , "drop *_pmttriggerwindowsinit_*_*"
+-#      # , "drop *_triggersimgatesinit_*_*"
+-#       ]
+-#   }
+-# }
+-
+-# physics.producers.crtdaq.G4ModuleLabel: "shifted"
+-# physics.producers.opdaq.InputModule: "pdfastsim"
+-# physics.producers.shifted.InitAuxDetSimChannelLabel: "genericcrt"
+-# physics.producers.shifted.InitSimPhotonsLabel: "pdfastsim"
+-
+-
+ #
+ # File:    services_icarus_simulation.fcl
+ # Purpose: Configuration presets for simulation jobs in ICARUS.
+@@ -157,12 +98,9 @@
+  LarqlAlpha: 0.0372
+  LarqlBeta: 0.0124
+ 
+-## Proton Quenching Factor
+- QProton: 1
+-
+   #* alpha particle quenching factor
+   #* Doke et al. Jpn. J. Appl. Phys. Vol. 41 (2002) pp. 1538
+- QAlpha: 0.43
++ QAlpha: 0.72
+ 
+   #* ion+excitation work function in eV
+   #* https://doi.org/10.1016/0168-9002(90)90011-T
+@@ -1678,67 +1616,6 @@
+     
+ } # icarus_detectorclocks_data_notiming
+ 
+-
+-# ##############################################################################
+-#
+-# Simulation settings
+-#
+-# Executive summary: use this configuration for simulation
+-#                    (shifted or not, with data overlay or not).
+-#
+-# These settings have dual (and a half) use.
+-# The explicit use is for simulation samples that underwent a time shift
+-# (e.g. via `AdjustSimForTrigger`) and have a new time reference in `shifted`
+-# data product. The implicit usage is for simulation samples that have not been
+-# shifted, yet or at all. The half is that an overlay workflow follows for the
+-# most part (only exception the data decoding) the simulation time reference.
+-# 
+-# The standard time reference (`icarus_detectorclocks`) is from `daqTrigger`,
+-# which is normally decoded from data and never available in simulation.
+-# In absence of the configured trigger data product, timing configuration
+-# silently falls back to default values from the configuration, which are
+-# in fact suitable for standard simulation jobs.
+-# 
+-# This configuration table replaces the non-existing `daqTrigger` data product,
+-# which exists only when decoding data, with the non-existing `shifted`
+-# data product, which exists only after `AdjustSimForTrigger` is executed
+-# (with the standard module name).
+-# 
+-# In normal Monte Carlo jobs, this change is indifferent since DetectorClocks
+-# will always fall back to the configured default values.
+-# 
+-# In case of shifted simulation jobs, this configuration does the right thing,
+-# picking the now available `shifted` data product as the time reference
+-# (and unfortunately it still silently falls back to configured defaults if
+-# for any reason that product is not available).
+-# 
+-# Finally, in case of simulation overlaid on data ("overlay"), the data itself
+-# is supposed to be "time-invariant" (off-beam, minimum bias), and the time
+-# reference is taken from the simulation, again from the defaults or from the
+-# `shifted` data product, depending on whether simulation is being shifted.
+-# It is to be noted that, in an overlay workflow the default time reference of
+-# the standard configuration, `daqTrigger` is sooner or later decoded, and its
+-# availability depends on the relative order of simulation and decoding. At that
+-# point, time reference will switch from default values (wrong if simulation was
+-# shifted) to the minimum bias trigger time (wrong, always).
+-# 
+-# Note that `TrigModuleName` configuration parameter is not covered by
+-# `InheritClockConfig`, so overriding that in a job with inheriting enabled
+-# does use the overridden trigger and does not cause errors.
+-#
+-# Use as:
+-#     
+-#     services.DetectorClocksService: @local::icarus_detectorclocks_simulation
+-#     
+-#
+-icarus_detectorclocks_simulation: {
+-    @table::icarus_detectorclocks
+-
+-    TrigModuleName: "shifted"
+-
+-} # icarus_detectorclocks_simulation
+-
+-
+ #
+ #
+ #
+@@ -2081,28 +1958,6 @@
+                                      # Run 3: run>=11590
+ }
+ 
+-# These are the standard tags for analyses on Run 1, Run 2, Run 3 and Run 4 data (as of Oct 2025)
+-# These tagged versions of the databases contain tables relevant for Run 1, Run 2, Run 3 and Run 4.
+-# Notes: 
+-#   - New cosmics corrections for Run 4 (run>=12837)
+-PMT_CalibrationTags_Oct2025: {
+-  pmt_cables_delays_data:    "v2r5"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=10369, run>=10441, run>=10865
+-                                     # Run 4: run>=12040, run>=12455, run>=12777
+-  pmt_laser_timing_data:     "v2r3"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=10908, run>=11590
+-                                     # Run 4: run>=12058, run>=12837
+-  pmt_cosmics_timing_data:   "v2r3"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=11590
+-                                     # Run 4: run>=12837
+-}
+-
+ END_PROLOG
+ # File:    calibration_database_GlobalTags.fcl
+ # Purpose: Collection of tag info for the TPC calibration database
+@@ -2125,7 +1980,7 @@
+ ## - Files decoded with release >=v09_66_02 should use v3r2
+ TPC_CalibrationTags_Feb2024: {
+ 
+-  tpc_channelstatus_data: "v3r2"
++  tpc_channelstatus_data: "v3r4"
+   tpc_elifetime_data: "v2r1"
+   tpc_dqdxcalibration_data: "v2r1"
+   tpc_yz_correction_data: "v2r1"
+@@ -2133,38 +1988,15 @@
+ }
+ 
+ ## TPC_CalibrationTags_Feb2024 but updating tpc_yz_correction_data to tpc_yz_correction_allplanes_data
+-## Update to mask out additional bad noisy channels
+ TPC_CalibrationTags_Jan2025: {
+ 
+-  tpc_channelstatus_data: "v3r4"
++  tpc_channelstatus_data: "v3r2"
+   tpc_elifetime_data: "v2r1"
+   tpc_dqdxcalibration_data: "v2r1"
+   tpc_yz_correction_allplanes_data: "v1r0"
+ 
+ }
+ 
+-## TPC_CalibrationTags_Jul2025 
+-# Update to 2D deconv tags. Change TPC equalization to be per-plane
+-TPC_CalibrationTags_Jul2025: {
+-
+-  tpc_channelstatus_data: "v3r4"
+-  tpc_elifetime_data: "v3r0"
+-  tpc_dqdxcalibration_allplanes_data: "v1r0"
+-  tpc_yz_correction_allplanes_data: "v2r0"
+-
+-}
+-
+-## TPC_CalibrationTags_Oct2025 
+-# Include Run 4 in calibrations
+-TPC_CalibrationTags_Oct2025: {
+-
+-  tpc_channelstatus_data: "v4r0"
+-  tpc_elifetime_data: "v3r1"
+-  tpc_dqdxcalibration_allplanes_data: "v1r1"
+-  tpc_yz_correction_allplanes_data: "v2r1"
+-
+-}
+-
+ END_PROLOG
+ # File:    calibration_database_GlobalTags.fcl
+ # Purpose: Collection of tag info for the TPC calibration database
+@@ -2183,8 +2015,8 @@
+ BEGIN_PROLOG
+ 
+ ICARUS_Calibration_GlobalTags: {
+-  @table::TPC_CalibrationTags_Oct2025
+-  @table::PMT_CalibrationTags_Oct2025
++  @table::TPC_CalibrationTags_Jan2025
++  @table::PMT_CalibrationTags_Run3_Feb2025
+   @table::CRT_CalibrationTags_Oct2023
+ }
+ 
+@@ -2599,28 +2431,6 @@
+                                      # Run 3: run>=11590
+ }
+ 
+-# These are the standard tags for analyses on Run 1, Run 2, Run 3 and Run 4 data (as of Oct 2025)
+-# These tagged versions of the databases contain tables relevant for Run 1, Run 2, Run 3 and Run 4.
+-# Notes: 
+-#   - New cosmics corrections for Run 4 (run>=12837)
+-PMT_CalibrationTags_Oct2025: {
+-  pmt_cables_delays_data:    "v2r5"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=10369, run>=10441, run>=10865
+-                                     # Run 4: run>=12040, run>=12455, run>=12777
+-  pmt_laser_timing_data:     "v2r3"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=10908, run>=11590
+-                                     # Run 4: run>=12058, run>=12837
+-  pmt_cosmics_timing_data:   "v2r3"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=11590
+-                                     # Run 4: run>=12837
+-}
+-
+ END_PROLOG
+ # File:    calibration_database_GlobalTags.fcl
+ # Purpose: Collection of tag info for the TPC calibration database
+@@ -2643,7 +2453,7 @@
+ ## - Files decoded with release >=v09_66_02 should use v3r2
+ TPC_CalibrationTags_Feb2024: {
+ 
+-  tpc_channelstatus_data: "v3r2"
++  tpc_channelstatus_data: "v3r4"
+   tpc_elifetime_data: "v2r1"
+   tpc_dqdxcalibration_data: "v2r1"
+   tpc_yz_correction_data: "v2r1"
+@@ -2651,38 +2461,15 @@
+ }
+ 
+ ## TPC_CalibrationTags_Feb2024 but updating tpc_yz_correction_data to tpc_yz_correction_allplanes_data
+-## Update to mask out additional bad noisy channels
+ TPC_CalibrationTags_Jan2025: {
+ 
+-  tpc_channelstatus_data: "v3r4"
++  tpc_channelstatus_data: "v3r2"
+   tpc_elifetime_data: "v2r1"
+   tpc_dqdxcalibration_data: "v2r1"
+   tpc_yz_correction_allplanes_data: "v1r0"
+ 
+ }
+ 
+-## TPC_CalibrationTags_Jul2025 
+-# Update to 2D deconv tags. Change TPC equalization to be per-plane
+-TPC_CalibrationTags_Jul2025: {
+-
+-  tpc_channelstatus_data: "v3r4"
+-  tpc_elifetime_data: "v3r0"
+-  tpc_dqdxcalibration_allplanes_data: "v1r0"
+-  tpc_yz_correction_allplanes_data: "v2r0"
+-
+-}
+-
+-## TPC_CalibrationTags_Oct2025 
+-# Include Run 4 in calibrations
+-TPC_CalibrationTags_Oct2025: {
+-
+-  tpc_channelstatus_data: "v4r0"
+-  tpc_elifetime_data: "v3r1"
+-  tpc_dqdxcalibration_allplanes_data: "v1r1"
+-  tpc_yz_correction_allplanes_data: "v2r1"
+-
+-}
+-
+ END_PROLOG
+ # File:    calibration_database_GlobalTags.fcl
+ # Purpose: Collection of tag info for the TPC calibration database
+@@ -2701,8 +2488,8 @@
+ BEGIN_PROLOG
+ 
+ ICARUS_Calibration_GlobalTags: {
+-  @table::TPC_CalibrationTags_Oct2025
+-  @table::PMT_CalibrationTags_Oct2025
++  @table::TPC_CalibrationTags_Jan2025
++  @table::PMT_CalibrationTags_Run3_Feb2025
+   @table::CRT_CalibrationTags_Oct2023
+ }
+ 
+@@ -3771,420 +3558,6 @@
+ 
+ 
+ END_PROLOG
+-# File:    calibration_database_PMT_TagSets_icarus.fcl
+-# Author:  M. Vicenzi (mvicenzi@bnl.gov), J. Kim (jae.sung.kim.3426@gmail.com)
+-# Date:    February 20, 2025
+-# Purpose: Tags definitions for the PMT timing calibration databases
+-
+-BEGIN_PROLOG
+-
+-# These are the standard tags for analyses on Run 1 data
+-# These tagged versions of the databases only contain tables relevant for Run 1
+-PMT_CalibrationTags_Run1: {
+-  pmt_cables_delays_data:    "v1r0"  # tables for run>=0 (null) and run>=8046
+-  pmt_laser_timing_data:     "v1r0"  # tables for run>=0 (null) and run>=8046
+-  pmt_cosmics_timing_data:   "v1r0"  # tables for run>=0 (null) and run>=8046 
+-}
+-
+-# These are the standard tags for analyses on Run 1 and Run 2 data (as of August 2023)
+-# These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+-# Notes: 
+-#  - No cosmics corrections are available for Run 2
+-#  - Laser and cable corrections do not cover the entire Run 2 period
+-PMT_CalibrationTags_Run2_August2023: {
+-  pmt_cables_delays_data:    "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9773
+-  pmt_laser_timing_data:     "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9773
+-  pmt_cosmics_timing_data:   "v1r0"  # tables for run>=0 (null) and run>=8046 
+-}
+-
+-# These are the standard tags for analyses on Run 1 and Run 2 data (as of September 2023)
+-# These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+-# Notes: 
+-#  - No cosmics corrections are available for Run 2
+-PMT_CalibrationTags_Run2_Sept2023: {
+-  pmt_cables_delays_data:    "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+-  pmt_laser_timing_data:     "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+-  pmt_cosmics_timing_data:   "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9301 (null) 
+-}
+-
+-# These are the standard tags for analyses on Run 1 and Run 2 data (as of December 2023)
+-# These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+-# Notes: 
+-#  - Updated cable delays with new phase offsets
+-#  - Full laser and cosmics corrections for all Run 2.
+-PMT_CalibrationTags_Run2_Dec2023: {
+-  pmt_cables_delays_data:    "v2r3"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773 and run>=10369
+-  pmt_laser_timing_data:     "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+-  pmt_cosmics_timing_data:   "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773 
+-}
+-
+-# These are the standard tags for analyses on Run 1, Run 2 and pre-Run 3 data (as of December 2023)
+-# These tagged versions of the databases contain tables relevant for Run 1, Run 2 and pre-Run 3.
+-# Notes: 
+-#   - New cable delays (mapping changes, upgrades to laser distribution)
+-#   - New laser table for the beginning of Run 3 (new signal cables)
+-PMT_CalibrationTags_Run3_Dec2023: {
+-  pmt_cables_delays_data:    "v2r4"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773, run>=10369 and run>=10865
+-  pmt_laser_timing_data:     "v2r2"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773 and run>=10908
+-  pmt_cosmics_timing_data:   "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773 
+-}
+-
+-# These are the standard tags for analyses on Run 1, Run 2, Run 3 and pre-Run 4 data (as of Feb 2025)
+-# These tagged versions of the databases contain tables relevant for Run 1, Run 2, Run 3 and pre-Run 4.
+-# Notes: 
+-#   - New cable delays for Run 4 (after summer 2024 laser and PPS changes)
+-#   - New laser tables up to final Run 4 gain equalization
+-#   - New cosmics corrections for Run 3, updates to Run 1,2 tables (more statistics)
+-PMT_CalibrationTags_Run3_Feb2025: {
+-  pmt_cables_delays_data:    "v2r5"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=10369, run>=10441, run>=10865
+-                                     # Run 4: run>=12040, run>=12455, run>=12777
+-  pmt_laser_timing_data:     "v2r3"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=10908, run>=11590
+-                                     # Run 4: run>=12058, run>=12837
+-  pmt_cosmics_timing_data:   "v2r2"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=11590
+-}
+-
+-# These are the standard tags for analyses on Run 1, Run 2, Run 3 and Run 4 data (as of Oct 2025)
+-# These tagged versions of the databases contain tables relevant for Run 1, Run 2, Run 3 and Run 4.
+-# Notes: 
+-#   - New cosmics corrections for Run 4 (run>=12837)
+-PMT_CalibrationTags_Oct2025: {
+-  pmt_cables_delays_data:    "v2r5"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=10369, run>=10441, run>=10865
+-                                     # Run 4: run>=12040, run>=12455, run>=12777
+-  pmt_laser_timing_data:     "v2r3"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=10908, run>=11590
+-                                     # Run 4: run>=12058, run>=12837
+-  pmt_cosmics_timing_data:   "v2r3"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=11590
+-                                     # Run 4: run>=12837
+-}
+-
+-END_PROLOG
+-# File:    calibration_database_GlobalTags.fcl
+-# Purpose: Collection of tag info for the TPC calibration database
+-
+-BEGIN_PROLOG
+-
+-## Valid for Run A,1, and 2
+-## - Files decoded with release <v09_66_02 should use v3r1 
+-TPC_CalibrationTags_Oct2023: {
+-
+-  tpc_channelstatus_data: "v3r1"
+-  tpc_elifetime_data: "v2r1"
+-  tpc_dqdxcalibration_data: "v2r1"
+-  tpc_yz_correction_data: "v2r1"
+-
+-}
+-
+-## Valid for Run A,1, and 2
+-## - tpc_channelstatus_data updated to v3r2, where we reverted back "flange=WE20M AND board=1 or 5" to "Good" status.
+-## - Files decoded with release >=v09_66_02 should use v3r2
+-TPC_CalibrationTags_Feb2024: {
+-
+-  tpc_channelstatus_data: "v3r2"
+-  tpc_elifetime_data: "v2r1"
+-  tpc_dqdxcalibration_data: "v2r1"
+-  tpc_yz_correction_data: "v2r1"
+-
+-}
+-
+-## TPC_CalibrationTags_Feb2024 but updating tpc_yz_correction_data to tpc_yz_correction_allplanes_data
+-## Update to mask out additional bad noisy channels
+-TPC_CalibrationTags_Jan2025: {
+-
+-  tpc_channelstatus_data: "v3r4"
+-  tpc_elifetime_data: "v2r1"
+-  tpc_dqdxcalibration_data: "v2r1"
+-  tpc_yz_correction_allplanes_data: "v1r0"
+-
+-}
+-
+-## TPC_CalibrationTags_Jul2025 
+-# Update to 2D deconv tags. Change TPC equalization to be per-plane
+-TPC_CalibrationTags_Jul2025: {
+-
+-  tpc_channelstatus_data: "v3r4"
+-  tpc_elifetime_data: "v3r0"
+-  tpc_dqdxcalibration_allplanes_data: "v1r0"
+-  tpc_yz_correction_allplanes_data: "v2r0"
+-
+-}
+-
+-## TPC_CalibrationTags_Oct2025 
+-# Include Run 4 in calibrations
+-TPC_CalibrationTags_Oct2025: {
+-
+-  tpc_channelstatus_data: "v4r0"
+-  tpc_elifetime_data: "v3r1"
+-  tpc_dqdxcalibration_allplanes_data: "v1r1"
+-  tpc_yz_correction_allplanes_data: "v2r1"
+-
+-}
+-
+-END_PROLOG
+-# File:    calibration_database_GlobalTags.fcl
+-# Purpose: Collection of tag info for the TPC calibration database
+-
+-BEGIN_PROLOG
+-
+-## Valid for Run A,1, and 2
+-CRT_CalibrationTags_Oct2023: {
+-
+-  crt_gain_reco_data: "v1r0"
+-
+-}
+-
+-END_PROLOG
+-
+-BEGIN_PROLOG
+-
+-ICARUS_Calibration_GlobalTags: {
+-  @table::TPC_CalibrationTags_Oct2025
+-  @table::PMT_CalibrationTags_Oct2025
+-  @table::CRT_CalibrationTags_Oct2023
+-}
+-
+-
+-END_PROLOG
+-
+-BEGIN_PROLOG
+-
+-icarus_pmttimingservice:
+-{
+-    # service name:   IPMTTimingCorrectionService
+-    service_provider: PMTTimingCorrectionService
+-    CorrectionTags: {
+-      CablesTag: @local::ICARUS_Calibration_GlobalTags.pmt_cables_delays_data
+-      LaserTag: @local::ICARUS_Calibration_GlobalTags.pmt_laser_timing_data
+-      CosmicsTag: @local::ICARUS_Calibration_GlobalTags.pmt_cosmics_timing_data
+-    }
+-    Verbose:          false
+-    OverrideRunNumber: -1
+-}
+-
+-icarus_ophit_timing_correction:
+-{
+-    module_type:         OpHitTimingCorrection
+-    InputLabels:         ["ophit"]
+-    CorrectLaser:        true
+-    CorrectCosmics:      true
+-    Verbose:             false
+-}
+-
+-END_PROLOG
+-#
+-# @file   pmt_channel_status_icarus.fcl
+-# @brief  Standard configuration for the ICARUS PMT channel status service.
+-#
+-
+-BEGIN_PROLOG
+-
+-icarus_pmt_channel_status: {
+-  service_provider: PMTChannelStatusService
+-  DBname:        "pmt_voltage_data"
+-  StatusTag:     "v1r3"
+-  DefaultStatus:  0       # kOff
+-  DefaultVoltage: 1500.0  # [V]
+-  Verbose:       false
+-  OverrideRunNumber: -1  
+-  LogCategory:   "PMTChannelStatusProvider"
+-}
+-
+-END_PROLOG
+-# File:    pmt_calibration_icarus.fcl
+-# Purpose: Configurations for ICARUS PMT calibration tools.
+-# Contact: Matteo Vicenzi (mvicenzi@bnl.gov)
+-#
+-# Provides the following configuration tables:
+-# 
+-# * pmt_laser_calibration, pmt_bkgphotons_calibration: hit timing calibrations
+-# * icarus_photon_calibration: configuration of IPhotonCalibratorService
+-#
+-
+-BEGIN_PROLOG
+-
+-laser_pulse_configuration:
+-{
+-
+-  ADCmV: 0.122 			
+-  ADCpC: 0.00488  
+-  SamplingTime: 2.0      # ns
+-
+-  NoiseWindowSize: 600        #n bins
+-  NoiseReverse: false
+-  NoiseThreshold: 300         # Arb. Unit after signal time domain FFT
+-
+-
+-  IntegralStartBin: 500       # bin
+-  IntegrationWindow: 1500     # number of bins
+-
+-  PulseThreshold:   1.5       # Threshold to accept a laser pulse in mV
+-  DoFit: true                 # Choose to fit a pulse
+-  FitRange: [ 30, 40 ]        # fit range around t peak in ns [ tpeak - FitRange[0], tpeak + FitRange[1] ]
+-
+-}
+-
+-END_PROLOG
+-
+-BEGIN_PROLOG
+-
+-### The values below represent the average SPE amplitude/area across all PMT channels.
+-### The default optical reconstruction now uses the `IPhotonCalibratorService` to
+-### properly pick-up channel-by-channel SPEArea values for a given time (run number).
+-### These values here are kept as defaults to support older workflows.
+-
+-SPEorig: {
+-  Area: 212.
+-  Amplitude: 49.18
+-  Shift: 0.
+-}
+-
+-SPE202202: {  # amplitude set to 4 mV, gain 9.7x10^6 with R = 50 ohm
+-  Area: 318.256      # ADC x (2 ns)
+-  Amplitude: 32.768  # ADC (= 4 mV / 2 V x 2^14 bit)
+-  Shift: 0.
+-}
+-
+-# the following is based on SPE202202 rescaling it to gain 7.5x10^6;
+-# this is an empirical choice attempting to reconciliate the mean value
+-# of MC hit amplitude with data; see e.g. SBN DocDB 34640
+-SPE202401patch: {  # amplitude set to 3.23 mV, gain 7.5x10^6 with R = 50 ohm
+-  Area: 256.658      # ADC x (2 ns)
+-  Amplitude: 26.4258 # ADC (= 3.23 mV / 2 V x 2^14 bit)
+-  Shift: 0.
+-}
+-
+-# the following is based on the selection of single-PE ophits from RUN-2 data
+-# this is a data-driven choice, already including the reconstruction biases
+-# see SBN DocbDB 45565, slide 13-14
+-# NB: this is much smaller than before due to the integral definition
+-#     resulting from the official baseline reco when using ophits;
+-#     since this value is used on ophits, it's good to natually include this bias.
+-SPE2025Run2: {
+-  Area: 152.01      # ADC x (2 ns)
+-  Amplitude: 28.08  # ADC
+-  Shift: 0.
+-}
+-
+-# the following is based on the selection of single-PE ophits from RUN-3 data
+-# this is a data-driven choice, already including the reconstruction biases
+-# see SBN DocbDB 45565, slide 13-14
+-SPE2025Run3: {
+-  Area: 127.39      # ADC x (2 ns)
+-  Amplitude: 29.91  # ADC
+-  Shift: 0.
+-}
+-
+-# the following is based on the selection of single-PE ophits from RUN-4 data
+-# this is a data-driven choice, already including the reconstruction biases
+-# see SBN DocbDB 45565, slide 13-14
+-SPE2025Run4: {
+-  Area: 131.83      # ADC x (2 ns)
+-  Amplitude: 31.14  # ADC
+-  Shift: 0.
+-}
+-
+-SPERun2: @local::SPE2025Run2
+-SPERun3: @local::SPE2025Run3
+-SPERun4: @local::SPE2025Run4
+-
+-SPE: @local::SPE202401patch
+-
+-END_PROLOG
+-
+-BEGIN_PROLOG
+-
+-# ==============================================================================
+-# ===  Hit time calibration
+-# ===
+-pmt_laser_calibration:
+-{
+-  module_type: PMTLaserCalibration
+-  OpDetWaveformLabel: "daqPMT"
+-  PMTWaveformTimingCorrectionLabel:  ""  #or "daqPMT:globtrg" if the corrections are applied at decoder level already 
+-  LaserChannel:       1
+-  WaveformAnalysis :  @local::laser_pulse_configuration
+-  DebugMessage:       false 
+-}
+-
+-pmt_bkgphotons_calibration:
+-{
+-  module_type: 	PMTBackgroundphotonsCalibration
+-  OpHitModule: "ophit"
+-  TriggerModule: "daqTrigger"
+-  ADCmV: 0.122      
+-  ADCpC: 0.00488  
+-  ChannelMask: [  ]  
+-  FilterInGate: [ -3., 7. ] #in us
+-  FilterInTime: true
+-  TimeWindow: 1.0 # in us 
+-  AmplitudeBinning: [ 0., 30., 0.15 ] # in mV 
+-  IntegralBinning: [ 0., 8., 0.04 ] # in 10^7 electrons
+-}
+-
+-
+-# ==============================================================================
+-# ===  Hit photoelectron conversion
+-# ===
+-icarus_photon_calibration:
+-{
+-  service_provider: ICARUSPhotonCalibratorServiceFromDB
+-  AreaTag:  "v1r2"
+-  Defaults: {
+-    SPEArea: @local::SPERun2.Area # ADC x tick, Run2 default
+-  }
+-  OverrideRunNumber: -1
+-} # icarus_photon_calibration
+-
+-
+-# ==============================================================================
+-# ===  Vertical-track flash / waveform ntupler (for calibration)
+-# ===
+-verticaltrack_flashwf_ana:
+-{
+-  module_type:        "VerticalTrackFlashWaveformAna"
+-
+-  # per-cryostat track + flash collections (order must match: E, W)
+-  TrackLabels:        [ "pandoraTrackGausCryoE", "pandoraTrackGausCryoW" ]
+-  OpFlashLabels:      [ "opflashCryoE",          "opflashCryoW"          ]
+-  PandoraLabels:      [ "pandoraGausCryoE",      "pandoraGausCryoW"      ]
+-
+-  # single merged collections covering both cryostats
+-  OpDetWaveformLabel: "daqPMT"
+-  SimPhotonsLabel: ""
+-
+-  # vertical-track selection
+-  MinAbsDirY:          0.98
+-  MaxDeltaX:           30.0   # cm
+-  MaxDeltaZ:           30.0   # cm
+-  ZMin:              -700.0   # cm
+-  ZMax:               700.0   # cm
+-  MinTrackLength:     100.0   # cm
+-  RequireDownwards:   true
+-
+-  # flash match
+-  BarycenterMaxDist:  30.0    # cm (YZ distance)
+-}
+-
+-
+-# ==============================================================================
+-
+-END_PROLOG
+ 
+ BEGIN_PROLOG
+ 
+@@ -4197,8 +3570,6 @@
+   
+   @table::icarus_common_services
+   
+-  DetectorClocksService: @local::icarus_detectorclocks_simulation
+-  
+ }
+ 
+ 
+@@ -4206,8 +3577,7 @@
+ icarus_simulation_basic_services: {
+   
+                                            @table::icarus_common_services
+-    DetectorClocksService:                 @local::icarus_detectorclocks_simulation
+-  
++
+     LArG4Parameters:                       @local::icarus_largeantparameters
+     LArVoxelCalculator:                    @local::icarus_larvoxelcalculator
+     SpaceChargeService:                    @local::icarus_spacecharge
+@@ -4231,8 +3601,6 @@
+   # (it turns out they are the same ones needed for the inverse operation...)
+   @table::icarus_wirecalibration_services
+   
+-  DetectorClocksService: @local::icarus_detectorclocks_simulation
+-  
+ } # icarus_detsim_dark_services
+ 
+ 
+@@ -4265,12 +3633,11 @@
+ 
+ # Define icarus_detsim_services ... (2*)
+ icarus_detsim_services: {
+-
++    
+     @table::icarus_detsim_dark_services
+-    IPMTTimingCorrectionService:       @local::icarus_pmttimingservice
+-    IPMTChannelStatusService:          @local::icarus_pmt_channel_status
+-    IPhotonCalibratorService:          @local::icarus_photon_calibration
+-
++    
++    # PmtGainService:                 @local::icarus_pmtgain_service
++    
+ } # icarus_detsim_services
+ 
+ 
+@@ -5334,67 +4701,6 @@
+     
+ } # icarus_detectorclocks_data_notiming
+ 
+-
+-# ##############################################################################
+-#
+-# Simulation settings
+-#
+-# Executive summary: use this configuration for simulation
+-#                    (shifted or not, with data overlay or not).
+-#
+-# These settings have dual (and a half) use.
+-# The explicit use is for simulation samples that underwent a time shift
+-# (e.g. via `AdjustSimForTrigger`) and have a new time reference in `shifted`
+-# data product. The implicit usage is for simulation samples that have not been
+-# shifted, yet or at all. The half is that an overlay workflow follows for the
+-# most part (only exception the data decoding) the simulation time reference.
+-# 
+-# The standard time reference (`icarus_detectorclocks`) is from `daqTrigger`,
+-# which is normally decoded from data and never available in simulation.
+-# In absence of the configured trigger data product, timing configuration
+-# silently falls back to default values from the configuration, which are
+-# in fact suitable for standard simulation jobs.
+-# 
+-# This configuration table replaces the non-existing `daqTrigger` data product,
+-# which exists only when decoding data, with the non-existing `shifted`
+-# data product, which exists only after `AdjustSimForTrigger` is executed
+-# (with the standard module name).
+-# 
+-# In normal Monte Carlo jobs, this change is indifferent since DetectorClocks
+-# will always fall back to the configured default values.
+-# 
+-# In case of shifted simulation jobs, this configuration does the right thing,
+-# picking the now available `shifted` data product as the time reference
+-# (and unfortunately it still silently falls back to configured defaults if
+-# for any reason that product is not available).
+-# 
+-# Finally, in case of simulation overlaid on data ("overlay"), the data itself
+-# is supposed to be "time-invariant" (off-beam, minimum bias), and the time
+-# reference is taken from the simulation, again from the defaults or from the
+-# `shifted` data product, depending on whether simulation is being shifted.
+-# It is to be noted that, in an overlay workflow the default time reference of
+-# the standard configuration, `daqTrigger` is sooner or later decoded, and its
+-# availability depends on the relative order of simulation and decoding. At that
+-# point, time reference will switch from default values (wrong if simulation was
+-# shifted) to the minimum bias trigger time (wrong, always).
+-# 
+-# Note that `TrigModuleName` configuration parameter is not covered by
+-# `InheritClockConfig`, so overriding that in a job with inheriting enabled
+-# does use the overridden trigger and does not cause errors.
+-#
+-# Use as:
+-#     
+-#     services.DetectorClocksService: @local::icarus_detectorclocks_simulation
+-#     
+-#
+-icarus_detectorclocks_simulation: {
+-    @table::icarus_detectorclocks
+-
+-    TrigModuleName: "shifted"
+-
+-} # icarus_detectorclocks_simulation
+-
+-
+ #
+ #
+ #
+@@ -5494,12 +4800,9 @@
+  LarqlAlpha: 0.0372
+  LarqlBeta: 0.0124
+ 
+-## Proton Quenching Factor
+- QProton: 1
+-
+   #* alpha particle quenching factor
+   #* Doke et al. Jpn. J. Appl. Phys. Vol. 41 (2002) pp. 1538
+- QAlpha: 0.43
++ QAlpha: 0.72
+ 
+   #* ion+excitation work function in eV
+   #* https://doi.org/10.1016/0168-9002(90)90011-T
+@@ -5742,6 +5045,7 @@
+         inputers: ["wclsSimDepoSetSource:electron"]
+         outputers: 
+         [
++            "wclsDepoSetSimChannelSink:postdriftold",
+             "wclsDepoFluxWriter:postdrift",
+             "wclsFrameSaver:simdigits0",
+             "wclsFrameSaver:simdigits1",
+@@ -5750,11 +5054,11 @@
+         ]
+         // Make available parameters via Jsonnet's std.extVar()
+         params: {
+-	         files_fields: "icarus_fnal_fit_ks_P0nom.json.bz2"
+-	         file_rcresp: "icarus_fnal_rc_tail.json" # use the RCResponse by default
+-	         cathode_input_format: "array" # scalar (flat) or array (bent)
+-                  SimEnergyDepositLabel: "ionization"
+-	     }
++	    files_fields: "icarus_fnal_fit_ks_P0nom.json.bz2"
++	    file_rcresp: "icarus_fnal_rc_tail.json" # use the RCResponse by default
++	    cathode_input_format: "array" # scalar (flat) or array (bent)
++            SimEnergyDepositLabel: "ionization"
++	}
+         structs: {
+             # load values from simulationservices_icarus.fcl
+             # Longitudinal diffusion constant [cm2/ns]
+@@ -5767,10 +5071,10 @@
+             # Electron drift speed, assumes a certain applied E-field [mm/us]
+             # driftSpeed: 1.5756
+             # Scaling Parameters from int and coh noise components
+-	         int_noise_scale: 1.0
+-	         coh_noise_scale: 1.0
++	    int_noise_scale: 1.0
++	    coh_noise_scale: 1.0
+ 
+-	         overlay_drifter: false # default drifter by default
++	    overlay_drifter: false # default drifter by default
+ 
+             # Gain and shaping time
+             gain0: 17.05212   # mV/fC 
+@@ -5798,620 +5102,408 @@
+ ]
+ 
+ icarus_simwire_wirecell_shifted: @local::icarus_simwire_wirecell
+-icarus_simwire_wirecell_shifted.wcls_main.configs: ["pgrapher/experiment/icarus/wcls-multitpc-sim-drift-simchannel-refactored.jsonnet"]
+ icarus_simwire_wirecell_shifted.wcls_main.params.SimEnergyDepositLabel: "shifted"
+ 
+-icarus_simwire_wirecell_shifted_overlay: @local::icarus_simwire_wirecell_shifted
+-icarus_simwire_wirecell_shifted_overlay.wcls_main.structs.coh_noise_scale: 0.0 # disable noise
+-icarus_simwire_wirecell_shifted_overlay.wcls_main.structs.int_noise_scale: 0.0 # ditto
+-icarus_simwire_wirecell_shifted_overlay.wcls_main.structs.overlay_drifter: true
+-icarus_simwire_wirecell_shifted_overlay.wcls_main.plugins: [@sequence::icarus_simwire_wirecell_shifted_overlay.wcls_main.plugins, "WireCellICARUSDrifter"]
+-icarus_simwire_wirecell_shifted_overlay.wcls_main.inputers: ["wclsSimDepoSetSource:electron", "wclsICARUSDrifter:drifter"]
+-icarus_simwire_wirecell_shifted_overlay.wcls_main.params.cathode_input_format: "scalar"
+-
+ icarus_simwire_wirecell_filtersed: @local::icarus_simwire_wirecell
+-icarus_simwire_wirecell_filtersed.wcls_main.configs: ["pgrapher/experiment/icarus/wcls-multitpc-sim-drift-simchannel-refactored.jsonnet"]
+ icarus_simwire_wirecell_filtersed.wcls_main.params.SimEnergyDepositLabel: "filtersed"
+ 
+-
+-# The following four sets of definitions implement the yz simulation as four separate modules - one per TPC
+-
+-icarus_simwire_wirecell_yz_0: {
+-   module_type: "WireCellToolkit"
+-   wcls_main: {
+-      apps: [
+-         "Pgrapher:pgrapher0"
+-      ]
+-      configs: [
+-         "pgrapher/experiment/icarus/wcls-per-tpc-sim-drift-simchannel-yzsim.jsonnet"
+-      ]
+-      logsinks: ["stdout"]
+-      loglevels: ["info"]
+-      inputers: [
+-         "wclsSimDepoSetSource:electron"
+-      ]
+-      outputers: [
+-         "wclsDepoFluxWriter:postdrift0",
+-         "wclsDepoFluxWriter:postdrift1",
+-         "wclsDepoFluxWriter:postdrift2",
+-         "wclsDepoFluxWriter:postdrift3",
+-         "wclsDepoFluxWriter:postdrift4",
+-         "wclsDepoFluxWriter:postdrift5",
+-         "wclsDepoFluxWriter:postdrift6",
+-         "wclsDepoFluxWriter:postdrift7",
+-         "wclsDepoFluxWriter:postdrift8",
+-         "wclsDepoFluxWriter:postdrift9",
+-         "wclsDepoFluxWriter:postdrift10",
+-         "wclsDepoFluxWriter:postdrift11",
+-         "wclsDepoFluxWriter:postdrift12",
+-         "wclsDepoFluxWriter:postdrift13",
+-         "wclsDepoFluxWriter:postdrift14",
+-         "wclsDepoFluxWriter:postdrift15",
+-         "wclsDepoFluxWriter:postdrift16",
+-         "wclsDepoFluxWriter:postdrift17",
+-         "wclsDepoFluxWriter:postdrift18",
+-         "wclsDepoFluxWriter:postdrift19",
+-         "wclsDepoFluxWriter:postdrift20",
+-         "wclsDepoFluxWriter:postdrift21",
+-         "wclsDepoFluxWriter:postdrift22",
+-         "wclsDepoFluxWriter:postdrift23",
+-         "wclsDepoFluxWriter:postdrift24",
+-         "wclsDepoFluxWriter:postdrift25",
+-         "wclsDepoFluxWriter:postdrift26",
+-         "wclsDepoFluxWriter:postdrift27",
+-         "wclsDepoFluxWriter:postdrift28",
+-         "wclsDepoFluxWriter:postdrift29",
+-         "wclsDepoFluxWriter:postdrift30",
+-         "wclsDepoFluxWriter:postdrift31",
+-         "wclsDepoFluxWriter:postdrift32",
+-         "wclsDepoFluxWriter:postdrift33",
+-         "wclsDepoFluxWriter:postdrift34",
+-         "wclsDepoFluxWriter:postdrift35",
+-         "wclsDepoFluxWriter:postdrift36",
+-         "wclsDepoFluxWriter:postdrift37",
+-         "wclsDepoFluxWriter:postdrift38",
+-         "wclsDepoFluxWriter:postdrift39",
+-         "wclsDepoFluxWriter:postdrift40",
+-         "wclsDepoFluxWriter:postdrift41",
+-         "wclsDepoFluxWriter:postdrift42",
+-         "wclsDepoFluxWriter:postdrift43",
+-         "wclsDepoFluxWriter:postdrift44",
+-         "wclsDepoFluxWriter:postdrift45",
+-         "wclsDepoFluxWriter:postdrift46",
+-         "wclsDepoFluxWriter:postdrift47",
+-         "wclsDepoFluxWriter:postdrift48",
+-         "wclsDepoFluxWriter:postdrift49",
+-         "wclsDepoFluxWriter:postdrift50",
+-         "wclsDepoFluxWriter:postdrift51",
+-         "wclsDepoFluxWriter:postdrift52",
+-         "wclsDepoFluxWriter:postdrift53",
+-         "wclsDepoFluxWriter:postdrift54",
+-         "wclsDepoFluxWriter:postdrift55",
+-         "wclsDepoFluxWriter:postdrift56",
+-         "wclsDepoFluxWriter:postdrift57",
+-         "wclsDepoFluxWriter:postdrift58",
+-         "wclsDepoFluxWriter:postdrift59",
+-         "wclsDepoFluxWriter:postdrift60",
+-         "wclsDepoFluxWriter:postdrift61",
+-         "wclsDepoFluxWriter:postdrift62",
+-         "wclsDepoFluxWriter:postdrift63",
+-         "wclsDepoFluxWriter:postdrift64",
+-         "wclsDepoFluxWriter:postdrift65",
+-         "wclsDepoFluxWriter:postdrift66",
+-         "wclsDepoFluxWriter:postdrift67",
+-         "wclsDepoFluxWriter:postdrift68",
+-         "wclsDepoFluxWriter:postdrift69",
+-         "wclsDepoFluxWriter:postdrift70",
+-         "wclsDepoFluxWriter:postdrift71",
+-         "wclsDepoFluxWriter:postdrift72",
+-         "wclsDepoFluxWriter:postdrift73",
+-         "wclsDepoFluxWriter:postdrift74",
+-         "wclsDepoFluxWriter:postdrift75",
+-         "wclsDepoFluxWriter:postdrift76",
+-         "wclsDepoFluxWriter:postdrift77",
+-         "wclsDepoFluxWriter:postdrift78",
+-         "wclsDepoFluxWriter:postdrift79",
+-         "wclsDepoFluxWriter:postdrift80",
+-         "wclsDepoFluxWriter:postdrift81",
+-         "wclsDepoFluxWriter:postdrift82",
+-         "wclsDepoFluxWriter:postdrift83",
+-         "wclsDepoFluxWriter:postdrift84",
+-         "wclsDepoFluxWriter:postdrift85",
+-         "wclsDepoFluxWriter:postdrift86",
+-         "wclsDepoFluxWriter:postdrift87",
+-         "wclsDepoFluxWriter:postdrift88",
+-         "wclsDepoFluxWriter:postdrift89",
+-         "wclsFrameSaver:simdigits0"
+-      ]
+-      params: {
+-         SimEnergyDepositLabel: "filtersed"
+-         cathode_input_format: "array"
+-         file_rcresp: "icarus_fnal_rc_tail.json"
+-         tpc_idx: "0"
+-         files_fields: "\"icarus_final_fit_dqdx0.json.bz2\",\n                           \"icarus_final_fit_dqdx1.json.bz2\",\n                           \"icarus_final_fit_dqdx2.json.bz2\",\n                           \"icarus_final_fit_dqdx3.json.bz2\",\n                           \"icarus_final_fit_dqdx4.json.bz2\",\n                           \"icarus_final_fit_dqdx5.json.bz2\",\n                           \"icarus_final_fit_dqdx6.json.bz2\",\n                           \"icarus_final_fit_dqdx7.json.bz2\",\n                           \"icarus_final_fit_dqdx8.json.bz2\",\n                           \"icarus_final_fit_dqdx9.json.bz2\",\n                           \"icarus_final_fit_dqdx10.json.bz2\",\n                           \"icarus_final_fit_dqdx11.json.bz2\",\n                           \"icarus_final_fit_dqdx12.json.bz2\",\n                           \"icarus_final_fit_dqdx13.json.bz2\",\n                           \"icarus_final_fit_dqdx14.json.bz2\""
+-      }
+-      plugins: [
+-         "WireCellPgraph",
+-         "WireCellGen",
+-         "WireCellSio",
+-         "WireCellRoot",
+-         "WireCellLarsoft",
+-         "WireCellHio"
+-      ]
+-      structs: {
+-         DL: 4e-9
+-         DT: 8.8e-9
+-         coh_noise_scale: 1
+-         gain0: 1.705212e1
+-         gain1: 1.26181926e1
+-         gain2: 1.30261362e1
+-         int_noise_scale: 1
+-         lifetime: 3000
+-         lifetime_TPCEE: 3000
+-         lifetime_TPCEW: 3000
+-         lifetime_TPCWE: 3000
+-         lifetime_TPCWW: 3000
+-         overlay_drifter: false
+-         shaping0: 1.3
+-         shaping1: 1.45
+-         shaping2: 1.3
+-         time_offset_u: 0
+-         time_offset_v: 0
+-         time_offset_y: 0
+-      }
+-      tool_type: "WCLS"
+-   }
+-}
+-
+-icarus_simwire_wirecell_yz_1: {
+-   module_type: "WireCellToolkit"
+-   wcls_main: {
+-      apps: [
+-         "Pgrapher:pgrapher1"
+-      ]
+-      configs: [
+-         "pgrapher/experiment/icarus/wcls-per-tpc-sim-drift-simchannel-yzsim.jsonnet"
+-      ]
+-      logsinks: ["stdout"]
+-      loglevels: ["info"]
+-      inputers: [
+-         "wclsSimDepoSetSource:electron"
+-      ]
+-      outputers: [
+-         "wclsDepoFluxWriter:postdrift90",
+-         "wclsDepoFluxWriter:postdrift91",
+-         "wclsDepoFluxWriter:postdrift92",
+-         "wclsDepoFluxWriter:postdrift93",
+-         "wclsDepoFluxWriter:postdrift94",
+-         "wclsDepoFluxWriter:postdrift95",
+-         "wclsDepoFluxWriter:postdrift96",
+-         "wclsDepoFluxWriter:postdrift97",
+-         "wclsDepoFluxWriter:postdrift98",
+-         "wclsDepoFluxWriter:postdrift99",
+-         "wclsDepoFluxWriter:postdrift100",
+-         "wclsDepoFluxWriter:postdrift101",
+-         "wclsDepoFluxWriter:postdrift102",
+-         "wclsDepoFluxWriter:postdrift103",
+-         "wclsDepoFluxWriter:postdrift104",
+-         "wclsDepoFluxWriter:postdrift105",
+-         "wclsDepoFluxWriter:postdrift106",
+-         "wclsDepoFluxWriter:postdrift107",
+-         "wclsDepoFluxWriter:postdrift108",
+-         "wclsDepoFluxWriter:postdrift109",
+-         "wclsDepoFluxWriter:postdrift110",
+-         "wclsDepoFluxWriter:postdrift111",
+-         "wclsDepoFluxWriter:postdrift112",
+-         "wclsDepoFluxWriter:postdrift113",
+-         "wclsDepoFluxWriter:postdrift114",
+-         "wclsDepoFluxWriter:postdrift115",
+-         "wclsDepoFluxWriter:postdrift116",
+-         "wclsDepoFluxWriter:postdrift117",
+-         "wclsDepoFluxWriter:postdrift118",
+-         "wclsDepoFluxWriter:postdrift119",
+-         "wclsDepoFluxWriter:postdrift120",
+-         "wclsDepoFluxWriter:postdrift121",
+-         "wclsDepoFluxWriter:postdrift122",
+-         "wclsDepoFluxWriter:postdrift123",
+-         "wclsDepoFluxWriter:postdrift124",
+-         "wclsDepoFluxWriter:postdrift125",
+-         "wclsDepoFluxWriter:postdrift126",
+-         "wclsDepoFluxWriter:postdrift127",
+-         "wclsDepoFluxWriter:postdrift128",
+-         "wclsDepoFluxWriter:postdrift129",
+-         "wclsDepoFluxWriter:postdrift130",
+-         "wclsDepoFluxWriter:postdrift131",
+-         "wclsDepoFluxWriter:postdrift132",
+-         "wclsDepoFluxWriter:postdrift133",
+-         "wclsDepoFluxWriter:postdrift134",
+-         "wclsDepoFluxWriter:postdrift135",
+-         "wclsDepoFluxWriter:postdrift136",
+-         "wclsDepoFluxWriter:postdrift137",
+-         "wclsDepoFluxWriter:postdrift138",
+-         "wclsDepoFluxWriter:postdrift139",
+-         "wclsDepoFluxWriter:postdrift140",
+-         "wclsDepoFluxWriter:postdrift141",
+-         "wclsDepoFluxWriter:postdrift142",
+-         "wclsDepoFluxWriter:postdrift143",
+-         "wclsDepoFluxWriter:postdrift144",
+-         "wclsDepoFluxWriter:postdrift145",
+-         "wclsDepoFluxWriter:postdrift146",
+-         "wclsDepoFluxWriter:postdrift147",
+-         "wclsDepoFluxWriter:postdrift148",
+-         "wclsDepoFluxWriter:postdrift149",
+-         "wclsDepoFluxWriter:postdrift150",
+-         "wclsDepoFluxWriter:postdrift151",
+-         "wclsDepoFluxWriter:postdrift152",
+-         "wclsDepoFluxWriter:postdrift153",
+-         "wclsDepoFluxWriter:postdrift154",
+-         "wclsDepoFluxWriter:postdrift155",
+-         "wclsDepoFluxWriter:postdrift156",
+-         "wclsDepoFluxWriter:postdrift157",
+-         "wclsDepoFluxWriter:postdrift158",
+-         "wclsDepoFluxWriter:postdrift159",
+-         "wclsDepoFluxWriter:postdrift160",
+-         "wclsDepoFluxWriter:postdrift161",
+-         "wclsDepoFluxWriter:postdrift162",
+-         "wclsDepoFluxWriter:postdrift163",
+-         "wclsDepoFluxWriter:postdrift164",
+-         "wclsDepoFluxWriter:postdrift165",
+-         "wclsDepoFluxWriter:postdrift166",
+-         "wclsDepoFluxWriter:postdrift167",
+-         "wclsDepoFluxWriter:postdrift168",
+-         "wclsDepoFluxWriter:postdrift169",
+-         "wclsDepoFluxWriter:postdrift170",
+-         "wclsDepoFluxWriter:postdrift171",
+-         "wclsDepoFluxWriter:postdrift172",
+-         "wclsDepoFluxWriter:postdrift173",
+-         "wclsDepoFluxWriter:postdrift174",
+-         "wclsDepoFluxWriter:postdrift175",
+-         "wclsDepoFluxWriter:postdrift176",
+-         "wclsDepoFluxWriter:postdrift177",
+-         "wclsDepoFluxWriter:postdrift178",
+-         "wclsDepoFluxWriter:postdrift179",
+-         "wclsFrameSaver:simdigits1"
+-      ]
+-      params: {
+-         SimEnergyDepositLabel: "filtersed"
+-         cathode_input_format: "array"
+-         file_rcresp: "icarus_fnal_rc_tail.json"
+-         tpc_idx: "1"
+-         files_fields: "\"icarus_final_fit_dqdx0.json.bz2\",\n                           \"icarus_final_fit_dqdx1.json.bz2\",\n                           \"icarus_final_fit_dqdx2.json.bz2\",\n                           \"icarus_final_fit_dqdx3.json.bz2\",\n                           \"icarus_final_fit_dqdx4.json.bz2\",\n                           \"icarus_final_fit_dqdx5.json.bz2\",\n                           \"icarus_final_fit_dqdx6.json.bz2\",\n                           \"icarus_final_fit_dqdx7.json.bz2\",\n                           \"icarus_final_fit_dqdx8.json.bz2\",\n                           \"icarus_final_fit_dqdx9.json.bz2\",\n                           \"icarus_final_fit_dqdx10.json.bz2\",\n                           \"icarus_final_fit_dqdx11.json.bz2\",\n                           \"icarus_final_fit_dqdx12.json.bz2\",\n                           \"icarus_final_fit_dqdx13.json.bz2\",\n                           \"icarus_final_fit_dqdx14.json.bz2\""
+-      }
+-      plugins: [
+-         "WireCellPgraph",
+-         "WireCellGen",
+-         "WireCellSio",
+-         "WireCellRoot",
+-         "WireCellLarsoft",
+-         "WireCellHio"
+-      ]
+-      structs: {
+-         DL: 4e-9
+-         DT: 8.8e-9
+-         coh_noise_scale: 1
+-         gain0: 1.705212e1
+-         gain1: 1.26181926e1
+-         gain2: 1.30261362e1
+-         int_noise_scale: 1
+-         lifetime: 3000
+-         lifetime_TPCEE: 3000
+-         lifetime_TPCEW: 3000
+-         lifetime_TPCWE: 3000
+-         lifetime_TPCWW: 3000
+-         overlay_drifter: false
+-         shaping0: 1.3
+-         shaping1: 1.45
+-         shaping2: 1.3
+-         time_offset_u: 0
+-         time_offset_v: 0
+-         time_offset_y: 0
+-      }
+-      tool_type: "WCLS"
+-   }
+-}
+-
+-icarus_simwire_wirecell_yz_2: {
+-   module_type: "WireCellToolkit"
+-   wcls_main: {
+-      apps: [
+-         "Pgrapher:pgrapher2"
+-      ]
+-      configs: [
+-         "pgrapher/experiment/icarus/wcls-per-tpc-sim-drift-simchannel-yzsim.jsonnet"
+-      ]
+-      logsinks: ["stdout"]
+-      loglevels: ["info"]
+-      inputers: [
+-         "wclsSimDepoSetSource:electron"
+-      ]
+-      outputers: [
+-         "wclsDepoFluxWriter:postdrift180",
+-         "wclsDepoFluxWriter:postdrift181",
+-         "wclsDepoFluxWriter:postdrift182",
+-         "wclsDepoFluxWriter:postdrift183",
+-         "wclsDepoFluxWriter:postdrift184",
+-         "wclsDepoFluxWriter:postdrift185",
+-         "wclsDepoFluxWriter:postdrift186",
+-         "wclsDepoFluxWriter:postdrift187",
+-         "wclsDepoFluxWriter:postdrift188",
+-         "wclsDepoFluxWriter:postdrift189",
+-         "wclsDepoFluxWriter:postdrift190",
+-         "wclsDepoFluxWriter:postdrift191",
+-         "wclsDepoFluxWriter:postdrift192",
+-         "wclsDepoFluxWriter:postdrift193",
+-         "wclsDepoFluxWriter:postdrift194",
+-         "wclsDepoFluxWriter:postdrift195",
+-         "wclsDepoFluxWriter:postdrift196",
+-         "wclsDepoFluxWriter:postdrift197",
+-         "wclsDepoFluxWriter:postdrift198",
+-         "wclsDepoFluxWriter:postdrift199",
+-         "wclsDepoFluxWriter:postdrift200",
+-         "wclsDepoFluxWriter:postdrift201",
+-         "wclsDepoFluxWriter:postdrift202",
+-         "wclsDepoFluxWriter:postdrift203",
+-         "wclsDepoFluxWriter:postdrift204",
+-         "wclsDepoFluxWriter:postdrift205",
+-         "wclsDepoFluxWriter:postdrift206",
+-         "wclsDepoFluxWriter:postdrift207",
+-         "wclsDepoFluxWriter:postdrift208",
+-         "wclsDepoFluxWriter:postdrift209",
+-         "wclsDepoFluxWriter:postdrift210",
+-         "wclsDepoFluxWriter:postdrift211",
+-         "wclsDepoFluxWriter:postdrift212",
+-         "wclsDepoFluxWriter:postdrift213",
+-         "wclsDepoFluxWriter:postdrift214",
+-         "wclsDepoFluxWriter:postdrift215",
+-         "wclsDepoFluxWriter:postdrift216",
+-         "wclsDepoFluxWriter:postdrift217",
+-         "wclsDepoFluxWriter:postdrift218",
+-         "wclsDepoFluxWriter:postdrift219",
+-         "wclsDepoFluxWriter:postdrift220",
+-         "wclsDepoFluxWriter:postdrift221",
+-         "wclsDepoFluxWriter:postdrift222",
+-         "wclsDepoFluxWriter:postdrift223",
+-         "wclsDepoFluxWriter:postdrift224",
+-         "wclsDepoFluxWriter:postdrift225",
+-         "wclsDepoFluxWriter:postdrift226",
+-         "wclsDepoFluxWriter:postdrift227",
+-         "wclsDepoFluxWriter:postdrift228",
+-         "wclsDepoFluxWriter:postdrift229",
+-         "wclsDepoFluxWriter:postdrift230",
+-         "wclsDepoFluxWriter:postdrift231",
+-         "wclsDepoFluxWriter:postdrift232",
+-         "wclsDepoFluxWriter:postdrift233",
+-         "wclsDepoFluxWriter:postdrift234",
+-         "wclsDepoFluxWriter:postdrift235",
+-         "wclsDepoFluxWriter:postdrift236",
+-         "wclsDepoFluxWriter:postdrift237",
+-         "wclsDepoFluxWriter:postdrift238",
+-         "wclsDepoFluxWriter:postdrift239",
+-         "wclsDepoFluxWriter:postdrift240",
+-         "wclsDepoFluxWriter:postdrift241",
+-         "wclsDepoFluxWriter:postdrift242",
+-         "wclsDepoFluxWriter:postdrift243",
+-         "wclsDepoFluxWriter:postdrift244",
+-         "wclsDepoFluxWriter:postdrift245",
+-         "wclsDepoFluxWriter:postdrift246",
+-         "wclsDepoFluxWriter:postdrift247",
+-         "wclsDepoFluxWriter:postdrift248",
+-         "wclsDepoFluxWriter:postdrift249",
+-         "wclsDepoFluxWriter:postdrift250",
+-         "wclsDepoFluxWriter:postdrift251",
+-         "wclsDepoFluxWriter:postdrift252",
+-         "wclsDepoFluxWriter:postdrift253",
+-         "wclsDepoFluxWriter:postdrift254",
+-         "wclsDepoFluxWriter:postdrift255",
+-         "wclsDepoFluxWriter:postdrift256",
+-         "wclsDepoFluxWriter:postdrift257",
+-         "wclsDepoFluxWriter:postdrift258",
+-         "wclsDepoFluxWriter:postdrift259",
+-         "wclsDepoFluxWriter:postdrift260",
+-         "wclsDepoFluxWriter:postdrift261",
+-         "wclsDepoFluxWriter:postdrift262",
+-         "wclsDepoFluxWriter:postdrift263",
+-         "wclsDepoFluxWriter:postdrift264",
+-         "wclsDepoFluxWriter:postdrift265",
+-         "wclsDepoFluxWriter:postdrift266",
+-         "wclsDepoFluxWriter:postdrift267",
+-         "wclsDepoFluxWriter:postdrift268",
+-         "wclsDepoFluxWriter:postdrift269",
+-         "wclsFrameSaver:simdigits2"
+-      ]
+-      params: {
+-         SimEnergyDepositLabel: "filtersed"
+-         cathode_input_format: "array"
+-         file_rcresp: "icarus_fnal_rc_tail.json"
+-         tpc_idx: "2"
+-         files_fields: "\"icarus_final_fit_dqdx0.json.bz2\",\n                           \"icarus_final_fit_dqdx1.json.bz2\",\n                           \"icarus_final_fit_dqdx2.json.bz2\",\n                           \"icarus_final_fit_dqdx3.json.bz2\",\n                           \"icarus_final_fit_dqdx4.json.bz2\",\n                           \"icarus_final_fit_dqdx5.json.bz2\",\n                           \"icarus_final_fit_dqdx6.json.bz2\",\n                           \"icarus_final_fit_dqdx7.json.bz2\",\n                           \"icarus_final_fit_dqdx8.json.bz2\",\n                           \"icarus_final_fit_dqdx9.json.bz2\",\n                           \"icarus_final_fit_dqdx10.json.bz2\",\n                           \"icarus_final_fit_dqdx11.json.bz2\",\n                           \"icarus_final_fit_dqdx12.json.bz2\",\n                           \"icarus_final_fit_dqdx13.json.bz2\",\n                           \"icarus_final_fit_dqdx14.json.bz2\""
+-      }
+-      plugins: [
+-         "WireCellPgraph",
+-         "WireCellGen",
+-         "WireCellSio",
+-         "WireCellRoot",
+-         "WireCellLarsoft",
+-         "WireCellHio"
+-      ]
+-      structs: {
+-         DL: 4e-9
+-         DT: 8.8e-9
+-         coh_noise_scale: 1
+-         gain0: 1.705212e1
+-         gain1: 1.26181926e1
+-         gain2: 1.30261362e1
+-         int_noise_scale: 1
+-         lifetime: 3000
+-         lifetime_TPCEE: 3000
+-         lifetime_TPCEW: 3000
+-         lifetime_TPCWE: 3000
+-         lifetime_TPCWW: 3000
+-         overlay_drifter: false
+-         shaping0: 1.3
+-         shaping1: 1.45
+-         shaping2: 1.3
+-         time_offset_u: 0
+-         time_offset_v: 0
+-         time_offset_y: 0
+-      }
+-      tool_type: "WCLS"
+-   }
+-}
+-icarus_simwire_wirecell_yz_3: {
+-   module_type: "WireCellToolkit"
+-   wcls_main: {
+-      apps: [
+-         "Pgrapher:pgrapher3"
+-      ]
+-      configs: [
+-         "pgrapher/experiment/icarus/wcls-per-tpc-sim-drift-simchannel-yzsim.jsonnet"
+-      ]
+-      logsinks: ["stdout"]
+-      loglevels: ["info"]
+-      inputers: [
+-         "wclsSimDepoSetSource:electron"
+-      ]
+-      outputers: [
+-         "wclsDepoFluxWriter:postdrift270",
+-         "wclsDepoFluxWriter:postdrift271",
+-         "wclsDepoFluxWriter:postdrift272",
+-         "wclsDepoFluxWriter:postdrift273",
+-         "wclsDepoFluxWriter:postdrift274",
+-         "wclsDepoFluxWriter:postdrift275",
+-         "wclsDepoFluxWriter:postdrift276",
+-         "wclsDepoFluxWriter:postdrift277",
+-         "wclsDepoFluxWriter:postdrift278",
+-         "wclsDepoFluxWriter:postdrift279",
+-         "wclsDepoFluxWriter:postdrift280",
+-         "wclsDepoFluxWriter:postdrift281",
+-         "wclsDepoFluxWriter:postdrift282",
+-         "wclsDepoFluxWriter:postdrift283",
+-         "wclsDepoFluxWriter:postdrift284",
+-         "wclsDepoFluxWriter:postdrift285",
+-         "wclsDepoFluxWriter:postdrift286",
+-         "wclsDepoFluxWriter:postdrift287",
+-         "wclsDepoFluxWriter:postdrift288",
+-         "wclsDepoFluxWriter:postdrift289",
+-         "wclsDepoFluxWriter:postdrift290",
+-         "wclsDepoFluxWriter:postdrift291",
+-         "wclsDepoFluxWriter:postdrift292",
+-         "wclsDepoFluxWriter:postdrift293",
+-         "wclsDepoFluxWriter:postdrift294",
+-         "wclsDepoFluxWriter:postdrift295",
+-         "wclsDepoFluxWriter:postdrift296",
+-         "wclsDepoFluxWriter:postdrift297",
+-         "wclsDepoFluxWriter:postdrift298",
+-         "wclsDepoFluxWriter:postdrift299",
+-         "wclsDepoFluxWriter:postdrift300",
+-         "wclsDepoFluxWriter:postdrift301",
+-         "wclsDepoFluxWriter:postdrift302",
+-         "wclsDepoFluxWriter:postdrift303",
+-         "wclsDepoFluxWriter:postdrift304",
+-         "wclsDepoFluxWriter:postdrift305",
+-         "wclsDepoFluxWriter:postdrift306",
+-         "wclsDepoFluxWriter:postdrift307",
+-         "wclsDepoFluxWriter:postdrift308",
+-         "wclsDepoFluxWriter:postdrift309",
+-         "wclsDepoFluxWriter:postdrift310",
+-         "wclsDepoFluxWriter:postdrift311",
+-         "wclsDepoFluxWriter:postdrift312",
+-         "wclsDepoFluxWriter:postdrift313",
+-         "wclsDepoFluxWriter:postdrift314",
+-         "wclsDepoFluxWriter:postdrift315",
+-         "wclsDepoFluxWriter:postdrift316",
+-         "wclsDepoFluxWriter:postdrift317",
+-         "wclsDepoFluxWriter:postdrift318",
+-         "wclsDepoFluxWriter:postdrift319",
+-         "wclsDepoFluxWriter:postdrift320",
+-         "wclsDepoFluxWriter:postdrift321",
+-         "wclsDepoFluxWriter:postdrift322",
+-         "wclsDepoFluxWriter:postdrift323",
+-         "wclsDepoFluxWriter:postdrift324",
+-         "wclsDepoFluxWriter:postdrift325",
+-         "wclsDepoFluxWriter:postdrift326",
+-         "wclsDepoFluxWriter:postdrift327",
+-         "wclsDepoFluxWriter:postdrift328",
+-         "wclsDepoFluxWriter:postdrift329",
+-         "wclsDepoFluxWriter:postdrift330",
+-         "wclsDepoFluxWriter:postdrift331",
+-         "wclsDepoFluxWriter:postdrift332",
+-         "wclsDepoFluxWriter:postdrift333",
+-         "wclsDepoFluxWriter:postdrift334",
+-         "wclsDepoFluxWriter:postdrift335",
+-         "wclsDepoFluxWriter:postdrift336",
+-         "wclsDepoFluxWriter:postdrift337",
+-         "wclsDepoFluxWriter:postdrift338",
+-         "wclsDepoFluxWriter:postdrift339",
+-         "wclsDepoFluxWriter:postdrift340",
+-         "wclsDepoFluxWriter:postdrift341",
+-         "wclsDepoFluxWriter:postdrift342",
+-         "wclsDepoFluxWriter:postdrift343",
+-         "wclsDepoFluxWriter:postdrift344",
+-         "wclsDepoFluxWriter:postdrift345",
+-         "wclsDepoFluxWriter:postdrift346",
+-         "wclsDepoFluxWriter:postdrift347",
+-         "wclsDepoFluxWriter:postdrift348",
+-         "wclsDepoFluxWriter:postdrift349",
+-         "wclsDepoFluxWriter:postdrift350",
+-         "wclsDepoFluxWriter:postdrift351",
+-         "wclsDepoFluxWriter:postdrift352",
+-         "wclsDepoFluxWriter:postdrift353",
+-         "wclsDepoFluxWriter:postdrift354",
+-         "wclsDepoFluxWriter:postdrift355",
+-         "wclsDepoFluxWriter:postdrift356",
+-         "wclsDepoFluxWriter:postdrift357",
+-         "wclsDepoFluxWriter:postdrift358",
+-         "wclsDepoFluxWriter:postdrift359",
+-         "wclsFrameSaver:simdigits3"
+-      ]
+-      params: {
+-         SimEnergyDepositLabel: "filtersed"
+-         cathode_input_format: "array"
+-         file_rcresp: "icarus_fnal_rc_tail.json"
+-         tpc_idx: "3"
+-         files_fields: "\"icarus_final_fit_dqdx0.json.bz2\",\n                           \"icarus_final_fit_dqdx1.json.bz2\",\n                           \"icarus_final_fit_dqdx2.json.bz2\",\n                           \"icarus_final_fit_dqdx3.json.bz2\",\n                           \"icarus_final_fit_dqdx4.json.bz2\",\n                           \"icarus_final_fit_dqdx5.json.bz2\",\n                           \"icarus_final_fit_dqdx6.json.bz2\",\n                           \"icarus_final_fit_dqdx7.json.bz2\",\n                           \"icarus_final_fit_dqdx8.json.bz2\",\n                           \"icarus_final_fit_dqdx9.json.bz2\",\n                           \"icarus_final_fit_dqdx10.json.bz2\",\n                           \"icarus_final_fit_dqdx11.json.bz2\",\n                           \"icarus_final_fit_dqdx12.json.bz2\",\n                           \"icarus_final_fit_dqdx13.json.bz2\",\n                           \"icarus_final_fit_dqdx14.json.bz2\""
+-      }
+-      plugins: [
+-         "WireCellPgraph",
+-         "WireCellGen",
+-         "WireCellSio",
+-         "WireCellRoot",
+-         "WireCellLarsoft",
+-         "WireCellHio"
+-      ]
+-      structs: {
+-         DL: 4e-9
+-         DT: 8.8e-9
+-         coh_noise_scale: 1
+-         gain0: 1.705212e1
+-         gain1: 1.26181926e1
+-         gain2: 1.30261362e1
+-         int_noise_scale: 1
+-         lifetime: 3000
+-         lifetime_TPCEE: 3000
+-         lifetime_TPCEW: 3000
+-         lifetime_TPCWE: 3000
+-         lifetime_TPCWW: 3000
+-         overlay_drifter: false
+-         shaping0: 1.3
+-         shaping1: 1.45
+-         shaping2: 1.3
+-         time_offset_u: 0
+-         time_offset_v: 0
+-         time_offset_y: 0
+-      }
+-      tool_type: "WCLS"
+-   }
+-}
+-
+-# The following are definitions for running the detector simulation in overlay mode
+-
+-icarus_simwire_wirecell_yz_overlay_0: @local::icarus_simwire_wirecell_yz_0
+-
+-icarus_simwire_wirecell_yz_overlay_0.wcls_main.structs.coh_noise_scale: 0.0 # disable noise
+-icarus_simwire_wirecell_yz_overlay_0.wcls_main.structs.int_noise_scale: 0.0 # ditto
+-icarus_simwire_wirecell_yz_overlay_0.wcls_main.structs.overlay_drifter: true
+-icarus_simwire_wirecell_yz_overlay_0.wcls_main.plugins: [@sequence::icarus_simwire_wirecell_yz_overlay_0.wcls_main.plugins, "WireCellICARUSDrifter"]
+-icarus_simwire_wirecell_yz_overlay_0.wcls_main.inputers: ["wclsSimDepoSetSource:electron",
++icarus_simwire_wirecell_yz: @local::icarus_simwire_wirecell_filtersed
++icarus_simwire_wirecell_yz.wcls_main.configs: ["pgrapher/experiment/icarus/wcls-multitpc-sim-drift-simchannel-yzsim-refactored.jsonnet"]
++icarus_simwire_wirecell_yz.wcls_main.outputers: [
++            "wclsDepoFluxWriter:postdrift0",
++            "wclsDepoFluxWriter:postdrift1",
++            "wclsDepoFluxWriter:postdrift2",
++            "wclsDepoFluxWriter:postdrift3",
++            "wclsDepoFluxWriter:postdrift4",
++            "wclsDepoFluxWriter:postdrift5",
++            "wclsDepoFluxWriter:postdrift6",
++            "wclsDepoFluxWriter:postdrift7",
++            "wclsDepoFluxWriter:postdrift8",
++            "wclsDepoFluxWriter:postdrift9",
++            "wclsDepoFluxWriter:postdrift10",
++            "wclsDepoFluxWriter:postdrift11",
++            "wclsDepoFluxWriter:postdrift12",
++            "wclsDepoFluxWriter:postdrift13",
++            "wclsDepoFluxWriter:postdrift14",
++            "wclsDepoFluxWriter:postdrift15",
++            "wclsDepoFluxWriter:postdrift16",
++            "wclsDepoFluxWriter:postdrift17",
++            "wclsDepoFluxWriter:postdrift18",
++            "wclsDepoFluxWriter:postdrift19",
++            "wclsDepoFluxWriter:postdrift20",
++            "wclsDepoFluxWriter:postdrift21",
++            "wclsDepoFluxWriter:postdrift22",
++            "wclsDepoFluxWriter:postdrift23",
++            "wclsDepoFluxWriter:postdrift24",
++            "wclsDepoFluxWriter:postdrift25",
++            "wclsDepoFluxWriter:postdrift26",
++            "wclsDepoFluxWriter:postdrift27",
++            "wclsDepoFluxWriter:postdrift28",
++            "wclsDepoFluxWriter:postdrift29",
++            "wclsDepoFluxWriter:postdrift30",
++            "wclsDepoFluxWriter:postdrift31",
++            "wclsDepoFluxWriter:postdrift32",
++            "wclsDepoFluxWriter:postdrift33",
++            "wclsDepoFluxWriter:postdrift34",
++            "wclsDepoFluxWriter:postdrift35",
++            "wclsDepoFluxWriter:postdrift36",
++            "wclsDepoFluxWriter:postdrift37",
++            "wclsDepoFluxWriter:postdrift38",
++            "wclsDepoFluxWriter:postdrift39",
++            "wclsDepoFluxWriter:postdrift40",
++            "wclsDepoFluxWriter:postdrift41",
++            "wclsDepoFluxWriter:postdrift42",
++            "wclsDepoFluxWriter:postdrift43",
++            "wclsDepoFluxWriter:postdrift44",
++            "wclsDepoFluxWriter:postdrift45",
++            "wclsDepoFluxWriter:postdrift46",
++            "wclsDepoFluxWriter:postdrift47",
++            "wclsDepoFluxWriter:postdrift48",
++            "wclsDepoFluxWriter:postdrift49",
++            "wclsDepoFluxWriter:postdrift50",
++            "wclsDepoFluxWriter:postdrift51",
++            "wclsDepoFluxWriter:postdrift52",
++            "wclsDepoFluxWriter:postdrift53",
++            "wclsDepoFluxWriter:postdrift54",
++            "wclsDepoFluxWriter:postdrift55",
++            "wclsDepoFluxWriter:postdrift56",
++            "wclsDepoFluxWriter:postdrift57",
++            "wclsDepoFluxWriter:postdrift58",
++            "wclsDepoFluxWriter:postdrift59",
++            "wclsDepoFluxWriter:postdrift60",
++            "wclsDepoFluxWriter:postdrift61",
++            "wclsDepoFluxWriter:postdrift62",
++            "wclsDepoFluxWriter:postdrift63",
++            "wclsDepoFluxWriter:postdrift64",
++            "wclsDepoFluxWriter:postdrift65",
++            "wclsDepoFluxWriter:postdrift66",
++            "wclsDepoFluxWriter:postdrift67",
++            "wclsDepoFluxWriter:postdrift68",
++            "wclsDepoFluxWriter:postdrift69",
++            "wclsDepoFluxWriter:postdrift70",
++            "wclsDepoFluxWriter:postdrift71",
++            "wclsDepoFluxWriter:postdrift72",
++            "wclsDepoFluxWriter:postdrift73",
++            "wclsDepoFluxWriter:postdrift74",
++            "wclsDepoFluxWriter:postdrift75",
++            "wclsDepoFluxWriter:postdrift76",
++            "wclsDepoFluxWriter:postdrift77",
++            "wclsDepoFluxWriter:postdrift78",
++            "wclsDepoFluxWriter:postdrift79",
++            "wclsDepoFluxWriter:postdrift80",
++            "wclsDepoFluxWriter:postdrift81",
++            "wclsDepoFluxWriter:postdrift82",
++            "wclsDepoFluxWriter:postdrift83",
++            "wclsDepoFluxWriter:postdrift84",
++            "wclsDepoFluxWriter:postdrift85",
++            "wclsDepoFluxWriter:postdrift86",
++            "wclsDepoFluxWriter:postdrift87",
++            "wclsDepoFluxWriter:postdrift88",
++            "wclsDepoFluxWriter:postdrift89",
++            "wclsDepoFluxWriter:postdrift90",
++            "wclsDepoFluxWriter:postdrift91",
++            "wclsDepoFluxWriter:postdrift92",
++            "wclsDepoFluxWriter:postdrift93",
++            "wclsDepoFluxWriter:postdrift94",
++            "wclsDepoFluxWriter:postdrift95",
++            "wclsDepoFluxWriter:postdrift96",
++            "wclsDepoFluxWriter:postdrift97",
++            "wclsDepoFluxWriter:postdrift98",
++            "wclsDepoFluxWriter:postdrift99",
++            "wclsDepoFluxWriter:postdrift100",
++            "wclsDepoFluxWriter:postdrift101",
++            "wclsDepoFluxWriter:postdrift102",
++            "wclsDepoFluxWriter:postdrift103",
++            "wclsDepoFluxWriter:postdrift104",
++            "wclsDepoFluxWriter:postdrift105",
++            "wclsDepoFluxWriter:postdrift106",
++            "wclsDepoFluxWriter:postdrift107",
++            "wclsDepoFluxWriter:postdrift108",
++            "wclsDepoFluxWriter:postdrift109",
++            "wclsDepoFluxWriter:postdrift110",
++            "wclsDepoFluxWriter:postdrift111",
++            "wclsDepoFluxWriter:postdrift112",
++            "wclsDepoFluxWriter:postdrift113",
++            "wclsDepoFluxWriter:postdrift114",
++            "wclsDepoFluxWriter:postdrift115",
++            "wclsDepoFluxWriter:postdrift116",
++            "wclsDepoFluxWriter:postdrift117",
++            "wclsDepoFluxWriter:postdrift118",
++            "wclsDepoFluxWriter:postdrift119",
++            "wclsDepoFluxWriter:postdrift120",
++            "wclsDepoFluxWriter:postdrift121",
++            "wclsDepoFluxWriter:postdrift122",
++            "wclsDepoFluxWriter:postdrift123",
++            "wclsDepoFluxWriter:postdrift124",
++            "wclsDepoFluxWriter:postdrift125",
++            "wclsDepoFluxWriter:postdrift126",
++            "wclsDepoFluxWriter:postdrift127",
++            "wclsDepoFluxWriter:postdrift128",
++            "wclsDepoFluxWriter:postdrift129",
++            "wclsDepoFluxWriter:postdrift130",
++            "wclsDepoFluxWriter:postdrift131",
++            "wclsDepoFluxWriter:postdrift132",
++            "wclsDepoFluxWriter:postdrift133",
++            "wclsDepoFluxWriter:postdrift134",
++            "wclsDepoFluxWriter:postdrift135",
++            "wclsDepoFluxWriter:postdrift136",
++            "wclsDepoFluxWriter:postdrift137",
++            "wclsDepoFluxWriter:postdrift138",
++            "wclsDepoFluxWriter:postdrift139",
++            "wclsDepoFluxWriter:postdrift140",
++            "wclsDepoFluxWriter:postdrift141",
++            "wclsDepoFluxWriter:postdrift142",
++            "wclsDepoFluxWriter:postdrift143",
++            "wclsDepoFluxWriter:postdrift144",
++            "wclsDepoFluxWriter:postdrift145",
++            "wclsDepoFluxWriter:postdrift146",
++            "wclsDepoFluxWriter:postdrift147",
++            "wclsDepoFluxWriter:postdrift148",
++            "wclsDepoFluxWriter:postdrift149",
++            "wclsDepoFluxWriter:postdrift150",
++            "wclsDepoFluxWriter:postdrift151",
++            "wclsDepoFluxWriter:postdrift152",
++            "wclsDepoFluxWriter:postdrift153",
++            "wclsDepoFluxWriter:postdrift154",
++            "wclsDepoFluxWriter:postdrift155",
++            "wclsDepoFluxWriter:postdrift156",
++            "wclsDepoFluxWriter:postdrift157",
++            "wclsDepoFluxWriter:postdrift158",
++            "wclsDepoFluxWriter:postdrift159",
++            "wclsDepoFluxWriter:postdrift160",
++            "wclsDepoFluxWriter:postdrift161",
++            "wclsDepoFluxWriter:postdrift162",
++            "wclsDepoFluxWriter:postdrift163",
++            "wclsDepoFluxWriter:postdrift164",
++            "wclsDepoFluxWriter:postdrift165",
++            "wclsDepoFluxWriter:postdrift166",
++            "wclsDepoFluxWriter:postdrift167",
++            "wclsDepoFluxWriter:postdrift168",
++            "wclsDepoFluxWriter:postdrift169",
++            "wclsDepoFluxWriter:postdrift170",
++            "wclsDepoFluxWriter:postdrift171",
++            "wclsDepoFluxWriter:postdrift172",
++            "wclsDepoFluxWriter:postdrift173",
++            "wclsDepoFluxWriter:postdrift174",
++            "wclsDepoFluxWriter:postdrift175",
++            "wclsDepoFluxWriter:postdrift176",
++            "wclsDepoFluxWriter:postdrift177",
++            "wclsDepoFluxWriter:postdrift178",
++            "wclsDepoFluxWriter:postdrift179",
++            "wclsDepoFluxWriter:postdrift180",
++            "wclsDepoFluxWriter:postdrift181",
++            "wclsDepoFluxWriter:postdrift182",
++            "wclsDepoFluxWriter:postdrift183",
++            "wclsDepoFluxWriter:postdrift184",
++            "wclsDepoFluxWriter:postdrift185",
++            "wclsDepoFluxWriter:postdrift186",
++            "wclsDepoFluxWriter:postdrift187",
++            "wclsDepoFluxWriter:postdrift188",
++            "wclsDepoFluxWriter:postdrift189",
++            "wclsDepoFluxWriter:postdrift190",
++            "wclsDepoFluxWriter:postdrift191",
++            "wclsDepoFluxWriter:postdrift192",
++            "wclsDepoFluxWriter:postdrift193",
++            "wclsDepoFluxWriter:postdrift194",
++            "wclsDepoFluxWriter:postdrift195",
++            "wclsDepoFluxWriter:postdrift196",
++            "wclsDepoFluxWriter:postdrift197",
++            "wclsDepoFluxWriter:postdrift198",
++            "wclsDepoFluxWriter:postdrift199",
++            "wclsDepoFluxWriter:postdrift200",
++            "wclsDepoFluxWriter:postdrift201",
++            "wclsDepoFluxWriter:postdrift202",
++            "wclsDepoFluxWriter:postdrift203",
++            "wclsDepoFluxWriter:postdrift204",
++            "wclsDepoFluxWriter:postdrift205",
++            "wclsDepoFluxWriter:postdrift206",
++            "wclsDepoFluxWriter:postdrift207",
++            "wclsDepoFluxWriter:postdrift208",
++            "wclsDepoFluxWriter:postdrift209",
++            "wclsDepoFluxWriter:postdrift210",
++            "wclsDepoFluxWriter:postdrift211",
++            "wclsDepoFluxWriter:postdrift212",
++            "wclsDepoFluxWriter:postdrift213",
++            "wclsDepoFluxWriter:postdrift214",
++            "wclsDepoFluxWriter:postdrift215",
++            "wclsDepoFluxWriter:postdrift216",
++            "wclsDepoFluxWriter:postdrift217",
++            "wclsDepoFluxWriter:postdrift218",
++            "wclsDepoFluxWriter:postdrift219",
++            "wclsDepoFluxWriter:postdrift220",
++            "wclsDepoFluxWriter:postdrift221",
++            "wclsDepoFluxWriter:postdrift222",
++            "wclsDepoFluxWriter:postdrift223",
++            "wclsDepoFluxWriter:postdrift224",
++            "wclsDepoFluxWriter:postdrift225",
++            "wclsDepoFluxWriter:postdrift226",
++            "wclsDepoFluxWriter:postdrift227",
++            "wclsDepoFluxWriter:postdrift228",
++            "wclsDepoFluxWriter:postdrift229",
++            "wclsDepoFluxWriter:postdrift230",
++            "wclsDepoFluxWriter:postdrift231",
++            "wclsDepoFluxWriter:postdrift232",
++            "wclsDepoFluxWriter:postdrift233",
++            "wclsDepoFluxWriter:postdrift234",
++            "wclsDepoFluxWriter:postdrift235",
++            "wclsDepoFluxWriter:postdrift236",
++            "wclsDepoFluxWriter:postdrift237",
++            "wclsDepoFluxWriter:postdrift238",
++            "wclsDepoFluxWriter:postdrift239",
++            "wclsDepoFluxWriter:postdrift240",
++            "wclsDepoFluxWriter:postdrift241",
++            "wclsDepoFluxWriter:postdrift242",
++            "wclsDepoFluxWriter:postdrift243",
++            "wclsDepoFluxWriter:postdrift244",
++            "wclsDepoFluxWriter:postdrift245",
++            "wclsDepoFluxWriter:postdrift246",
++            "wclsDepoFluxWriter:postdrift247",
++            "wclsDepoFluxWriter:postdrift248",
++            "wclsDepoFluxWriter:postdrift249",
++            "wclsDepoFluxWriter:postdrift250",
++            "wclsDepoFluxWriter:postdrift251",
++            "wclsDepoFluxWriter:postdrift252",
++            "wclsDepoFluxWriter:postdrift253",
++            "wclsDepoFluxWriter:postdrift254",
++            "wclsDepoFluxWriter:postdrift255",
++            "wclsDepoFluxWriter:postdrift256",
++            "wclsDepoFluxWriter:postdrift257",
++            "wclsDepoFluxWriter:postdrift258",
++            "wclsDepoFluxWriter:postdrift259",
++            "wclsDepoFluxWriter:postdrift260",
++            "wclsDepoFluxWriter:postdrift261",
++            "wclsDepoFluxWriter:postdrift262",
++            "wclsDepoFluxWriter:postdrift263",
++            "wclsDepoFluxWriter:postdrift264",
++            "wclsDepoFluxWriter:postdrift265",
++            "wclsDepoFluxWriter:postdrift266",
++            "wclsDepoFluxWriter:postdrift267",
++            "wclsDepoFluxWriter:postdrift268",
++            "wclsDepoFluxWriter:postdrift269",
++            "wclsDepoFluxWriter:postdrift270",
++            "wclsDepoFluxWriter:postdrift271",
++            "wclsDepoFluxWriter:postdrift272",
++            "wclsDepoFluxWriter:postdrift273",
++            "wclsDepoFluxWriter:postdrift274",
++            "wclsDepoFluxWriter:postdrift275",
++            "wclsDepoFluxWriter:postdrift276",
++            "wclsDepoFluxWriter:postdrift277",
++            "wclsDepoFluxWriter:postdrift278",
++            "wclsDepoFluxWriter:postdrift279",
++            "wclsDepoFluxWriter:postdrift280",
++            "wclsDepoFluxWriter:postdrift281",
++            "wclsDepoFluxWriter:postdrift282",
++            "wclsDepoFluxWriter:postdrift283",
++            "wclsDepoFluxWriter:postdrift284",
++            "wclsDepoFluxWriter:postdrift285",
++            "wclsDepoFluxWriter:postdrift286",
++            "wclsDepoFluxWriter:postdrift287",
++            "wclsDepoFluxWriter:postdrift288",
++            "wclsDepoFluxWriter:postdrift289",
++            "wclsDepoFluxWriter:postdrift290",
++            "wclsDepoFluxWriter:postdrift291",
++            "wclsDepoFluxWriter:postdrift292",
++            "wclsDepoFluxWriter:postdrift293",
++            "wclsDepoFluxWriter:postdrift294",
++            "wclsDepoFluxWriter:postdrift295",
++            "wclsDepoFluxWriter:postdrift296",
++            "wclsDepoFluxWriter:postdrift297",
++            "wclsDepoFluxWriter:postdrift298",
++            "wclsDepoFluxWriter:postdrift299",
++            "wclsDepoFluxWriter:postdrift300",
++            "wclsDepoFluxWriter:postdrift301",
++            "wclsDepoFluxWriter:postdrift302",
++            "wclsDepoFluxWriter:postdrift303",
++            "wclsDepoFluxWriter:postdrift304",
++            "wclsDepoFluxWriter:postdrift305",
++            "wclsDepoFluxWriter:postdrift306",
++            "wclsDepoFluxWriter:postdrift307",
++            "wclsDepoFluxWriter:postdrift308",
++            "wclsDepoFluxWriter:postdrift309",
++            "wclsDepoFluxWriter:postdrift310",
++            "wclsDepoFluxWriter:postdrift311",
++            "wclsDepoFluxWriter:postdrift312",
++            "wclsDepoFluxWriter:postdrift313",
++            "wclsDepoFluxWriter:postdrift314",
++            "wclsDepoFluxWriter:postdrift315",
++            "wclsDepoFluxWriter:postdrift316",
++            "wclsDepoFluxWriter:postdrift317",
++            "wclsDepoFluxWriter:postdrift318",
++            "wclsDepoFluxWriter:postdrift319",
++            "wclsDepoFluxWriter:postdrift320",
++            "wclsDepoFluxWriter:postdrift321",
++            "wclsDepoFluxWriter:postdrift322",
++            "wclsDepoFluxWriter:postdrift323",
++            "wclsDepoFluxWriter:postdrift324",
++            "wclsDepoFluxWriter:postdrift325",
++            "wclsDepoFluxWriter:postdrift326",
++            "wclsDepoFluxWriter:postdrift327",
++            "wclsDepoFluxWriter:postdrift328",
++            "wclsDepoFluxWriter:postdrift329",
++            "wclsDepoFluxWriter:postdrift330",
++            "wclsDepoFluxWriter:postdrift331",
++            "wclsDepoFluxWriter:postdrift332",
++            "wclsDepoFluxWriter:postdrift333",
++            "wclsDepoFluxWriter:postdrift334",
++            "wclsDepoFluxWriter:postdrift335",
++            "wclsDepoFluxWriter:postdrift336",
++            "wclsDepoFluxWriter:postdrift337",
++            "wclsDepoFluxWriter:postdrift338",
++            "wclsDepoFluxWriter:postdrift339",
++            "wclsDepoFluxWriter:postdrift340",
++            "wclsDepoFluxWriter:postdrift341",
++            "wclsDepoFluxWriter:postdrift342",
++            "wclsDepoFluxWriter:postdrift343",
++            "wclsDepoFluxWriter:postdrift344",
++            "wclsDepoFluxWriter:postdrift345",
++            "wclsDepoFluxWriter:postdrift346",
++            "wclsDepoFluxWriter:postdrift347",
++            "wclsDepoFluxWriter:postdrift348",
++            "wclsDepoFluxWriter:postdrift349",
++            "wclsDepoFluxWriter:postdrift350",
++            "wclsDepoFluxWriter:postdrift351",
++            "wclsDepoFluxWriter:postdrift352",
++            "wclsDepoFluxWriter:postdrift353",
++            "wclsDepoFluxWriter:postdrift354",
++            "wclsDepoFluxWriter:postdrift355",
++            "wclsDepoFluxWriter:postdrift356",
++            "wclsDepoFluxWriter:postdrift357",
++            "wclsDepoFluxWriter:postdrift358",
++            "wclsDepoFluxWriter:postdrift359",
++            "wclsFrameSaver:simdigits0",
++            "wclsFrameSaver:simdigits1",
++            "wclsFrameSaver:simdigits2",
++            "wclsFrameSaver:simdigits3"
++]
++icarus_simwire_wirecell_yz.wcls_main.params.files_fields: '"icarus_final_fit_dqdx0.json.bz2",
++                           "icarus_final_fit_dqdx1.json.bz2",
++                           "icarus_final_fit_dqdx2.json.bz2",
++                           "icarus_final_fit_dqdx3.json.bz2",
++                           "icarus_final_fit_dqdx4.json.bz2",
++                           "icarus_final_fit_dqdx5.json.bz2",
++                           "icarus_final_fit_dqdx6.json.bz2",
++                           "icarus_final_fit_dqdx7.json.bz2",
++                           "icarus_final_fit_dqdx8.json.bz2",
++                           "icarus_final_fit_dqdx9.json.bz2",
++                           "icarus_final_fit_dqdx10.json.bz2",
++                           "icarus_final_fit_dqdx11.json.bz2",
++                           "icarus_final_fit_dqdx12.json.bz2",
++                           "icarus_final_fit_dqdx13.json.bz2",
++                           "icarus_final_fit_dqdx14.json.bz2"'
++
++icarus_simwire_wirecell_yz.wcls_main.structs.lifetime_TPCEE: @local::icarus_detproperties.Electronlifetime
++icarus_simwire_wirecell_yz.wcls_main.structs.lifetime_TPCEW: @local::icarus_detproperties.Electronlifetime
++icarus_simwire_wirecell_yz.wcls_main.structs.lifetime_TPCWE: @local::icarus_detproperties.Electronlifetime
++icarus_simwire_wirecell_yz.wcls_main.structs.lifetime_TPCWW: @local::icarus_detproperties.Electronlifetime
++
++# config for overlays
++icarus_simwire_wirecell_yz_overlay: @local::icarus_simwire_wirecell_yz
++
++icarus_simwire_wirecell_yz_overlay.wcls_main.structs.coh_noise_scale: 0.0 # disable noise
++icarus_simwire_wirecell_yz_overlay.wcls_main.structs.int_noise_scale: 0.0 # ditto
++icarus_simwire_wirecell_yz_overlay.wcls_main.structs.overlay_drifter: true
++icarus_simwire_wirecell_yz_overlay.wcls_main.plugins: [@sequence::icarus_simwire_wirecell_yz_overlay.wcls_main.plugins, "WireCellICARUSDrifter"]
++icarus_simwire_wirecell_yz_overlay.wcls_main.inputers: ["wclsSimDepoSetSource:electron",
+     'wclsICARUSDrifter:drifter0', 
+     'wclsICARUSDrifter:drifter1', 
+     'wclsICARUSDrifter:drifter2', 
+@@ -6501,17 +5593,7 @@
+     'wclsICARUSDrifter:drifter86', 
+     'wclsICARUSDrifter:drifter87', 
+     'wclsICARUSDrifter:drifter88', 
+-    'wclsICARUSDrifter:drifter89'
+-]
+-
+-
+-icarus_simwire_wirecell_yz_overlay_1: @local::icarus_simwire_wirecell_yz_1
+-
+-icarus_simwire_wirecell_yz_overlay_1.wcls_main.structs.coh_noise_scale: 0.0 # disable noise
+-icarus_simwire_wirecell_yz_overlay_1.wcls_main.structs.int_noise_scale: 0.0 # ditto
+-icarus_simwire_wirecell_yz_overlay_1.wcls_main.structs.overlay_drifter: true
+-icarus_simwire_wirecell_yz_overlay_1.wcls_main.plugins: [@sequence::icarus_simwire_wirecell_yz_overlay_1.wcls_main.plugins, "WireCellICARUSDrifter"]
+-icarus_simwire_wirecell_yz_overlay_1.wcls_main.inputers: ["wclsSimDepoSetSource:electron",
++    'wclsICARUSDrifter:drifter89', 
+     'wclsICARUSDrifter:drifter90', 
+     'wclsICARUSDrifter:drifter91', 
+     'wclsICARUSDrifter:drifter92', 
+@@ -6601,18 +5683,7 @@
+     'wclsICARUSDrifter:drifter176', 
+     'wclsICARUSDrifter:drifter177', 
+     'wclsICARUSDrifter:drifter178', 
+-    'wclsICARUSDrifter:drifter179'
+-]
+-
+-
+-
+-icarus_simwire_wirecell_yz_overlay_2: @local::icarus_simwire_wirecell_yz_2
+-
+-icarus_simwire_wirecell_yz_overlay_2.wcls_main.structs.coh_noise_scale: 0.0 # disable noise
+-icarus_simwire_wirecell_yz_overlay_2.wcls_main.structs.int_noise_scale: 0.0 # ditto
+-icarus_simwire_wirecell_yz_overlay_2.wcls_main.structs.overlay_drifter: true
+-icarus_simwire_wirecell_yz_overlay_2.wcls_main.plugins: [@sequence::icarus_simwire_wirecell_yz_overlay_2.wcls_main.plugins, "WireCellICARUSDrifter"]
+-icarus_simwire_wirecell_yz_overlay_2.wcls_main.inputers: ["wclsSimDepoSetSource:electron",
++    'wclsICARUSDrifter:drifter179', 
+     'wclsICARUSDrifter:drifter180', 
+     'wclsICARUSDrifter:drifter181', 
+     'wclsICARUSDrifter:drifter182', 
+@@ -6702,19 +5773,7 @@
+     'wclsICARUSDrifter:drifter266', 
+     'wclsICARUSDrifter:drifter267', 
+     'wclsICARUSDrifter:drifter268', 
+-    'wclsICARUSDrifter:drifter269'
+-]
+-
+-
+-
+-
+-icarus_simwire_wirecell_yz_overlay_3: @local::icarus_simwire_wirecell_yz_3
+-
+-icarus_simwire_wirecell_yz_overlay_3.wcls_main.structs.coh_noise_scale: 0.0 # disable noise
+-icarus_simwire_wirecell_yz_overlay_3.wcls_main.structs.int_noise_scale: 0.0 # ditto
+-icarus_simwire_wirecell_yz_overlay_3.wcls_main.structs.overlay_drifter: true
+-icarus_simwire_wirecell_yz_overlay_3.wcls_main.plugins: [@sequence::icarus_simwire_wirecell_yz_overlay_3.wcls_main.plugins, "WireCellICARUSDrifter"]
+-icarus_simwire_wirecell_yz_overlay_3.wcls_main.inputers: ["wclsSimDepoSetSource:electron",
++    'wclsICARUSDrifter:drifter269', 
+     'wclsICARUSDrifter:drifter270', 
+     'wclsICARUSDrifter:drifter271', 
+     'wclsICARUSDrifter:drifter272', 
+@@ -6808,8 +5867,6 @@
+ ]
+ 
+ 
+-
+-
+ END_PROLOG
+ # Contains information required for:
+ # Timing parameterisation for VUV photons (propagation time)
+@@ -7937,9 +6994,7 @@
+ # Configurations offered:
+ # 
+ # * `PMTsimulationAlg` algorithm:
+-#     * `icarus_pmtsimulationalg_standard_run2`: main configuration for Run1/2, expected to be
+-#       used in production and by the general user
+-#     * `icarus_pmtsimulationalg_standard_run4`: main configuration for Run3/4/5+, expected to be
++#     * `icarus_pmtsimulationalg_standard`: main configuration, expected to be
+ #       used in production and by the general user
+ #     * `icarus_pmtsimulationalg_202202`: a general use configuration,
+ #       including dark and electronics noise; `noise` and `nonoise` variants
+@@ -7947,10 +7002,6 @@
+ #     * `icarus_pmtsimulationalg_2018`: legacy configuration (until June 2022),
+ #       including dark and electronics noise; `noise` and `nonoise` variants
+ #       (the latter with dark and electronics noise disabled)
+-#     * `icarus_pmtsimulationalg_run2_2025`: run1/2 configuration (developed in 2025),
+-#       including noise, new response function and gain tune.
+-#     * `icarus_pmtsimulationalg_run4_2025`: run3/4/5+ configuration (developed in 2025),
+-#       including noise, new response function and gain tune. 
+ # 
+ # Usage:
+ # 
+@@ -7973,13 +7024,7 @@
+ #   introduced configuration for SPR 202202
+ # 20240125 (petrillo@slac.stanford.edu)
+ #   introduced experimental setting PMT gain to 7.5 x 10^6 (and q.e. elsewhere)
+-# 20251111 (mvicenzi@bnl.gov)
+-#   introduced configuration for new Run1/2 SPR (SPRisolHitRun9271)
+-#   introduced configuration for new Run3/4 SPR (SPRisolHitRun12715)
+-# 20260618 (mvicenzi@bnl.gov)
+-#   introduced tail suppression tune for run2
+-# 20260722 (mvicenzi@bnl.gov)
+-#   introduced distance-based survival probability for run2
++#
+ 
+ #
+ # File:    opticalproperties_icarus.fcl
+@@ -8102,7 +7147,7 @@
+   
+   NoiseRMS:                 3.0   # in ADC#; "temporary" value, see SBN DocDB 19187
+   
+-  NominalPedestal:      15000.0   # in ADC#
++  NominalPedestal:      14999.5   # in ADC#; try to balance rounding errors
+   
+ } # icarus_settings_opdet_2022
+ 
+@@ -8121,41 +7166,9 @@
+ 
+ 
+ # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+-# the following is based on `icarus_settings_opdet_2022` rescaling it to gain
+-# 7.0x10^6; this is an empirical choice to reconciliate the single PE region in Run1/2
+-# NoiseRMS is also reduced to 2.6 ADC; see e.g. SBN DocDB 41115
+-icarus_settings_opdet_run2_2025: {
+-  
+-  @table::icarus_settings_opdet_2022
+-  
+-  nominalPMTgain: 7.0e6  # PMT multiplication gain factor
+-
+-  NoiseRMS: 2.6 # in ADC#
+-  
+-} # icarus_settings_opdet_run2_2025
+-
+-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+-# the following is based on `icarus_settings_opdet_2022` rescaling it to gain
+-# 4.5x10^6; this is an empirical choice to reconciliate the single PE region in Run3/4
+-# NoiseRMS is also reduced to 2.6 ADC; see e.g. SBN DocDB 41115
+-icarus_settings_opdet_run4_2025: {
+-  
+-  @table::icarus_settings_opdet_2022
+-  
+-  nominalPMTgain: 4.5e6  # PMT multiplication gain factor
+-
+-  NoiseRMS: 2.6 # in ADC#
+-  
+-} # icarus_settings_opdet_run4_2025
+-
+-
+-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ # settings used in the standard configurations:
++icarus_settings_opdet: @local::icarus_settings_opdet_202401patch
+ 
+-icarus_settings_opdet: @local::icarus_settings_opdet_run2_2025
+-
+-icarus_settings_opdet_run2: @local::icarus_settings_opdet_run2_2025
+-icarus_settings_opdet_run4: @local::icarus_settings_opdet_run4_2025
+ 
+ 
+ ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+@@ -8212,15 +7225,14 @@
+   TransitTime:               "55.1 ns"
+   RaiseTimeConstant:         "1.8 ns"
+   FallTimeConstant:          "4.2 ns"
+-  Gain:                      @local::icarus_settings_opdet_2022.nominalPMTgain  # Gain = 7.0e6 => PeakCurrent: -0.14144 mA
++  Gain:                      @local::icarus_settings_opdet.nominalPMTgain  # Gain = 7.0e6 => PeakCurrent: -0.14144 mA
+   ADC:                       409.6  # ADC / mA
+   
+ } # icarus_photoelectronresponse_exponentials
+ 
+ 
+ #
+-# Single photoelectron response from laser data.
+-# This is valid for Run1/2 cables.
++# Single photoelectron response from data.
+ # 
+ icarus_photoelectronresponse_202202: {
+   
+@@ -8228,44 +7240,12 @@
+   
+   WaveformData: "Responses/SPR202202.txt"
+   TransitTime:  "55.1 ns"
+-  Gain:          @local::icarus_settings_opdet_2022.nominalPMTgain
++  Gain:          @local::icarus_settings_opdet.nominalPMTgain
+   
+ } # icarus_photoelectronresponse_202202
+ 
+ 
+ #
+-# Single photoelectron response from single-PE data.
+-# This is valid for Run1/2 cables.
+-# 
+-icarus_photoelectronresponse_run2_2025: {
+-
+-  tool_type: SampledWaveformFunctionTool
+-
+-  WaveformData:  "Responses/SPRisolHitRun9271.txt"
+-  TransitTime:   "14.0 ns"
+-  Gain:           @local::icarus_settings_opdet_run2.nominalPMTgain
+-  BiasRatio:     1.5332
+-
+-} # icarus_photoelectronresponse_run2_2025
+-
+-
+-#
+-# Single photoelectron response from single-PE data.
+-# This is valid for Run3/4/5+ cables.
+-#
+-icarus_photoelectronresponse_run4_2025: {
+-
+-  tool_type: SampledWaveformFunctionTool
+-
+-  WaveformData:  "Responses/SPRisolHitRun12715.txt"
+-  TransitTime:   "14.0 ns"
+-  Gain:           @local::icarus_settings_opdet_run4.nominalPMTgain
+-  BiasRatio:     1.2196
+-
+-} # icarus_photoelectronresponse_run4_2025
+-
+-
+-#
+ # Custom photoelectron response.
+ # 
+ # This is just an example for an arbitrary function shape; the example tries to
+@@ -8294,9 +7274,7 @@
+ #
+ # pick one
+ #
+-
+-icarus_photoelectronresponse_standard_run2: @local::icarus_photoelectronresponse_run2_2025
+-icarus_photoelectronresponse_standard_run4: @local::icarus_photoelectronresponse_run4_2025
++icarus_photoelectronresponse_standard: @local::icarus_photoelectronresponse_202202
+ 
+ 
+ ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+@@ -8393,7 +7371,7 @@
+ 
+   Pedestal:                  @local::icarus_pmt_pedestal_standard
+   
+-  SinglePhotonResponse:      @local::icarus_photoelectronresponse_202202
++  SinglePhotonResponse:      @local::icarus_photoelectronresponse_standard
+   
+   DarkNoiseRate:             "1.6 kHz"      # per channel, from CERN test stand measurement
+ 
+@@ -8416,13 +7394,10 @@
+   ReadoutEnablePeriod:       "2.0 ms"       # PMT enable gate duration: time for which PMT readout is enabled
+   CreateBeamGateTriggers:    true           #Option to create unbiased readout around beam spill
+   BeamGateTriggerRepPeriod:  "2.0 us"       # Repetition period and number of repetitions for BeamGateTriggers:
+-  BeamGateTriggerNReps:      10             # should cover -7/+21 us, instead just goes -1 to 21 us
++  BeamGateTriggerNReps:      10             # should cover -7/+21 us, instead just goes -1 to 21 us)
+   QE:                        @local::icarus_opticalproperties.ScintPreScale # from opticalproperties_icarus.fcl
+   FluctuateGain:             true           # apply per-photoelectron gain fluctuations
+-  ApplyTimingDelays:         false          # legacy value
+-  UseGainDatabase:           false          # legacy value
+-  UseChannelStatusDatabase:  false          # legacy value
+-
++  
+   PMTspecs: {
+     DynodeK:                   0.75           # gain on a PMT multiplication stage
+                                               # is proportional to dV^k
+@@ -8434,13 +7409,6 @@
+     Gain:                   @local::icarus_settings_opdet.nominalPMTgain  # total typical PMT gain
+   } # PMTspecs
+ 
+-  # Subtractive tail suppression correction
+-  TailSuppression: {
+-    Apply:   false
+-    Epsilon: 0.0
+-    Tau:     250.0  # [ns]
+-  }
+-
+ } # icarus_pmtsimulationalg_202202_noise
+ 
+ 
+@@ -8475,107 +7443,6 @@
+ } # icarus_pmtsimulationalg_202401patch
+ 
+ 
+-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+-### Configuration Run2-2025:
+-###  * explicitly based on the configuration "2022" above
+-###  * gain adapted to reconciliate signal integral and amplitude in SPE region
+-###    (SBN DocDB 41115)
+-###  * gain updated to 7.0 x 10^6
+-###  * threshold for digitization scaled down
+-###
+-
+-icarus_pmtsimulationalg_run2_2025: {
+-
+-  @table::icarus_pmtsimulationalg_202202_noise
+-  
+-  SinglePhotonResponse:      @local::icarus_photoelectronresponse_standard_run2
+-
+-  # Apply timing delays (cables, transit time, ..) to the simulated photons
+-  # These delays are extracted from the calibration database
+-  ApplyTimingDelays:         false
+-  # Use channel status database to skip dead or bad channels
+-  UseChannelStatusDatabase:  false
+-  # Use per-channel gain from database
+-  UseGainDatabase:           false
+-
+-  # Threshold in ADC counts for a PMT self-trigger
+-  ThresholdADC:              15             # ADC counts
+-
+-  # arranged ad hoc to get ~40% Poisson fluctuation on gain (effectively: 40.8%)
+-  PMTspecs: {
+-    DynodeK:                 0.75           # gain on a PMT multiplication stage
+-    VoltageDistribution:    [ 3.0, 3.4, 5.0, 3.33, 1.67, 1.0, 1.2, 1.5, 2.2, 3.0 ]
+-    Gain:                   @local::icarus_settings_opdet_run2.nominalPMTgain  # total PMT gain
+-  }
+-
+-  # Tail suppression effective correction
+-  # Run2 tune from SBN-doc-48511
+-  TailSuppression: {
+-    Apply:   true
+-    Epsilon: 0.27   # correction strength
+-    Tau:     500.0  # [ns]
+-  }
+-
+-  # Distance-dependent scintillation photon survival S(d): each photon kept
+-  # with probability QE x S(d), S = 1 outside range
+-  # Run2 tune from SBN-doc-48511
+-  DistanceSurvival: {
+-    Apply:    true
+-    BinEdges: [ 150, 200, 250, 300, 350, 400, 450 ]  # [cm]
+-    Factors:  [ 0.97, 0.87, 0.82, 0.82, 0.82, 0.85 ]         
+-  }
+-
+-} # icarus_pmtsimulationalg_run2_2025
+-
+-
+-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+-### Configuration Run4-2025:
+-###  * explicitly based on the configuration "2022" above
+-###  * gain adapted to reconciliate signal integral and amplitude in SPE region
+-###  * gain updated to 4.5 x 10^6
+-###  * threshold for digitization scaled down
+-###
+-
+-icarus_pmtsimulationalg_run4_2025: {
+-
+-  @table::icarus_pmtsimulationalg_202202_noise
+-  
+-  SinglePhotonResponse:      @local::icarus_photoelectronresponse_standard_run4
+-
+-  # Apply timing delays (cables, transit time, ..) to the simulated photons
+-  # These delays are extracted from the calibration database
+-  ApplyTimingDelays:         false
+-  # Use channel status database to skip dead or bad channels
+-  UseChannelStatusDatabase:  false
+-  # Use per-channel gain from database
+-  UseGainDatabase:           false
+-
+-  # Threshold in ADC counts for a PMT self-trigger
+-  ThresholdADC:              15             # ADC counts
+-
+-  # arranged ad hoc to get ~40% Poisson fluctuation on gain (effectively: 40.8%)
+-  PMTspecs: {
+-    DynodeK:                 0.75           # gain on a PMT multiplication stage
+-    VoltageDistribution:    [ 3.0, 3.4, 5.0, 3.33, 1.67, 1.0, 1.2, 1.5, 2.2, 3.0 ]
+-    Gain:                   @local::icarus_settings_opdet_run4.nominalPMTgain  # total PMT gain
+-  }
+-
+-  # TODO: requires tuning on Run-4 data
+-  TailSuppression: {
+-    Apply:   false
+-    Epsilon: 0.27    
+-    Tau:     500.0   # [ns]
+-  }
+-
+-  # TODO: requires tuning on Run-4 data
+-  DistanceSurvival: {
+-    Apply:   false
+-    BinEdges: [ 150, 200, 250, 300, 350, 400, 450 ]  # [cm]
+-    Factors:  [ 0.97, 0.87, 0.82, 0.82, 0.82, 0.85 ] 
+-  }
+-
+-} # icarus_pmtsimulationalg_run4_2025
+-
+ # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ ###
+ ### Legacy configuration, pre-2022
+@@ -8590,7 +7457,7 @@
+     }
+   } # Pedestal
+   
+-  SinglePhotonResponse:      @local::icarus_photoelectronresponse_202202
++  SinglePhotonResponse:      @local::icarus_photoelectronresponse_standard
+   
+   DarkNoiseRate:             "1.6 kHz"      # from CERN test stand measurement
+ 
+@@ -8615,10 +7482,7 @@
+   Saturation:                300            #in number of p.e. to see saturation effects in the signal
+   QE:                        @local::icarus_opticalproperties.ScintPreScale # from opticalproperties_icarus.fcl
+   FluctuateGain:             true           # apply per-photoelectron gain fluctuations
+-  ApplyTimingDelays:         false          # legacy value
+-  UseGainDatabase:           false          # legacy value
+-  UseChannelStatusDatabase:  false          # legacy value
+-
++  
+   PMTspecs: {
+     DynodeK:                 0.75           # gain on a PMT multiplication stage
+                                             # is proportional to dV^k
+@@ -8655,8 +7519,7 @@
+ #
+ # Includes noise.
+ #
+-icarus_pmtsimulationalg_standard_run2: @local::icarus_pmtsimulationalg_run2_2025
+-icarus_pmtsimulationalg_standard_run4: @local::icarus_pmtsimulationalg_run4_2025
++icarus_pmtsimulationalg_standard: @local::icarus_pmtsimulationalg_202401patch
+ 
+ 
+ # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+@@ -8664,38 +7527,24 @@
+ 
+ BEGIN_PROLOG
+ 	
+-icarus_simpmt_run2: 
+-{
+-  module_type:               "SimPMTIcarus"
+-  InputModule:               "pdfastsim"
+-  
+-  @table::icarus_pmtsimulationalg_standard_run2
+-}
+-
+-icarus_simpmt_run4: 
++icarus_simpmt: 
+ {
+   module_type:               "SimPMTIcarus"
+   InputModule:               "pdfastsim"
+   
+-  @table::icarus_pmtsimulationalg_standard_run4
++  @table::icarus_pmtsimulationalg_standard
+ }
+ 
+-icarus_simpmt_run3: @local::icarus_simpmt_run4
+ 
+-icarus_simpmt_run2_nonoise: {
+-  @table::icarus_simpmt_run2
++icarus_simpmt_nonoise: {
++  @table::icarus_simpmt
+   @table::icarus_pmtsimulation.disable_noise
+ }
+ 
+-icarus_simpmt_run4_nonoise: {
+-  @table::icarus_simpmt_run4
+-  @table::icarus_pmtsimulation.disable_noise
++icarus_simpmt_noise: {
++  @table::icarus_simpmt
+ }
+ 
+-icarus_simpmt_run3_nonoise: @local::icarus_simpmt_run4_nonoise
+-
+-icarus_simpmt: @local::icarus_simpmt_run2
+-icarus_simpmt_nonoise: @local::icarus_simpmt_run2_nonoise
+ 
+ END_PROLOG
+ BEGIN_PROLOG
+@@ -8853,7 +7702,7 @@
+ #     (`icarus_pmtdiscriminatethr`).
+ #     The default for MC is `pmtthr` and data products have instance names
+ #     according to the discriminated thresholds (e.g. `pmtthr:400`).
+-#     Data default is also `pmtthr`.
++#     Data default (`pmtthrfixed`?) is a TODO here.
+ # * paired (LVDS) PMT signals (`icarus_lvdsgates`): `pmtlvdsgates`
+ # * window combination of LVDS signals (`icarus_trigslidewindow`):
+ #     `pmttriggerwindows`
+@@ -8867,72 +7716,6 @@
+ # :   original version
+ # 20221104 (petrillo@slac.stanford.edu) [v2.0]
+ # :   added many configurations, and rationalized (?) their names
+-# 20260403 (petrillo@slac.stanford.edu) [v3.0]
+-# :   * discrimination baselines based on data product for simulation too
+-# :     (breaking change: needs updated SimPMTIcarus writing baselines)
+-# :   * reduced the number of discriminated thresholds in shifting workflow
+-#
+-
+-#
+-# File:    triggeremu_settings_icarus.fcl
+-# Purpose: Collection of settings for trigger emulation.
+-# Author:  Gianluca Petrillo (petrillo@slac.stanford.edu)
+-# Date:    July 28, 2022
+-#
+-# This is an attempt to centralize the definition of as many settings for
+-# trigger emulation as possible.
+-# The usage model is the following:
+-#  1. users preemptively assign final values to the settings they want to customize
+-#  2. the configuration includes this file, completing with defaults
+-#  3. the template trigger configurations use those settings
+-#  4. eventually users can override the settings one last time
+-#
+-# The pattern is chosen because there are several parameters that are used
+-# multiple times in the configuration, and customizing them at step 4 requires
+-# multiple overrides and the detailed knowledge of where to.
+-# To implement step 1, user configuration will look like:
+-#     
+-#     ###
+-#     ### Step 1: preemptively assign final values to custom settings
+-#     ###
+-#     BEGIN_PROLOG
+-#     
+-#     # choose only four fixed discrimination thresholds
+-#     triggeremu_config_icarus.settings.PMTADCthresholds @protect_ignore:
+-#       [ 200, 300, 400, 500 ]
+-#     
+-#     END_PROLOG
+-#     
+-#     ###
+-#     ### Step 3: include FHiCL configuration (including the trigger preset)
+-#     ###
+-#     #include "triggeremu_data_config.fcl"
+-#     
+-#     ###
+-#     ### Step 4: override settings as needed
+-#     ###
+-#     BEGIN_PROLOG
+-#     
+-#     
+-#     
+-#     END_PROLOG
+-#     
+-#     ###
+-#     ### no more prolog from now on
+-#     ###
+-#     
+-#     process_name: Ana
+-#     # ...
+-#     
+-# 
+-# The definitions are all in `triggeremu_config_icarus` table.
+-# 
+-# 
+-# DEVELOPER NOTE: special care needs to be used when adding settings to this
+-# file: limitations/quirks on FHiCL library `@protect_ignore:` assignment make
+-# its use straightforward only when assigning single atoms, as opposed to tables
+-# or sequences. See the note below.
+-# 
+ #
+ 
+ #
+@@ -8954,8 +7737,6 @@
+ # 20221104 (petrillo@slac.stanford.edu)
+ #   overhaul of the configuration to just host settings and parameters;
+ #   module configurations are now in `trigger_emulation_icarus.fcl`
+-# 20260403 (petrillo@slac.stanford.edu)
+-#   changed discrimination threshold from 400 ADC# to 390 (only Run1 has 400)
+ # 
+ #
+ 
+@@ -8966,9 +7747,7 @@
+ # Configurations offered:
+ # 
+ # * `PMTsimulationAlg` algorithm:
+-#     * `icarus_pmtsimulationalg_standard_run2`: main configuration for Run1/2, expected to be
+-#       used in production and by the general user
+-#     * `icarus_pmtsimulationalg_standard_run4`: main configuration for Run3/4/5+, expected to be
++#     * `icarus_pmtsimulationalg_standard`: main configuration, expected to be
+ #       used in production and by the general user
+ #     * `icarus_pmtsimulationalg_202202`: a general use configuration,
+ #       including dark and electronics noise; `noise` and `nonoise` variants
+@@ -8976,10 +7755,6 @@
+ #     * `icarus_pmtsimulationalg_2018`: legacy configuration (until June 2022),
+ #       including dark and electronics noise; `noise` and `nonoise` variants
+ #       (the latter with dark and electronics noise disabled)
+-#     * `icarus_pmtsimulationalg_run2_2025`: run1/2 configuration (developed in 2025),
+-#       including noise, new response function and gain tune.
+-#     * `icarus_pmtsimulationalg_run4_2025`: run3/4/5+ configuration (developed in 2025),
+-#       including noise, new response function and gain tune. 
+ # 
+ # Usage:
+ # 
+@@ -9002,13 +7777,7 @@
+ #   introduced configuration for SPR 202202
+ # 20240125 (petrillo@slac.stanford.edu)
+ #   introduced experimental setting PMT gain to 7.5 x 10^6 (and q.e. elsewhere)
+-# 20251111 (mvicenzi@bnl.gov)
+-#   introduced configuration for new Run1/2 SPR (SPRisolHitRun9271)
+-#   introduced configuration for new Run3/4 SPR (SPRisolHitRun12715)
+-# 20260618 (mvicenzi@bnl.gov)
+-#   introduced tail suppression tune for run2
+-# 20260722 (mvicenzi@bnl.gov)
+-#   introduced distance-based survival probability for run2
++#
+ 
+ #
+ # File:    opticalproperties_icarus.fcl
+@@ -9131,7 +7900,7 @@
+   
+   NoiseRMS:                 3.0   # in ADC#; "temporary" value, see SBN DocDB 19187
+   
+-  NominalPedestal:      15000.0   # in ADC#
++  NominalPedestal:      14999.5   # in ADC#; try to balance rounding errors
+   
+ } # icarus_settings_opdet_2022
+ 
+@@ -9150,41 +7919,9 @@
+ 
+ 
+ # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+-# the following is based on `icarus_settings_opdet_2022` rescaling it to gain
+-# 7.0x10^6; this is an empirical choice to reconciliate the single PE region in Run1/2
+-# NoiseRMS is also reduced to 2.6 ADC; see e.g. SBN DocDB 41115
+-icarus_settings_opdet_run2_2025: {
+-  
+-  @table::icarus_settings_opdet_2022
+-  
+-  nominalPMTgain: 7.0e6  # PMT multiplication gain factor
+-
+-  NoiseRMS: 2.6 # in ADC#
+-  
+-} # icarus_settings_opdet_run2_2025
+-
+-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+-# the following is based on `icarus_settings_opdet_2022` rescaling it to gain
+-# 4.5x10^6; this is an empirical choice to reconciliate the single PE region in Run3/4
+-# NoiseRMS is also reduced to 2.6 ADC; see e.g. SBN DocDB 41115
+-icarus_settings_opdet_run4_2025: {
+-  
+-  @table::icarus_settings_opdet_2022
+-  
+-  nominalPMTgain: 4.5e6  # PMT multiplication gain factor
+-
+-  NoiseRMS: 2.6 # in ADC#
+-  
+-} # icarus_settings_opdet_run4_2025
+-
+-
+-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ # settings used in the standard configurations:
++icarus_settings_opdet: @local::icarus_settings_opdet_202401patch
+ 
+-icarus_settings_opdet: @local::icarus_settings_opdet_run2_2025
+-
+-icarus_settings_opdet_run2: @local::icarus_settings_opdet_run2_2025
+-icarus_settings_opdet_run4: @local::icarus_settings_opdet_run4_2025
+ 
+ 
+ ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+@@ -9241,15 +7978,14 @@
+   TransitTime:               "55.1 ns"
+   RaiseTimeConstant:         "1.8 ns"
+   FallTimeConstant:          "4.2 ns"
+-  Gain:                      @local::icarus_settings_opdet_2022.nominalPMTgain  # Gain = 7.0e6 => PeakCurrent: -0.14144 mA
++  Gain:                      @local::icarus_settings_opdet.nominalPMTgain  # Gain = 7.0e6 => PeakCurrent: -0.14144 mA
+   ADC:                       409.6  # ADC / mA
+   
+ } # icarus_photoelectronresponse_exponentials
+ 
+ 
+ #
+-# Single photoelectron response from laser data.
+-# This is valid for Run1/2 cables.
++# Single photoelectron response from data.
+ # 
+ icarus_photoelectronresponse_202202: {
+   
+@@ -9257,44 +7993,12 @@
+   
+   WaveformData: "Responses/SPR202202.txt"
+   TransitTime:  "55.1 ns"
+-  Gain:          @local::icarus_settings_opdet_2022.nominalPMTgain
++  Gain:          @local::icarus_settings_opdet.nominalPMTgain
+   
+ } # icarus_photoelectronresponse_202202
+ 
+ 
+ #
+-# Single photoelectron response from single-PE data.
+-# This is valid for Run1/2 cables.
+-# 
+-icarus_photoelectronresponse_run2_2025: {
+-
+-  tool_type: SampledWaveformFunctionTool
+-
+-  WaveformData:  "Responses/SPRisolHitRun9271.txt"
+-  TransitTime:   "14.0 ns"
+-  Gain:           @local::icarus_settings_opdet_run2.nominalPMTgain
+-  BiasRatio:     1.5332
+-
+-} # icarus_photoelectronresponse_run2_2025
+-
+-
+-#
+-# Single photoelectron response from single-PE data.
+-# This is valid for Run3/4/5+ cables.
+-#
+-icarus_photoelectronresponse_run4_2025: {
+-
+-  tool_type: SampledWaveformFunctionTool
+-
+-  WaveformData:  "Responses/SPRisolHitRun12715.txt"
+-  TransitTime:   "14.0 ns"
+-  Gain:           @local::icarus_settings_opdet_run4.nominalPMTgain
+-  BiasRatio:     1.2196
+-
+-} # icarus_photoelectronresponse_run4_2025
+-
+-
+-#
+ # Custom photoelectron response.
+ # 
+ # This is just an example for an arbitrary function shape; the example tries to
+@@ -9323,9 +8027,7 @@
+ #
+ # pick one
+ #
+-
+-icarus_photoelectronresponse_standard_run2: @local::icarus_photoelectronresponse_run2_2025
+-icarus_photoelectronresponse_standard_run4: @local::icarus_photoelectronresponse_run4_2025
++icarus_photoelectronresponse_standard: @local::icarus_photoelectronresponse_202202
+ 
+ 
+ ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+@@ -9422,7 +8124,7 @@
+ 
+   Pedestal:                  @local::icarus_pmt_pedestal_standard
+   
+-  SinglePhotonResponse:      @local::icarus_photoelectronresponse_202202
++  SinglePhotonResponse:      @local::icarus_photoelectronresponse_standard
+   
+   DarkNoiseRate:             "1.6 kHz"      # per channel, from CERN test stand measurement
+ 
+@@ -9445,13 +8147,10 @@
+   ReadoutEnablePeriod:       "2.0 ms"       # PMT enable gate duration: time for which PMT readout is enabled
+   CreateBeamGateTriggers:    true           #Option to create unbiased readout around beam spill
+   BeamGateTriggerRepPeriod:  "2.0 us"       # Repetition period and number of repetitions for BeamGateTriggers:
+-  BeamGateTriggerNReps:      10             # should cover -7/+21 us, instead just goes -1 to 21 us
++  BeamGateTriggerNReps:      10             # should cover -7/+21 us, instead just goes -1 to 21 us)
+   QE:                        @local::icarus_opticalproperties.ScintPreScale # from opticalproperties_icarus.fcl
+   FluctuateGain:             true           # apply per-photoelectron gain fluctuations
+-  ApplyTimingDelays:         false          # legacy value
+-  UseGainDatabase:           false          # legacy value
+-  UseChannelStatusDatabase:  false          # legacy value
+-
++  
+   PMTspecs: {
+     DynodeK:                   0.75           # gain on a PMT multiplication stage
+                                               # is proportional to dV^k
+@@ -9463,13 +8162,6 @@
+     Gain:                   @local::icarus_settings_opdet.nominalPMTgain  # total typical PMT gain
+   } # PMTspecs
+ 
+-  # Subtractive tail suppression correction
+-  TailSuppression: {
+-    Apply:   false
+-    Epsilon: 0.0
+-    Tau:     250.0  # [ns]
+-  }
+-
+ } # icarus_pmtsimulationalg_202202_noise
+ 
+ 
+@@ -9504,107 +8196,6 @@
+ } # icarus_pmtsimulationalg_202401patch
+ 
+ 
+-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+-### Configuration Run2-2025:
+-###  * explicitly based on the configuration "2022" above
+-###  * gain adapted to reconciliate signal integral and amplitude in SPE region
+-###    (SBN DocDB 41115)
+-###  * gain updated to 7.0 x 10^6
+-###  * threshold for digitization scaled down
+-###
+-
+-icarus_pmtsimulationalg_run2_2025: {
+-
+-  @table::icarus_pmtsimulationalg_202202_noise
+-  
+-  SinglePhotonResponse:      @local::icarus_photoelectronresponse_standard_run2
+-
+-  # Apply timing delays (cables, transit time, ..) to the simulated photons
+-  # These delays are extracted from the calibration database
+-  ApplyTimingDelays:         false
+-  # Use channel status database to skip dead or bad channels
+-  UseChannelStatusDatabase:  false
+-  # Use per-channel gain from database
+-  UseGainDatabase:           false
+-
+-  # Threshold in ADC counts for a PMT self-trigger
+-  ThresholdADC:              15             # ADC counts
+-
+-  # arranged ad hoc to get ~40% Poisson fluctuation on gain (effectively: 40.8%)
+-  PMTspecs: {
+-    DynodeK:                 0.75           # gain on a PMT multiplication stage
+-    VoltageDistribution:    [ 3.0, 3.4, 5.0, 3.33, 1.67, 1.0, 1.2, 1.5, 2.2, 3.0 ]
+-    Gain:                   @local::icarus_settings_opdet_run2.nominalPMTgain  # total PMT gain
+-  }
+-
+-  # Tail suppression effective correction
+-  # Run2 tune from SBN-doc-48511
+-  TailSuppression: {
+-    Apply:   true
+-    Epsilon: 0.27   # correction strength
+-    Tau:     500.0  # [ns]
+-  }
+-
+-  # Distance-dependent scintillation photon survival S(d): each photon kept
+-  # with probability QE x S(d), S = 1 outside range
+-  # Run2 tune from SBN-doc-48511
+-  DistanceSurvival: {
+-    Apply:    true
+-    BinEdges: [ 150, 200, 250, 300, 350, 400, 450 ]  # [cm]
+-    Factors:  [ 0.97, 0.87, 0.82, 0.82, 0.82, 0.85 ]         
+-  }
+-
+-} # icarus_pmtsimulationalg_run2_2025
+-
+-
+-### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+-### Configuration Run4-2025:
+-###  * explicitly based on the configuration "2022" above
+-###  * gain adapted to reconciliate signal integral and amplitude in SPE region
+-###  * gain updated to 4.5 x 10^6
+-###  * threshold for digitization scaled down
+-###
+-
+-icarus_pmtsimulationalg_run4_2025: {
+-
+-  @table::icarus_pmtsimulationalg_202202_noise
+-  
+-  SinglePhotonResponse:      @local::icarus_photoelectronresponse_standard_run4
+-
+-  # Apply timing delays (cables, transit time, ..) to the simulated photons
+-  # These delays are extracted from the calibration database
+-  ApplyTimingDelays:         false
+-  # Use channel status database to skip dead or bad channels
+-  UseChannelStatusDatabase:  false
+-  # Use per-channel gain from database
+-  UseGainDatabase:           false
+-
+-  # Threshold in ADC counts for a PMT self-trigger
+-  ThresholdADC:              15             # ADC counts
+-
+-  # arranged ad hoc to get ~40% Poisson fluctuation on gain (effectively: 40.8%)
+-  PMTspecs: {
+-    DynodeK:                 0.75           # gain on a PMT multiplication stage
+-    VoltageDistribution:    [ 3.0, 3.4, 5.0, 3.33, 1.67, 1.0, 1.2, 1.5, 2.2, 3.0 ]
+-    Gain:                   @local::icarus_settings_opdet_run4.nominalPMTgain  # total PMT gain
+-  }
+-
+-  # TODO: requires tuning on Run-4 data
+-  TailSuppression: {
+-    Apply:   false
+-    Epsilon: 0.27    
+-    Tau:     500.0   # [ns]
+-  }
+-
+-  # TODO: requires tuning on Run-4 data
+-  DistanceSurvival: {
+-    Apply:   false
+-    BinEdges: [ 150, 200, 250, 300, 350, 400, 450 ]  # [cm]
+-    Factors:  [ 0.97, 0.87, 0.82, 0.82, 0.82, 0.85 ] 
+-  }
+-
+-} # icarus_pmtsimulationalg_run4_2025
+-
+ # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ ###
+ ### Legacy configuration, pre-2022
+@@ -9619,7 +8210,7 @@
+     }
+   } # Pedestal
+   
+-  SinglePhotonResponse:      @local::icarus_photoelectronresponse_202202
++  SinglePhotonResponse:      @local::icarus_photoelectronresponse_standard
+   
+   DarkNoiseRate:             "1.6 kHz"      # from CERN test stand measurement
+ 
+@@ -9644,10 +8235,7 @@
+   Saturation:                300            #in number of p.e. to see saturation effects in the signal
+   QE:                        @local::icarus_opticalproperties.ScintPreScale # from opticalproperties_icarus.fcl
+   FluctuateGain:             true           # apply per-photoelectron gain fluctuations
+-  ApplyTimingDelays:         false          # legacy value
+-  UseGainDatabase:           false          # legacy value
+-  UseChannelStatusDatabase:  false          # legacy value
+-
++  
+   PMTspecs: {
+     DynodeK:                 0.75           # gain on a PMT multiplication stage
+                                             # is proportional to dV^k
+@@ -9684,8 +8272,7 @@
+ #
+ # Includes noise.
+ #
+-icarus_pmtsimulationalg_standard_run2: @local::icarus_pmtsimulationalg_run2_2025
+-icarus_pmtsimulationalg_standard_run4: @local::icarus_pmtsimulationalg_run4_2025
++icarus_pmtsimulationalg_standard: @local::icarus_pmtsimulationalg_202401patch
+ 
+ 
+ # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+@@ -9753,7 +8340,7 @@
+ icarus_triggergate_basic.Baseline: 15000
+ 
+ # This is the primary PMT discrimination threshold, chosen for the hardware.
+-icarus_triggergate_basic.SelectedThreshold: 390 # ADC
++icarus_triggergate_basic.SelectedThreshold: 400 # ADC
+ 
+ # This is the primary PMT adder discrimination threshold (in ADC equivalent).
+ icarus_triggergate_basic.SelectedAdderThreshold: 492  # 60 mV x (2^14 / 2 V) => 491.52 ADC#
+@@ -9941,21 +8528,8 @@
+ # this configuration takes the configured beam gate duration
+ # and creates extended gates to be used for trigger evaluation;
+ # [20221104] the amount of extension needs to be verified with Run2 data
+-# [20260415] shifting for the cable delay, that is now simulated at waveform level:
+-#            -200 (margin) + 265 (average delay for Run2 data);
+-#            estimation from the reconstructed triggering flash times,
+-#            from simulation enabling trigger emulation (with no trigger delay)
+-#            and standard hit reconstruction (which includes time correction).
+-#            Simulation adds the delay, then the shifting to trigger time eats it,
+-#            and the hit correction effectively moves the hits away from the trigger.
+-#            There are other ways to estimate it (e.g. average on DB coefficients!)
+-# [20260507] tuning Run2 gates: spills 128 ns (BNB) and 200 ns (NuMI) after gate
+-#            opening; expecting neutrinos to appear at +30 ns (simulation time)
+-#            because of simulated propagation time from the flux window (-20 m)
+-#            to the face of the detector (~-10 m); values hard-coded because
+-#            they're observed in Run2 data
+ #
+-icarus_triggersimgates_Run2: {
++icarus_triggersimgates_Run1: {
+ 
+   module_type: FixBeamGateInfo
+ 
+@@ -9964,22 +8538,20 @@
+   Changes: [  # gates of type not included are left unchanged
+     { # for BNB gates
+       Select: { Types: [ "BNB" ] }
+-      Start:  { SetTo: "+0.100 us" }
+-      Width:  { SetTo: "2.1 us" }
++      Start:  { SetTo: "-0.2 us" }
++      Width:  { SetTo: @local::BNB_settings.spill_duration  Add: "0.5 us" }
+     },
+     { # for NuMI gates
+       Select: { Types: [ "NuMI" ]}
+-      Start:  { SetTo: "+0.065 us" }
+-      Width:  { SetTo: "10.0 us" }
++      Start:  { SetTo: "-0.2 us" }
++      Width:  { SetTo: @local::NuMI_settings.spill_duration  Add: "0.6 us" }
+     }
+     ]
+ 
+-} # icarus_triggersimgates_Run2
++} # icarus_triggersimgates_Run1
+ 
+ 
+-icarus_triggersimgates_Run1: @local::icarus_triggersimgates_Run2
+-
+-icarus_triggersimgates: @local::icarus_triggersimgates_Run2
++icarus_triggersimgates: @local::icarus_triggersimgates_Run1
+ 
+ 
+ ###
+@@ -9995,8 +8567,8 @@
+   
+   BeamGates: [
+     {
+-      Duration: @local::icarus_pmtsimulationalg_standard_run2.ReadoutEnablePeriod  # from pmtsimulation_icarus.fcl
+-      Start:    @local::icarus_pmtsimulationalg_standard_run2.TriggerOffsetPMT  # from pmtsimulation_icarus.fcl
++      Duration: @local::icarus_pmtsimulationalg_standard.ReadoutEnablePeriod  # from pmtsimulation_icarus.fcl
++      Start:    @local::icarus_pmtsimulationalg_standard.TriggerOffsetPMT  # from pmtsimulation_icarus.fcl
+     }
+   ]
+   
+@@ -10083,31 +8655,16 @@
+   inMainWindow:         3  # relevant only to disambiguate the location
+ }
+ 
+-icarus_triggergate_basic.patterns.S7: {
+-  sumOfOppositeWindows: 7
+-  inMainWindow:         4  # relevant only to disambiguate the location
+-}
+-
+ icarus_triggergate_basic.patterns.S8: {
+   sumOfOppositeWindows: 8
+   inMainWindow:         4  # irrelevant
+ }
+ 
+-icarus_triggergate_basic.patterns.S9: {
+-  sumOfOppositeWindows: 9
+-  inMainWindow:         5  # relevant only to disambiguate the location
+-}
+-
+ icarus_triggergate_basic.patterns.S10: {
+   sumOfOppositeWindows: 10
+   inMainWindow:          5 # irrelevant
+ }
+ 
+-icarus_triggergate_basic.patterns.S15: {
+-  sumOfOppositeWindows: 15
+-  inMainWindow:          8  # relevant only to disambiguate the location
+-}
+-
+ 
+ icarus_triggergate_basic.SelectedPattern: @local::icarus_triggergate_basic.patterns.S5
+ icarus_triggergate_basic.SelectedPrimitivePattern: @local::icarus_triggergate_basic.patterns.S10
+@@ -10153,206 +8710,961 @@
+ #
+ # 
+ 
++#
++# File:    trigger_icarus.fcl
++# Purpose: Parameters of ICARUS trigger related algorithm.
++# Author:  Gianluca Petrillo (petrillo@slac.stanford.edu)
++# Date:    April 2, 2019
++#
++# Settings and parameters are provided for algorithms related to triggering.
++# 
++# Current offer includes:
++# 
++# * trigger gate builder tool configurations: tools to create discriminated
++#     waveforms out of full PMT waveforms
++# 
++# Changes:
++# 20210727 (petrillo@slac.stanford.edu)
++#   updated the selection of thresholds
++# 20221104 (petrillo@slac.stanford.edu)
++#   overhaul of the configuration to just host settings and parameters;
++#   module configurations are now in `trigger_emulation_icarus.fcl`
++# 
++#
++
++#
++# File:    pmtsimulation_icarus.fcl
++# Purpose: Presets for configuration of ICARUS PMT channel digitization.
++# 
++# Configurations offered:
++# 
++# * `PMTsimulationAlg` algorithm:
++#     * `icarus_pmtsimulationalg_standard`: main configuration, expected to be
++#       used in production and by the general user
++#     * `icarus_pmtsimulationalg_202202`: a general use configuration,
++#       including dark and electronics noise; `noise` and `nonoise` variants
++#       (the latter with dark and electronics noise disabled)
++#     * `icarus_pmtsimulationalg_2018`: legacy configuration (until June 2022),
++#       including dark and electronics noise; `noise` and `nonoise` variants
++#       (the latter with dark and electronics noise disabled)
++# 
++# Usage:
++# 
++# * `PMTsimulationAlg` algorithm configuration needs to be included verbatim
++#     into the configuration of `SimPMTIcarus` module
++#    
++#
++# Changes:
++# 20181024 (petrillo@slac.stanford.edu)
++#   detached from `opdetsim_pmt_icarus.fcl`
++# 20200212 (petrillo@slac.stanford.edu)
++#   reconnected quantum efficiency to the value in `opticalproperties_icarus.fcl`
++# 20210206 (petrillo@slac.stanford.edu)
++#   added explicit noise configuration, and made standard an alias of it
++# 20210212 (petrillo@slac.stanford.edu)
++#   updated baseline to reflect the one in data
++# 20210615 (petrillo@slac.stanford.edu)
++#   updated PMT readout enable window to 2 ms
++# 20220706 (petrillo@slac.stanford.edu)
++#   introduced configuration for SPR 202202
++# 20240125 (petrillo@slac.stanford.edu)
++#   introduced experimental setting PMT gain to 7.5 x 10^6 (and q.e. elsewhere)
++#
++
++#
++# File:    opticalproperties_icarus.fcl
++# Purpose: Collection of optical properties.
++#
++# Available configurations:
++#
++# * `icarus_opticalproperties`: standard LAr properties for LArProperties service
++#
++
++
+ BEGIN_PROLOG
+ 
++# ------------------------------------------------------------------------------
++# Configuration used until January 2024 for standard processing
+ #
+-# Configuration with 5 sliding windows per PMT wall,
+-# 30 PMT each (roughly 6 meter coverage), overlapping half size.
++icarus_opticalproperties_2022: {
++    
++    ScintYield:     24000  # 24000 ph/MeV assume 500 mV/cm
++    ScintPreScale:  0.121  # see JINST 13 (2018) 12, P12020
++                           # MUST match between g4 and detsim
++    # ScintPreScale:  0.0093   # DocDB 4914, @MToups
++
++    ScintYieldRatio:         0.23
++    MuonScintYield:          24000
++    MuonScintYieldRatio:     0.23
++    ScintByParticleType:     true
++    PionScintYield:          24000
++    PionScintYieldRatio:     0.23
++    ElectronScintYield:      20000
++    ElectronScintYieldRatio: 0.27
++    KaonScintYield:          24000
++    KaonScintYieldRatio:     0.23
++    ProtonScintYield:        19200
++    ProtonScintYieldRatio:   0.29
++    AlphaScintYield:         16800
++    AlphaScintYieldRatio:    0.56
++    
++    EnableCerenkovLight: false # Cerenkov light OFF by default
++    
++
++    # reflectivities stolen from SBND (sbndcode v09_00_00)
++    # note that this is ignored when using FastOptical simulation, and needs
++    # services.DetectorPropertiesService.SimpleBoundaryProcess: false
++    # when using Optical (check) Redmine issue #25016 is resolved
++    ReflectiveSurfaceEnergies:     [ 1.77, 2.0675, 2.481, 2.819, 2.953, 3.1807, 3.54, 4.135, 4.962, 5.39, 7., 15. ]
++    ReflectiveSurfaceNames:        [ # in ICARUS geometry (20201107):
++      "STEEL_STAINLESS_Fe7Cr2Ni",    # wires, race track, cathode, structure
++      "copper",                      # unused
++      "G10",                         # unused
++      "vm2000",                      # unused
++      "ALUMINUM_Al",                 # CRT...
++      "ALUMINUM_PMT",                # PMT passive
++      "ALUMINUM_CRYO"                # cryostat shell
++    ]
++    ReflectiveSurfaceReflectances: [
++      [ 0.66,  0.64,  0.62,  0.60,  0.59,  0.57,  0.53,  0.47,  0.39,  0.36,  0.27, 0.25 ], # STEEL_STAINLESS_Fe7Cr2Ni
++      [ 0.902, 0.841, 0.464, 0.379, 0.345, 0.299, 0.287, 0.264, 0.337, 0.3,   0.0,  0.0  ], # copper
++      [ 0.393, 0.405, 0.404, 0.352, 0.323, 0.243, 0.127, 0.065, 0.068, 0.068, 0.0,  0.0  ], # "G10"
++      [ 0.93,  0.93,  0.93,  0.93,  0.93,  0.93,  0.1,   0.1,   0.7,   0.3,   0.0,  0.0  ], # "vm2000"
++      [ 0.9,   0.9,   0.9,   0.9,   0.9,   0.9,   0.9,   0.47,  0.39,  0.36,  0.27, 0.25 ], # "ALUMINUM_Al"
++      [ 0.9,   0.9,   0.9,   0.9,   0.9,   0.9,   0.9,   0.47,  0.39,  0.36,  0.27, 0.25 ], # "ALUMINUM_PMT"
++      [ 0.9,   0.9,   0.9,   0.9,   0.9,   0.9,   0.9,   0.47,  0.39,  0.36,  0.27, 0.25 ]  # "ALUMINUM_CRYO"
++    ]
++
++
++} # icarus_opticalproperties_2022
++
++
++# ------------------------------------------------------------------------------
++# The following is based on SBN DocDB 34640, showing an empirical choice
++# to reconciliate the mean value of MC hit amplitude with data
+ #
+-icarus_trigslidewindow_standard_size: {
+-  WindowSize: 30
+-  Stride: 15
+-} # icarus_trigslidewindow_standard_size
++icarus_opticalproperties_202401patch: {
++    @table::icarus_opticalproperties_2022
++    
++    ScintPreScale:  0.073  # test value, empiric; see SBN DocDB 34640
++                           # MUST match between g4 and detsim
++    
++} # icarus_opticalproperties_202401patch
+ 
+ 
++# ##############################################################################
++# Standard optical properties for LArProperties
++#
++# Use as:
++#    
++#     service.LArPropertiesService: {
++#         ...
++#         @table::icarus_opticalproperties
++#         ...
++#     }
++#
++#
++icarus_opticalproperties: @local::icarus_opticalproperties_202401patch
+ 
+ END_PROLOG
+ 
+ 
+-# ------------------------------------------------------------------------------
+ BEGIN_PROLOG
+ 
+-# All settings are enclosed in `triggeremu_config_icarus`, structured in:
+-#  * `settings`: general settings, like a common PROLOG
+-#  * `services`: table of required services
+-#  * `producers`: table of producer configurations
+-#  * `producerpath`: list of producers
+-#  * `messagedestinations`: message facility destinations for logging
+-# Table `triggeremu_config_icarus` is defined in multiple passes to allow
+-# internal references.
+-
+-# settings in triggeremu_config_icarus.settings are set individually
+-# so that each can be ignored by setting it with `@protect_ignore:` before
+-# including this configuration file
+-# (setting the whole `settings: { ... }` block would just get rid of the whole
+-#  content of `settings` regardless the protection level of each item within)
+-# So for example:
+-#     
+-#     triggeremu_config_icarus.BNBgate: { # BAD!
+-#       Start:    "-0.05 us"
+-#       Duration: "1.7 us"
+-#     }
+-#     
+-# must be avoided in favour of:
+-#     
+-#     triggeremu_config_icarus.BNBgate.Start:    "-0.05 us"
+-#     triggeremu_config_icarus.BNBgate.Duration: "1.7 us"
+-#     
+-# The first form would override any assignment to `Start` and `Duration`, even
+-# if they were assigned with "@protect_ignore:".
++################################################################################
++###  Configurations for `PMTsimulationAlg`
++################################################################################
++
++### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
++### Detector and readout parameters
++### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
++
++icarus_settings_opdet_2022: {
++  
++  nominalPMTgain: 9.7e6  # PMT multiplication gain factor
++  
++  # the actual readout window size for each "trigger" on the readout electronics
++  readoutWindowSize:         5000   # ticks (2 ns each --> 10 us)
++
++  # fraction of readout window size that should come before the "trigger" in the
++  # readout electronics
++  readoutPreTrigFraction:   0.3   # fraction (3+7 us)
++  
++  NoiseRMS:                 3.0   # in ADC#; "temporary" value, see SBN DocDB 19187
++  
++  NominalPedestal:      14999.5   # in ADC#; try to balance rounding errors
++  
++} # icarus_settings_opdet_2022
++
++
++# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
++# the following is based on `icarus_settings_opdet_2022` rescaling it to gain
++# 7.5x10^6; this is an empirical choice attempting to reconciliate the mean
++# value of MC hit amplitude with data; see e.g. SBN DocDB 34640
++icarus_settings_opdet_202401patch: {
++  
++  @table::icarus_settings_opdet_2022
++  
++  nominalPMTgain: 7.5e6  # PMT multiplication gain factor
++  
++} # icarus_settings_opdet_202401patch
++
++
++# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
++# settings used in the standard configurations:
++icarus_settings_opdet: @local::icarus_settings_opdet_202401patch
++
++
++
++### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
++### Single photoelectron response configurations
++### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
++#
++# single photoelectron response with a Gaussian rise and a fall shape.
++# 
++# Parameters are as used since forever to at least v08_46_00.
+ # 
++icarus_photoelectronresponse_gaussian: {
++  
++  # run `lar --print-description AsymGaussPulseFunctionTool` for configuration
++  tool_type: AsymGaussPulseFunctionTool
++  
++  TransitTime:               "55.1 ns"
++  RaiseTime:                 "3.8 ns"
++  FallTime:                  "13.7 ns"
++  MeanAmplitude:             "0.9 pC"
++  ADC:                       -11.1927       #charge to adc factor
++  
++} # icarus_photoelectronresponse_gaussian
+ 
+-# bad PMT channels (off or too noisy)
+-triggeremu_config_icarus.settings.missing_pmt_channels:
+-  @local::icarus_trigger_channel_ignore_202101  # from trigger_icarus.fcl
+ 
+ #
+-# trigger timings
++# Single photoelectron response with exponential rise and a fall shapes.
++# 
++# Parameters are reworked from an ICARUS trigger note (not yet released as
++# of April 2020), which come from data analysis from the BNL group.
++# 
++# In particular, raise and fall times are reported to be 1.4 and 3.2 ns for
++# the PMT, and 1.8 and 4.2 ns including the cable distortion at CERN (10 m),
++# which is not the setup of the actual ICARUS detector (37 m).
++# The average gain is considered to be 7 x 10^6 (somehow lower than the nominal
++# 10^7 which we had targetted).
++# Attenuation from the cable is considered negligible.
++# 
++# The peak charge is computed starting from the charge of a photoelectron
++# (-1.6 x 10^-7 pC), multiplied by the gain (7 x 10^6). At signal peak time,
++# the current from that charge is -0.14 mA, i.e. a voltage drop on 50 ohm
++# of -7.07 mV. In this parametrisation, we inject the gain and let the code
++# compute the amplitude.
++# The digitizer converts a range up to 2 volt with 14 bit, which translates into
++# about 8.192 ADC/mV and 409.6 ADC/mA.
++# In short, the peak signal is expected to be -7.07 mV, -0.14 mA, -57.93 ADC.
++# 
++# The integral of the shape is 191.407 ADC (time 0 to infinity, 2 ns sampling).
++# 
++icarus_photoelectronresponse_exponentials: {
++  
++  # run `lar --print-description AsymGaussPulseFunctionTool` for configuration
++  tool_type: AsymExpPulseFunctionTool
++  
++  TransitTime:               "55.1 ns"
++  RaiseTimeConstant:         "1.8 ns"
++  FallTimeConstant:          "4.2 ns"
++  Gain:                      @local::icarus_settings_opdet.nominalPMTgain  # Gain = 7.0e6 => PeakCurrent: -0.14144 mA
++  ADC:                       409.6  # ADC / mA
++  
++} # icarus_photoelectronresponse_exponentials
++
++
+ #
++# Single photoelectron response from data.
++# 
++icarus_photoelectronresponse_202202: {
++  
++  tool_type: SampledWaveformFunctionTool
++  
++  WaveformData: "Responses/SPR202202.txt"
++  TransitTime:  "55.1 ns"
++  Gain:          @local::icarus_settings_opdet.nominalPMTgain
++  
++} # icarus_photoelectronresponse_202202
++
++
++#
++# Custom photoelectron response.
++# 
++# This is just an example for an arbitrary function shape; the example tries to
++# reproduce an `AsymGaussPulseFunction`.
++# The names of the parameters are arbitrary and their value must be numerical.
++# 
++icarus_photoelectronresponse_customexample: {
++  
++  # run `lar --print-description CustomPulseFunctionTool` for configuration
++  tool_type: CustomPulseFunctionTool
++  
++  ShapeFormula:
++    "[ADC] * [MeanAmplitude] * exp(-0.5*((x - [TransitTime])/((x < [TransitTime])? [RaiseTime]: [FallTime]))**2)"
++  PeakTime: "[TransitTime]"
++  Parameters: {
++    TransitTime:               55.1
++    RaiseTime:                 3.8
++    FallTime:                  13.7
++    MeanAmplitude:             0.9
++    ADC:                       -11.1927
++  } # parameters
++  
++} # icarus_photoelectronresponse_customexample
++
++
++#
++# pick one
++#
++icarus_photoelectronresponse_standard: @local::icarus_photoelectronresponse_202202
++
++
++### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
++### Electronics noise configurations
++### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
++# pedestal noise generator tool configuration:
++icarus_pmt_electronicsnoise_gauss: {
++  tool_type: PMTgausNoiseGeneratorTool
++  RMS:       @local::icarus_settings_opdet.NoiseRMS
++}
++
++icarus_pmt_electronicsnoise_gauss_fast: {
++  tool_type: PMTfastGausNoiseGeneratorTool
++  RMS:       @local::icarus_settings_opdet.NoiseRMS
++}
++
++icarus_pmt_electronicsnoise_nonoise: {
++  tool_type: PMTnoNoiseGeneratorTool
++}
++
++# icarus_pmt_electronicsnoise_standard is always the current favourite
++icarus_pmt_electronicsnoise_standard: @local::icarus_pmt_electronicsnoise_gauss_fast
++
++
++# pedestal generator tool configuration (uses the pedestal noise generator too):
++icarus_pmt_pedestal_gaussnoise: {
++  tool_type: PMTconstantPedestalGeneratorTool
++  Pedestal:       @local::icarus_settings_opdet.NominalPedestal
++  NoiseGenerator: @local::icarus_pmt_electronicsnoise_gauss
++} # icarus_pmt_pedestal_gaussnoise
++
++icarus_pmt_pedestal_fastgaussnoise: {
++  @table::icarus_pmt_pedestal_gaussnoise
++  NoiseGenerator: @local::icarus_pmt_electronicsnoise_gauss_fast
++} # icarus_pmt_pedestal_fastgaussnoise
++
++icarus_pmt_pedestal_nonoise: {
++  @table::icarus_pmt_pedestal_gaussnoise
++  NoiseGenerator: @local::icarus_pmt_electronicsnoise_nonoise
++} # icarus_pmt_pedestal_nonoise
++
++icarus_pmt_pedestal_standard: @local::icarus_pmt_pedestal_fastgaussnoise
++
++
++# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
++###
++### Configuration preset components
++###
++icarus_pmtsimulation.disable_noise: {
++  Pedestal:                  @local::icarus_pmt_pedestal_nonoise
++  DarkNoiseRate:             "0 kHz"
++} # icarus_pmtsimulation.disable_noise
++
++
++################################################################################
++###
++### The standard configuration (`icarus_pmtsimulationalg_standard`) is chosen
++### below.
++###
++###
++
++
++### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
++### Configuration "2022":
++###  * based on SPR202202
++###  * gain: 9.7 x 10^6
++###  * electronics noise included
++###  * readout is fundamentally different from the real one: the hardwware readout
++###    collects channels in groups of 180 (full cryostat in Run1, may change in future)
++###    based on a trigger logic (channels above a O(10) p.e. threshold); the simulation
++###    instead does not assume a readout trigger logic and tries to read out every
++###    photoelectron (each channel independently, against a << 1 p.e. threshold);
++###    the part that is not included in the simulation but would be included in data
++###    is comprised only of noise (and exceptionally low response fluctuations of single
++###    photoelectrons), so post-processing can trim and extend the this simulation to
++###    reflect the real readout by removing the channels in the regions (cryostats)
++###    that would not be triggered, and generating the missing waveforms with noise.
++###    The single photoelectron response 202202 used in the simulation is 800 samples
++###    (1.6 us) long; since every single photoelectron "triggers" the simulation, each
++###    waveform will end with pure noise. With the current setting of a 4 us buffer
++###    we have about 1 us of noise in the pre-trigger buffer, 1.6 us of signal and then
++###    1.4 us of noise (additional photoelectrons in these 4 us would just effectively
++###    extend the "signal" part). All this considered, we keep the PMT readout buffer
++###    in the simulation 1+3 us, sizeably smaller than the 3+7 us used in the hardware
++###    for Run1, to save space (using 3+7, we would still have 1.6 us of signal,
++###    and the 3 us before and 5.4 us after it would still be pure noise).
++###    Likewise, we don't attempt to cover the full beam gate time like in hardware
++###    (7+21 us in Run1 settings), since all the signal will be included anyway.
++###    But we do force all 360 channels to take data at beam gate time ("only" for
++###    1+21 us around the beam gate opening though).
++###
++
++icarus_pmtsimulationalg_202202_noise: {
++
++  Pedestal:                  @local::icarus_pmt_pedestal_standard
++  
++  SinglePhotonResponse:      @local::icarus_photoelectronresponse_standard
++  
++  DarkNoiseRate:             "1.6 kHz"      # per channel, from CERN test stand measurement
++
++  ## This is the readout window size for each "trigger" on the electronics
++  ReadoutWindowSize:         2000           # ticks (2 ns each --> 4 us)
+ 
+-# Run3 delay extracted comparing emulated and hardware trigger time
+-# from run 11952 (majority only), not presented yet
+-triggeremu_config_icarus.settings.TriggerDelay_Run2: "345 ns"
+-triggeremu_config_icarus.settings.TriggerDelay_Run3: "350 ns"
+-triggeremu_config_icarus.settings.TriggerDelay:
+-  @local::triggeremu_config_icarus.settings.TriggerDelay_Run2
++  ##fraction of readout window size that should come before the "trigger" on the electronics
++  PreTrigFraction:           0.25           # fraction (1+3 us)
+ 
++  ##Threshold in ADC counts for a PMT self-trigger.
++  # 15 ADC = 5x 3 ADC (RMS, see ElectronicsNoise above),~55% of standard SPR (4 mV, 33 ADC);
++  # number of noise samples above 15 ADC: ~206 samples for 2 ms x 360 channels (300 Hz)
++  # number of noise samples above 18 ADC: ~0.36 samples for 2 ms x 360 channels (0.5 Hz)
++  ##NOTE this is assumed to be positive-going and ABOVE BASELINE! Pulse polarity is corrected before determining trigger.
++  ThresholdADC:              18             # ADC counts
++  DiscrimAlgo:               AboveThreshold # keep all samples above threshold
++
++  PulsePolarity:             -1             #Pulse polarity (1 = positive, -1 = negative)
++  TriggerOffsetPMT:          "-1.0 ms"      # PMT enable gate start: time relative to trigger when readout begins
++  ReadoutEnablePeriod:       "2.0 ms"       # PMT enable gate duration: time for which PMT readout is enabled
++  CreateBeamGateTriggers:    true           #Option to create unbiased readout around beam spill
++  BeamGateTriggerRepPeriod:  "2.0 us"       # Repetition period and number of repetitions for BeamGateTriggers:
++  BeamGateTriggerNReps:      10             # should cover -7/+21 us, instead just goes -1 to 21 us)
++  QE:                        @local::icarus_opticalproperties.ScintPreScale # from opticalproperties_icarus.fcl
++  FluctuateGain:             true           # apply per-photoelectron gain fluctuations
++  
++  PMTspecs: {
++    DynodeK:                   0.75           # gain on a PMT multiplication stage
++                                              # is proportional to dV^k
++    # relative multiplication stage resistors in Hamamatsu 5912,
++    # from their datasheet; if the resistor on first stage is 17.4 R, the one on
++    # the second stage is 3.4 R, etc. The value of R is not necessary.
++    # Only multiplication stages are included.
++    VoltageDistribution:    [ 17.4, 3.4, 5.0, 3.33, 1.67, 1.0, 1.2, 1.5, 2.2, 3.0 ]
++    Gain:                   @local::icarus_settings_opdet.nominalPMTgain  # total typical PMT gain
++  } # PMTspecs
++
++} # icarus_pmtsimulationalg_202202_noise
+ 
+-# beam gate window for trigger emulation:
+-#  - duration (BNB: 1.6 us; NuMI: 9.5 us; and some buffer)
+-triggeremu_config_icarus.settings.BeamGate.Duration: "1.70 us"
+-#  - window start offset
+-triggeremu_config_icarus.settings.BeamGate.Start:    "-0.05 us"
+ 
+-# discrimination thresholds (only fixed ADC listed here)
+-triggeremu_config_icarus.settings.PMTADCthresholds:
+-  [ 100, 150, 200, 250, 300, 350, 400, 500 ]
++icarus_pmtsimulationalg_202202_nonoise: {
++  @table::icarus_pmtsimulationalg_202202_noise
++  @table::icarus_pmtsimulation.disable_noise
++}
++
++icarus_pmtsimulationalg_202202: @local::icarus_pmtsimulationalg_202202_noise
+ 
+-# PMT discriminated signal width
+-triggeremu_config_icarus.settings.LVDSsignalWidth: "160 ns"
+ 
+-# special pairing for 30-PMT windows pairing the single PMT together
+-triggeremu_config_icarus.settings.trigger_channel_pairings_nosingle: [
++### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
++### Configuration 202401patch:
++###  * explicitly based on the configuration "2022" below
++###  * gain and quantum efficiency adapted to reconciliate signal amplitude
++###    (SBN DocDB 34640)
++###  * gain updated to 7.5 x 10^6
++###  * threshold for digitization scaled down
++###
++
++icarus_pmtsimulationalg_202401patch: {
++  @table::icarus_pmtsimulationalg_202202_noise
++  
++  ## Threshold in ADC counts for a PMT self-trigger
++  ## (actual readout simulation is still required downstream).
++  # 
++  # 15 ADC = 5x 3 ADC (RMS, see ElectronicsNoise above),~58% of standard SPR (3.2 mV, 26 ADC);
++  # number of noise samples above 15 ADC: ~206 samples for 2 ms x 360 channels (300 Hz), +~1 MB data
++  # number of noise samples above 18 ADC: ~0.36 samples for 2 ms x 360 channels (0.5 Hz), +~1 kB data
++  ThresholdADC:              15             # ADC counts
++  
++} # icarus_pmtsimulationalg_202401patch
++
++
++# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
++###
++### Legacy configuration, pre-2022
++###
++icarus_pmtsimulationalg_2018: {
++
++  Pedestal: {
++    Pedestal:                  14999.5
++    NoiseGenerator: {
++      tool_type:                 PMTfastGausNoiseGeneratorTool
++      RMS:                       3.0
++    }
++  } # Pedestal
++  
++  SinglePhotonResponse:      @local::icarus_photoelectronresponse_standard
++  
++  DarkNoiseRate:             "1.6 kHz"      # from CERN test stand measurement
++
++  ##This is the readout window size for each "trigger" on the electronics
++  ReadoutWindowSize:         2000           #ticks (if 2ns each --> 4us)
++
++  ##fraction of readout window size that should come before the "trigger" on the electronics
++  PreTrigFraction:           0.25           # fraction
++
++  ##Threshold in ADC counts for a PMT self-trigger.
++  # 18 ADC = 6x 3 ADC (RMS, see ElectronicsNoise above),~35% of standard SPR (55 ADC);
++  # number of noise samples above 18 ADC: ~0.35 samples for 2 ms x 360 channels
++  ##NOTE this is assumed to be positive-going and ABOVE BASELINE! Pulse polarity is corrected before determining trigger.
++  ThresholdADC:              18             # ADC counts
++
++  PulsePolarity:             -1             #Pulse polarity (1 = positive, -1 = negative)
++  TriggerOffsetPMT:          "-1.0 ms"      #Time relative to trigger when readout begins
++  ReadoutEnablePeriod:       "2.0 ms"       #Time for which pmt readout is enabled
++  CreateBeamGateTriggers:    true           #Option to create unbiased readout around beam spill
++  BeamGateTriggerRepPeriod:  "2.0 us"       #Repetition Period for BeamGateTriggers
++  BeamGateTriggerNReps:      10             #Number of beamgate trigger reps to produce
++  Saturation:                300            #in number of p.e. to see saturation effects in the signal
++  QE:                        @local::icarus_opticalproperties.ScintPreScale # from opticalproperties_icarus.fcl
++  FluctuateGain:             true           # apply per-photoelectron gain fluctuations
++  
++  PMTspecs: {
++    DynodeK:                 0.75           # gain on a PMT multiplication stage
++                                            # is proportional to dV^k
++    # relative multiplication stage resistors in Hamamatsu 5912, from
++    # JINST 13 (2018) 10, P10030 (https://doi.org/10.1088/1748-0221/13/10/P10030);
++    # if the resistor on first stage is 17.4 R, the one on the second stage is 3.4 R,
++    # etc. The value of R is not necessary.
++    # Only multiplication stages are included.
++    VoltageDistribution:    [ 17.4, 3.4, 5.0, 3.33, 1.67, 1.0, 1.2, 1.5, 2.2, 3.0 ]
++    Gain:                   @local::icarus_settings_opdet.nominalPMTgain  # total typical PMT gain
++  } # PMTspecs
++
++} # icarus_pmtsimulationalg_2018
++
++
++icarus_pmtsimulationalg_2018_noise: @local::icarus_pmtsimulationalg_2018
++
++
++# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
++###
++### Legacy no-noise configuration: `icarus_pmtsimulationalg_2018_nonoise`
++###
++###
++icarus_pmtsimulationalg_2018_nonoise: {
++  @table::icarus_pmtsimulationalg_2018
++  @table::icarus_pmtsimulation.disable_noise
++} # icarus_pmtsimulationalg_2018_nonoise
++
++
++# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
++###
++### Configuration used for standard simulation
++###
++#
++# Includes noise.
++#
++icarus_pmtsimulationalg_standard: @local::icarus_pmtsimulationalg_202401patch
++
++
++# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
++END_PROLOG
++
++BEGIN_PROLOG
++
++################################################################################
++###  Beam settings
++################################################################################
++
++BNB_settings: {
++
++  # also note the configuration `icarus_genie_BNB_base` in `genie_icarus_bnb.fcl`
++
++  spill_duration: "1.6 us"
++
++  batches_per_spill: 1
++
++  POT_per_batch: 5e12 # to be checked
++  
++  trigger_bits: 0x10
++
++} # BNB_settings
++
++#--- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
++
++NuMI_settings: {
++
++  spill_duration: "9.5 us"
++
++  batches_per_spill: 12
++
++  POT_per_batch: 5e12 # to be checked
++  
++  trigger_bits: 0x20
++
++} # NuMI_settings
++
++
++################################################################################
++###  Trigger gate builders
++################################################################################
++###
++### A "trigger gate" is a gate signal (i.e. open or closed vs. time) related
++### to a PMT channel and typically used for triggering.
++### 
++### We have a few algorithms available, and these are their standard
++### configurations.
++### Note that some of the parameters here are very hard to call "standard" in
++### that they are just a matter of choice: see e.g. the discrimination
++### thresholds.
++###
++###
++###
++#
++# icarus_triggergate_basic: basic configuration to be included in the full
++#   algorithm configuration
++# 
++# It includes the threshold and a single "universal" baseline level.
++# For Monte Carlo, it may be good to bind it to the simulated value
++# (`icarus_pmtsimulationalg_standard.Baseline`)
++#
++# waveform baseline [ADC counts]
++icarus_triggergate_basic.Baseline: 15000
++
++# This is the primary PMT discrimination threshold, chosen for the hardware.
++icarus_triggergate_basic.SelectedThreshold: 400 # ADC
++
++# This is the primary PMT adder discrimination threshold (in ADC equivalent).
++icarus_triggergate_basic.SelectedAdderThreshold: 492  # 60 mV x (2^14 / 2 V) => 491.52 ADC#
++
++
++# thresholds for channel trigger gate opening [ADC counts]
++# in this default, we have a 1-photoelectron threshold, a loose-but-reachable
++# one, the selected one defined above, and a tight one.
++# Roughly equivalent to the amplitudes of
++# [ 0.6, 10.0, 13.5, 20.0 ] photoelectrons or
++# [ 2.2, 37, 50, 75 ] mV;
++icarus_triggergate_basic.ChannelThresholds:
++  [ 18, 300, @local::icarus_triggergate_basic.SelectedThreshold, 600 ]
++
++
++# When a PMT signal crosses the discrimination threshold, the readout board
++# (V1730B) will open a gate signal for some amount of time in order to evaluate
++# the LVDS pair signal. This value determines that amount of time.
++icarus_triggergate_basic.PMTdiscrGateWidth: "160 ns"
++
++
++# adder signal emulation builds upon digitized waveforms;
++# discrimination thresholds need to be compared to a SPR of ~3.75 mV (as above)
++# that in an adder becomes ~3.7 mV x0.05 = 0.187 mV.
++# The thresholds chosen here are:         [ 320,      533,     1067     ] photoelectrons or
++#                                         [ "60 mV", "100 mV", "200 mV" ]
++icarus_triggergate_basic.AdderThresholds: [ 492,      819,     1638     ]
++
++
++#
++# the pairing scheme is:
++# 
++#    ~50 ~50 ~50 ~50 ~50 ~50 ~50 ~50 ~50 ~50 ~50
++#   | cm| cm| cm| cm| cm| cm| cm| cm| cm| cm| cm|
++#   |   |   |   |   |   |   |   |   |   |   |   |
++#   '   '   '   '   '   '   '   '   '   '   '   '
++#      ,O   O.         ,O   O.         ,O   O.     ---------.
++#     /       \       /       \       /       \              `~52 cm
++#   O'         `O   O'         `O   O'         `O  ---------<
++#                                                            `~52 cm
++#       O---O          (O) (O)          O---O      ---------<'
++#                                                            `~52 cm
++#   O.         ,O   O.         ,O   O.         ,O  ---------<'
++#     \       /       \       /       \       /              `~52 cm
++#      `O   O'         `O   O'         `O   O'     ----------'
++#
++# replicated thrice per side per module;
++# three rows below represent each of these units.
++#
++# The channel numbering scheme is:
++#
++#
++#   y
++# /\
++# ||
++# ||   |                              |                             |
++# ||   |        4    7             14 | 17             24   27      |
++# ||   |   1              9   11      |      19   21             29 |
++# ||   |        3    6             13 | 16             23   26      |
++# ||   |   0              8   10      |      18   20             28 |
++# ||   |        2    5             12 | 15             22   25      |
++# ||   |                              |                             |
++# ||
++# ##=====================================================================> z
++# 
++# 
++# (patterns can be generated with the `LVDSpatterns.py` script distributed
++#  in `icaruscode`)
++#
++icarus_trigger_channel_pairings: [
+ 
+   # behind C:0 S:0
+-  [   0,  2 ], [   1,  4 ], [   3,  6 ], [   5,  8 ], [   7,  9 ], [  10, 12 ], [  11, 14 ], [  13, 16 ],
+-  [  15, 18 ],              [  17, 19 ], [  20, 22 ], [  21, 24 ], [  23, 26 ], [  25, 28 ], [  27, 29 ],
+-  [  30, 32 ], [  31, 34 ], [  33, 36 ], [  35, 38 ], [  37, 39 ], [  40, 42 ], [  41, 44 ], [  43, 46 ],
+-  [  45, 48 ],              [  47, 49 ], [  50, 52 ], [  51, 54 ], [  53, 56 ], [  55, 58 ], [  57, 59 ],
+-  [  60, 62 ], [  61, 64 ], [  63, 66 ], [  65, 68 ], [  67, 69 ], [  70, 72 ], [  71, 74 ], [  73, 76 ],
+-  [  75, 78 ],              [  77, 79 ], [  80, 82 ], [  81, 84 ], [  83, 86 ], [  85, 88 ], [  87, 89 ],
++  [   0,  2 ], [   1,  4 ], [   3,  6 ], [   5,  8 ], [   7,  9 ], [  10, 12 ], [  11, 14 ], [  13 ],    
++  [  15, 18 ], [  16 ],     [  17, 19 ], [  20, 22 ], [  21, 24 ], [  23, 26 ], [  25, 28 ], [  27, 29 ],
++  [  30, 32 ], [  31, 34 ], [  33, 36 ], [  35, 38 ], [  37, 39 ], [  40, 42 ], [  41, 44 ], [  43 ],    
++  [  45, 48 ], [  46 ],     [  47, 49 ], [  50, 52 ], [  51, 54 ], [  53, 56 ], [  55, 58 ], [  57, 59 ],
++  [  60, 62 ], [  61, 64 ], [  63, 66 ], [  65, 68 ], [  67, 69 ], [  70, 72 ], [  71, 74 ], [  73 ],    
++  [  75, 78 ], [  76 ],     [  77, 79 ], [  80, 82 ], [  81, 84 ], [  83, 86 ], [  85, 88 ], [  87, 89 ],
+   
+   # behind C:0 S:1
+-  [  90, 92 ], [  91, 94 ], [  93, 96 ], [  95, 98 ], [  97, 99 ], [ 100,102 ], [ 101,104 ], [ 103,106 ],
+-  [ 105,108 ],              [ 107,109 ], [ 110,112 ], [ 111,114 ], [ 113,116 ], [ 115,118 ], [ 117,119 ],
+-  [ 120,122 ], [ 121,124 ], [ 123,126 ], [ 125,128 ], [ 127,129 ], [ 130,132 ], [ 131,134 ], [ 133,136 ],
+-  [ 135,138 ],              [ 137,139 ], [ 140,142 ], [ 141,144 ], [ 143,146 ], [ 145,148 ], [ 147,149 ],
+-  [ 150,152 ], [ 151,154 ], [ 153,156 ], [ 155,158 ], [ 157,159 ], [ 160,162 ], [ 161,164 ], [ 163,166 ],
+-  [ 165,168 ],              [ 167,169 ], [ 170,172 ], [ 171,174 ], [ 173,176 ], [ 175,178 ], [ 177,179 ],
++  [  90, 92 ], [  91, 94 ], [  93, 96 ], [  95, 98 ], [  97, 99 ], [ 100,102 ], [ 101,104 ], [ 103 ],    
++  [ 105,108 ], [ 106 ],     [ 107,109 ], [ 110,112 ], [ 111,114 ], [ 113,116 ], [ 115,118 ], [ 117,119 ],
++  [ 120,122 ], [ 121,124 ], [ 123,126 ], [ 125,128 ], [ 127,129 ], [ 130,132 ], [ 131,134 ], [ 133 ],    
++  [ 135,138 ], [ 136 ],     [ 137,139 ], [ 140,142 ], [ 141,144 ], [ 143,146 ], [ 145,148 ], [ 147,149 ],
++  [ 150,152 ], [ 151,154 ], [ 153,156 ], [ 155,158 ], [ 157,159 ], [ 160,162 ], [ 161,164 ], [ 163 ],    
++  [ 165,168 ], [ 166 ],     [ 167,169 ], [ 170,172 ], [ 171,174 ], [ 173,176 ], [ 175,178 ], [ 177,179 ],
+   
+   # behind C:1 S:0
+-  [ 180,182 ], [ 181,184 ], [ 183,186 ], [ 185,188 ], [ 187,189 ], [ 190,192 ], [ 191,194 ], [ 193,196 ],
+-  [ 195,198 ],              [ 197,199 ], [ 200,202 ], [ 201,204 ], [ 203,206 ], [ 205,208 ], [ 207,209 ],
+-  [ 210,212 ], [ 211,214 ], [ 213,216 ], [ 215,218 ], [ 217,219 ], [ 220,222 ], [ 221,224 ], [ 223,226 ],
+-  [ 225,228 ],              [ 227,229 ], [ 230,232 ], [ 231,234 ], [ 233,236 ], [ 235,238 ], [ 237,239 ],
+-  [ 240,242 ], [ 241,244 ], [ 243,246 ], [ 245,248 ], [ 247,249 ], [ 250,252 ], [ 251,254 ], [ 253,256 ],
+-  [ 255,258 ],              [ 257,259 ], [ 260,262 ], [ 261,264 ], [ 263,266 ], [ 265,268 ], [ 267,269 ],
++  [ 180,182 ], [ 181,184 ], [ 183,186 ], [ 185,188 ], [ 187,189 ], [ 190,192 ], [ 191,194 ], [ 193 ],    
++  [ 195,198 ], [ 196 ],     [ 197,199 ], [ 200,202 ], [ 201,204 ], [ 203,206 ], [ 205,208 ], [ 207,209 ],
++  [ 210,212 ], [ 211,214 ], [ 213,216 ], [ 215,218 ], [ 217,219 ], [ 220,222 ], [ 221,224 ], [ 223 ],    
++  [ 225,228 ], [ 226 ],     [ 227,229 ], [ 230,232 ], [ 231,234 ], [ 233,236 ], [ 235,238 ], [ 237,239 ],
++  [ 240,242 ], [ 241,244 ], [ 243,246 ], [ 245,248 ], [ 247,249 ], [ 250,252 ], [ 251,254 ], [ 253 ],    
++  [ 255,258 ], [ 256 ],     [ 257,259 ], [ 260,262 ], [ 261,264 ], [ 263,266 ], [ 265,268 ], [ 267,269 ],
+   
+   # behind C:1 S:1
+-  [ 270,272 ], [ 271,274 ], [ 273,276 ], [ 275,278 ], [ 277,279 ], [ 280,282 ], [ 281,284 ], [ 283,286 ],
+-  [ 285,288 ],              [ 287,289 ], [ 290,292 ], [ 291,294 ], [ 293,296 ], [ 295,298 ], [ 297,299 ],
+-  [ 300,302 ], [ 301,304 ], [ 303,306 ], [ 305,308 ], [ 307,309 ], [ 310,312 ], [ 311,314 ], [ 313,316 ],
+-  [ 315,318 ],              [ 317,319 ], [ 320,322 ], [ 321,324 ], [ 323,326 ], [ 325,328 ], [ 327,329 ],
+-  [ 330,332 ], [ 331,334 ], [ 333,336 ], [ 335,338 ], [ 337,339 ], [ 340,342 ], [ 341,344 ], [ 343,346 ],
+-  [ 345,348 ],              [ 347,349 ], [ 350,352 ], [ 351,354 ], [ 353,356 ], [ 355,358 ], [ 357,359 ]
+-  
+-] # trigger_channel_pairings_nosingle
+-
+-
+-# settings for plotting efficiency under patterns of sliding window triggers
+-# firing during beam time
+-triggeremu_config_icarus.settings.SlidingWindowTriggerPatternsSingleWindow: [
+-  @local::icarus_triggergate_basic.patterns.M1,  # from trigger_icarus.fcl
+-  { inMainWindow: 2                       },
+-  { inMainWindow: 3                       },
+-  { inMainWindow: 4                       },
+-  { inMainWindow: 5                       },
+-  { inMainWindow: 6                       }
+-] # SlidingWindowTriggerPatternsSingleWindow
+-
+-
+-triggeremu_config_icarus.settings.SlidingWindowTriggerPatternsWindowPair: [
+-  { inMainWindow: 1   inOppositeWindow: 1 },       # [0]
+-  { inMainWindow: 2   inOppositeWindow: 2 },       # [1]
+-  { inMainWindow: 3   inOppositeWindow: 3 },       # [2]
+-  { inMainWindow: 4   inOppositeWindow: 4 },       # [3]
+-  { inMainWindow: 5   inOppositeWindow: 5 },       # [4]
+-  { inMainWindow: 6   inOppositeWindow: 6 },       # [5]
+-  @local::icarus_triggergate_basic.patterns.S3,    # [6]
+-  @local::icarus_triggergate_basic.patterns.S5,    # [7]
+-  @local::icarus_triggergate_basic.patterns.S8,    # [8]
+-  @local::icarus_triggergate_basic.patterns.S10,   # [9]
+-  @local::icarus_triggergate_basic.patterns.S15    # [10]
+-] # SlidingWindowTriggerPatternsWindowPair
+-
+-
+-# list of the sliding windows that are enabled (all others are disabled)
+-
+-# * configuration with 3 windows per PMT wall (12 windows overall)
+-triggeremu_config_icarus.settings.EnabledWindowsTilingE:
+-  [  0,  1,  2,  3,  4,  5 ]
+-triggeremu_config_icarus.settings.EnabledWindowsTilingW:
+-  [  6,  7,  8,  9, 10, 11 ]
+-  
+-# * configuration with 5 windows per PMT wall, overlapping (20 windows overall)
+-triggeremu_config_icarus.settings.EnabledWindowsSlidingE:
+-  [  0,  1,  2,  3,  4,  5,  6,  7,  8,  9 ]
+-triggeremu_config_icarus.settings.EnabledWindowsSlidingW:
+-  [ 10, 11, 12, 13, 14, 15, 16, 17, 18, 19 ]
+-
+-triggeremu_config_icarus.settings.SlidingWindowTriggerPatterns: [
+-  @sequence::triggeremu_config_icarus.settings.SlidingWindowTriggerPatternsSingleWindow,
+-  @sequence::triggeremu_config_icarus.settings.SlidingWindowTriggerPatternsWindowPair
+-]
++  [ 270,272 ], [ 271,274 ], [ 273,276 ], [ 275,278 ], [ 277,279 ], [ 280,282 ], [ 281,284 ], [ 283 ],    
++  [ 285,288 ], [ 286 ],     [ 287,289 ], [ 290,292 ], [ 291,294 ], [ 293,296 ], [ 295,298 ], [ 297,299 ],
++  [ 300,302 ], [ 301,304 ], [ 303,306 ], [ 305,308 ], [ 307,309 ], [ 310,312 ], [ 311,314 ], [ 313 ],    
++  [ 315,318 ], [ 316 ],     [ 317,319 ], [ 320,322 ], [ 321,324 ], [ 323,326 ], [ 325,328 ], [ 327,329 ],
++  [ 330,332 ], [ 331,334 ], [ 333,336 ], [ 335,338 ], [ 337,339 ], [ 340,342 ], [ 341,344 ], [ 343 ],    
++  [ 345,348 ], [ 346 ],     [ 347,349 ], [ 350,352 ], [ 351,354 ], [ 353,356 ], [ 355,358 ], [ 357,359 ]
++  
++  ]
+ 
+ 
+-END_PROLOG
++################################################################################
++### PMT channels with issues
++###
+ #
+-# File:    triggerwindowdefs_icarus.fcl
+-# Purpose: Trigger sliding window configurations.
+-# Author:  Gianluca Petrillo (petrillo@slac.stanford.edu)
+-# Date:    January 29, 2021
++# the following PMT were found to have issues during commissioning
++# on January 2021 (or earlier).
++# See e.g. SBN DocDB 20696 (see plots on slide 7).
+ #
+-# Presets are defined in this configuration file that can be used
+-# with `SlidingWindowTrigger` module to simulate sliding window triggers.
++icarus_trigger_channel_ignore_202101: [
++   70, 106, 217,                     # PMT not working [SBN DocDB 20696]
++   54,  58,  67,  98, 112, 153, 254  # hot channels [SBN DocDB 20696] 
++]
++
++# default selection of PMT channels to ignore
++icarus_trigger_channel_ignore: @local::icarus_trigger_channel_ignore_202101
++
++
++################################################################################
++###
++### icarus_dynamictriggergate: variable length gates
++###
++icarus_dynamictriggergate: {
++  
++  tool_type: DynamicTriggerGateBuilderTool
++  
++  ChannelThresholds: @local::icarus_triggergate_basic.ChannelThresholds
++  
++} # icarus_dynamictriggergate
++
++
++################################################################################
++###
++### icarus_dynamictriggergate: fixed length gates
++###
++icarus_fixedtriggergate: {
++  
++  tool_type: FixedTriggerGateBuilderTool
++  
++  ChannelThresholds: @local::icarus_triggergate_basic.ChannelThresholds
++  
++  # minimum duration of a trigger gate
++  GateDuration: @local::icarus_triggergate_basic.PMTdiscrGateWidth
++  
++} # icarus_fixedtriggergate
++
++
++
++################################################################################
++icarus_region_finder: {
++  
++  # waveform baseline [ADC counts]
++  Baseline: @local::icarus_triggergate_basic.Baseline
++  
++  # minimum sampled value for a region to start
++  EnablingThreshold: @local::icarus_triggergate_basic.ChannelThresholds[0]
++  
++  # sampled value below which a region ends (default: as `EnablingThreshold`)
++  # DisablingThreshold: 5
++  
++  # how many samples above threshold for a region to start
++  MinSamplesAboveThreshold: 3  # default
++  
++  # how many samples below threshold for a region to end
++  # (default: as `MinSamplesAboveThreshold`)
++  # MinSamplesBelowThreshold: 3
++  
++} # icarus_region_finder
++
++
++
++################################################################################
++###  Trigger evaluation gates
+ # 
+-# Example of usage:
++# Preset configurations are available in `beamgates_icarus.fcl` to help the
++# workflow include the starting beam gate data product (there, its standard tag
++# is also defined, but we can't refer to it directly here because that
++# configuration file includes this one).
+ #
+-# physics: {
+-#   producers: {
+-#     
+-#     trigslidewindow: {
++# this configuration takes the configured beam gate duration
++# and creates extended gates to be used for trigger evaluation;
++# [20221104] the amount of extension needs to be verified with Run2 data
+ #
+-#       module_type: SlidingWindowTrigger
++icarus_triggersimgates_Run1: {
++
++  module_type: FixBeamGateInfo
++
++  BeamGateTag: beamgate
++
++  Changes: [  # gates of type not included are left unchanged
++    { # for BNB gates
++      Select: { Types: [ "BNB" ] }
++      Start:  { SetTo: "-0.2 us" }
++      Width:  { SetTo: @local::BNB_settings.spill_duration  Add: "0.5 us" }
++    },
++    { # for NuMI gates
++      Select: { Types: [ "NuMI" ]}
++      Start:  { SetTo: "-0.2 us" }
++      Width:  { SetTo: @local::NuMI_settings.spill_duration  Add: "0.6 us" }
++    }
++    ]
++
++} # icarus_triggersimgates_Run1
++
++
++icarus_triggersimgates: @local::icarus_triggersimgates_Run1
++
++
++###
++### enable gate for the trigger primitives
++###
++
+ #
+-#       TriggerGatesTag: "lvdsgates"
++# this gate is read from the simulation settings
+ #
+-#       Thresholds: @local::icarus_triggergate_basic.ChannelThresholds # from trigger_icarus.fcl
++icarus_enablegate_sim: {
++
++  module_type: WriteBeamGateInfo
++  
++  BeamGates: [
++    {
++      Duration: @local::icarus_pmtsimulationalg_standard.ReadoutEnablePeriod  # from pmtsimulation_icarus.fcl
++      Start:    @local::icarus_pmtsimulationalg_standard.TriggerOffsetPMT  # from pmtsimulation_icarus.fcl
++    }
++  ]
++  
++} # icarus_enablegate_sim
++
++
++icarus_enablegate: @local::icarus_enablegate_sim
++
++
++################################################################################
++###  Legacy configurations
++################################################################################
++###
++### this pairing scheme is equivalent to the one in
++### `icarus_trigger_channel_pairings` but coded with the old PMT mapping
++###
+ #
+-#       @table::icarus_trigslidewindow_standard_size
++# The channel numbering scheme is:
+ #
+-#       # channels not included in the input
+-#       MissingChannels: @local::icarus_trigger_channel_ignore
++#      50  44          30  24          10   4
+ #
+-#       # name of the category used for the output
+-#       LogCategory: "SlidingWindowTrigger"
++#  56          40  36          20  16           0
+ #
+-#     } # trigslidewindow
++#      52  46          32  26          12   6
+ #
+-#   } # producers
+-# } # physics
++#  58          42  38          22  18           2
+ #
+-# 
++#      54  48          34  28          14   8
++#
++icarus_trigger_channel_pairings_single_wire_geo: [
++
++  # behind C:0 S:0
++  [   0,  4 ], [   2,  8 ], [  12,  6 ], [  10, 16 ], [  14, 18 ], [  20, 24 ], [  22, 28 ], [  26 ],
++  [  30, 36 ], [  32 ],     [  34, 38 ], [  40, 44 ], [  42, 48 ], [  46, 52 ], [  50, 56 ], [  54, 58 ],
++  [  60, 64 ], [  62, 68 ], [  66, 72 ], [  70, 76 ], [  74, 78 ], [  80, 84 ], [  82, 88 ], [  86 ],
++  [  90, 96 ], [  92 ],     [  94, 98 ], [ 100,104 ], [ 106,112 ], [ 102,108 ], [ 110,116 ], [ 114,118 ],
++  [ 120,124 ], [ 122,128 ], [ 126,132 ], [ 130,136 ], [ 134,138 ], [ 140,144 ], [ 142,148 ], [ 146 ],
++  [ 150,156 ], [ 152 ],     [ 154,158 ], [ 160,164 ], [ 162,168 ], [ 166,172 ], [ 170,176 ], [ 174,178 ],
++  
++  # behind C:0 S:1
++  [   1,  5 ], [   3,  9 ], [  13,  7 ], [  11, 17 ], [  15, 19 ], [  21, 25 ], [  23, 29 ], [  27 ],
++  [  31, 37 ], [  33 ],     [  35, 39 ], [  41, 45 ], [  43, 49 ], [  47, 53 ], [  51, 57 ], [  55, 59 ],
++  [  61, 65 ], [  63, 69 ], [  67, 73 ], [  71, 77 ], [  75, 79 ], [  81, 85 ], [  83, 89 ], [  87 ],
++  [  91, 97 ], [  93 ],     [  95, 99 ], [ 101,105 ], [ 107,113 ], [ 103,109 ], [ 111,117 ], [ 115,119 ],
++  [ 121,125 ], [ 123,129 ], [ 127,133 ], [ 131,137 ], [ 135,139 ], [ 141,145 ], [ 143,149 ], [ 147 ],
++  [ 151,157 ], [ 153 ],     [ 155,159 ], [ 161,165 ], [ 163,169 ], [ 167,173 ], [ 171,177 ], [ 175,179 ],
++  
++  # behind C:1 S:0
++  [ 180,184 ], [ 182,188 ], [ 192,186 ], [ 190,196 ], [ 194,198 ], [ 200,204 ], [ 202,208 ], [ 206 ],
++  [ 210,216 ], [ 212 ],     [ 214,218 ], [ 220,224 ], [ 222,228 ], [ 226,232 ], [ 230,236 ], [ 234,238 ],
++  [ 240,244 ], [ 242,248 ], [ 246,252 ], [ 250,256 ], [ 254,258 ], [ 260,264 ], [ 262,268 ], [ 266 ],
++  [ 270,276 ], [ 272 ],     [ 274,278 ], [ 280,284 ], [ 286,292 ], [ 282,288 ], [ 290,296 ], [ 294,298 ],
++  [ 300,304 ], [ 302,308 ], [ 306,312 ], [ 310,316 ], [ 314,318 ], [ 320,324 ], [ 322,328 ], [ 326 ],
++  [ 330,336 ], [ 332 ],     [ 334,338 ], [ 340,344 ], [ 342,348 ], [ 346,352 ], [ 350,356 ], [ 354,358 ],
++  
++  # behind C:1 S:1
++  [ 181,185 ], [ 183,189 ], [ 193,187 ], [ 191,197 ], [ 195,199 ], [ 201,205 ], [ 203,209 ], [ 207 ],
++  [ 211,217 ], [ 213 ],     [ 215,219 ], [ 221,225 ], [ 223,229 ], [ 227,233 ], [ 231,237 ], [ 235,239 ],
++  [ 241,245 ], [ 243,249 ], [ 247,253 ], [ 251,257 ], [ 255,259 ], [ 261,265 ], [ 263,269 ], [ 267 ],
++  [ 271,277 ], [ 273 ],     [ 275,279 ], [ 281,285 ], [ 287,293 ], [ 283,289 ], [ 291,297 ], [ 295,299 ],
++  [ 301,305 ], [ 303,309 ], [ 307,313 ], [ 311,317 ], [ 315,319 ], [ 321,325 ], [ 323,329 ], [ 327 ],
++  [ 331,337 ], [ 333 ],     [ 335,339 ], [ 341,345 ], [ 343,349 ], [ 347,353 ], [ 351,357 ], [ 355,359 ]
++
++] # icarus_trigger_channel_pairings_single_wire_geo
++
++
++################################################################################
++###
++### Trigger patterns: definition of majority and a bit of topology of a trigger.
++###
++
++# M1 pattern: any PMT anywhere
++icarus_triggergate_basic.patterns.M1: {
++  inMainWindow: 1
++}
++
++icarus_triggergate_basic.patterns.S3: {
++  sumOfOppositeWindows: 3
++  inMainWindow:         2  # relevant only to disambiguate the location
++}
++
++icarus_triggergate_basic.patterns.S5: {
++  sumOfOppositeWindows: 5
++  inMainWindow:         3  # relevant only to disambiguate the location
++}
++
++icarus_triggergate_basic.patterns.S8: {
++  sumOfOppositeWindows: 8
++  inMainWindow:         4  # irrelevant
++}
++
++icarus_triggergate_basic.patterns.S10: {
++  sumOfOppositeWindows: 10
++  inMainWindow:          5 # irrelevant
++}
++
++
++icarus_triggergate_basic.SelectedPattern: @local::icarus_triggergate_basic.patterns.S5
++icarus_triggergate_basic.SelectedPrimitivePattern: @local::icarus_triggergate_basic.patterns.S10
++icarus_triggergate_basic.SelectedAdderPattern: @local::icarus_triggergate_basic.patterns.M1
++
++
++
++END_PROLOG
+ 
+ BEGIN_PROLOG
+ 
+@@ -10518,13 +9830,12 @@
+ #
+ # This module applies discrimination based on fixed threshold specified in the
+ # configuration.
+-# The baseline is read from a data product.
++# The baseline is fixed and read from global settings.
+ # It produces discriminated waveforms ("ReadoutTriggerGate" objects)
+ # and complimentary waveform summary data (all the waveform information that
+ # is not sample values: `sbn::OpDetWaveformMeta` objects).
+ #
+ # This module does requires `Geometry` and `DetectorClocksService` services.
+-# It also requires input from an updated SimPMTIcarus producing baselines too.
+ #
+ # Usually this module is usually run only once; standard label: "pmtthr":
+ #
+@@ -10538,8 +9849,9 @@
+   # input optical waveform data product tag:
+   OpticalWaveforms: "opdaq"
+ 
+-  # PMT baseline (written together with the waveforms themselves)
+-  Baselines: opdaq
++  # PMT baseline (from standard simulation configuration)
++  Baselines: @erase
++  Baseline: @local::icarus_settings_opdet.NominalPedestal
+ 
+ } # icarus_pmtdiscriminatethr_fixed_MC
+ 
+@@ -10624,12 +9936,6 @@
+ # ------------------------------------------------------------------------------
+ # ---  workflow helpers
+ # ------------------------------------------------------------------------------
+-# 
+-# Configurations for trigger in simulation.
+-# 
+-# The thresholds are picked from `icarus_triggergate_basic.SelectedThreshold`
+-# in `trigger_icarus.fcl`.
+-# 
+ icarus_standard_triggersim: {
+ 
+   producers: {
+@@ -10657,7 +9963,6 @@
+       Pattern:               @local::icarus_triggergate_basic.SelectedPattern
+       BeamGates:             triggersimgates
+       TriggerTimeResolution: "8 ns" # this should probably be 12 or 24 ns
+-      TriggerDelay:          @local::triggeremu_config_icarus.settings.TriggerDelay  # triggeremu_settings_icarus.fcl
+       EmitEmpty:             true
+       ExtraInfo:             true
+     }
+@@ -10678,10 +9983,7 @@
+ 
+   producers: {
+ 
+-    pmtfixedthrinit: {
+-      @table::icarus_pmtdiscriminatethr_fixed_MC
+-      SelectThresholds: [ @local::icarus_triggergate_basic.SelectedThreshold ]
+-    }
++    pmtfixedthrinit: @local::icarus_pmtdiscriminatethr_fixed_MC
+ 
+     pmtlvdsgatesinit: {
+       @table::icarus_standard_triggersim.producers.pmtlvdsgates
+@@ -10705,7 +10007,6 @@
+     emuTriggerUnshifted: {
+       @table::icarus_standard_triggersim.producers.emuTrigger
+       BeamGates: triggersimgatesinit
+-      BeamGateReference: Simulation
+       TriggerGatesTag: pmttriggerwindowsinit
+     }
+ 
+@@ -10718,7 +10019,6 @@
+        InitSimEnergyDepositLiteLabel: "sedlite"
+        InitSimPhotonsLabel: "largeant"
+        InitWaveformLabel: "opdaq"
+-       BindWaveformBaselines: "opdaq"
+        ShiftAuxDetIDEs: true
+        ShiftBeamGateInfo: true
+        ShiftSimEnergyDeposits: true
+@@ -10742,20 +10042,6 @@
+        ShiftSimPhotons: false
+        ShiftWaveforms: false
+        AdditionalOffset: 0.0 # [us] Additional offset to apply to the time shift
+-       DropTriggerProduct: true  # we already have `shifted`
+-    }
+-
+-    emuTrigger: {
+-      @table::icarus_standard_triggersim.producers.emuTrigger
+-      # biting our own tail: the `shifted` beam gate info object is the result
+-      # of the "standard" shifting by `AdjustSimForTrigger` on the old beam gate
+-      # info, whose reference was the simulation start time. At the time of its
+-      # production, simulation start time was also the trigger time (by default)
+-      # so that the same shift that moves the trigger time does apply also to
+-      # numbers expressed in (old) simulation time.
+-      # Not that we have a "new" simulation time (at the time of writing).
+-      BeamGates:         shifted
+-      BeamGateReference: Trigger
+     }
+ 
+   } # producers
+@@ -10913,25 +10199,22 @@
+     @table::icarus_rootoutput
+     outputCommands: [
+       "keep *"
+-     , "drop *_ionization_*_*"
+-     , "drop *_simdrift_*_*"
+-     , "drop *_pdfastsim_*_*"
++     # , "drop *_ionization_*_*"
++     # , "drop *_simdrift_*_*"
++     # , "drop *_pdfastsim_*_*"
+      , "drop raw::OpDetWaveform*_opdaq_*_*"
+-     , "drop sim::SimEnergyDeposits_largeant_*_*"
+-     , "drop sim::SimEnergyDepositLites_sedlite_*_*"
+-     , "drop sim::SimEnergyDeposits_shifted_*_*"
+-     , "drop *_pmtlvdsgatesinit_*_*"
+-     , "drop *_pmtfixedthrinit_*_*"
+-     , "drop *_pmttriggerwindowsinit_*_*"
+-     , "drop *_triggersimgatesinit_*_*"
++     # , "drop sim::SimEnergyDeposits_largeant_*_*"
++     # , "drop sim::SimEnergyDepositLites_sedlite_*_*"
++     # , "drop sim::SimEnergyDeposits_shifted_*_*"
++     # , "drop *_pmtlvdsgatesinit_*_*"
++     # , "drop *_pmtfixedthrinit_*_*"
++     # , "drop *_pmttriggerwindowsinit_*_*"
++     # , "drop *_triggersimgatesinit_*_*"
+       ]
+   }
+ }
+ 
+ physics.producers.crtdaq.G4ModuleLabel: "shifted"
+ physics.producers.opdaq.InputModule: "pdfastsim"
+-physics.producers.opdaq.ApplyTimingDelays:        false  # keep false for non-overlay MC
+-physics.producers.opdaq.UseGainDatabase:          false  # keep false for non-overlay MC
+-physics.producers.opdaq.UseChannelStatusDatabase: false  # keep false for non-overlay MC
+ physics.producers.shifted.InitAuxDetSimChannelLabel: "genericcrt"
+ physics.producers.shifted.InitSimPhotonsLabel: "pdfastsim"

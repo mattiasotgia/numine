@@ -1,0 +1,1618 @@
+--- CV_FNAL_10_31_00_01_EXPANDED//nuedis_cafmakerjob_icarus_detsim2d_systtools_and_fluxwgt_noyzsim_NuGraphReco_HitsInCAFs.expand	2026-11-26 10:27:06.767693812 +0100
++++ CV_CNAF_RicDev_EXPANDED//nuedis_cafmakerjob_icarus_detsim2d_systtools_and_fluxwgt_noyzsim_NuGraphReco_HitsInCAFs.expand	2026-11-26 10:15:19.456825614 +0100
+@@ -1255,67 +1255,6 @@
+     
+ } # icarus_detectorclocks_data_notiming
+ 
+-
+-# ##############################################################################
+-#
+-# Simulation settings
+-#
+-# Executive summary: use this configuration for simulation
+-#                    (shifted or not, with data overlay or not).
+-#
+-# These settings have dual (and a half) use.
+-# The explicit use is for simulation samples that underwent a time shift
+-# (e.g. via `AdjustSimForTrigger`) and have a new time reference in `shifted`
+-# data product. The implicit usage is for simulation samples that have not been
+-# shifted, yet or at all. The half is that an overlay workflow follows for the
+-# most part (only exception the data decoding) the simulation time reference.
+-# 
+-# The standard time reference (`icarus_detectorclocks`) is from `daqTrigger`,
+-# which is normally decoded from data and never available in simulation.
+-# In absence of the configured trigger data product, timing configuration
+-# silently falls back to default values from the configuration, which are
+-# in fact suitable for standard simulation jobs.
+-# 
+-# This configuration table replaces the non-existing `daqTrigger` data product,
+-# which exists only when decoding data, with the non-existing `shifted`
+-# data product, which exists only after `AdjustSimForTrigger` is executed
+-# (with the standard module name).
+-# 
+-# In normal Monte Carlo jobs, this change is indifferent since DetectorClocks
+-# will always fall back to the configured default values.
+-# 
+-# In case of shifted simulation jobs, this configuration does the right thing,
+-# picking the now available `shifted` data product as the time reference
+-# (and unfortunately it still silently falls back to configured defaults if
+-# for any reason that product is not available).
+-# 
+-# Finally, in case of simulation overlaid on data ("overlay"), the data itself
+-# is supposed to be "time-invariant" (off-beam, minimum bias), and the time
+-# reference is taken from the simulation, again from the defaults or from the
+-# `shifted` data product, depending on whether simulation is being shifted.
+-# It is to be noted that, in an overlay workflow the default time reference of
+-# the standard configuration, `daqTrigger` is sooner or later decoded, and its
+-# availability depends on the relative order of simulation and decoding. At that
+-# point, time reference will switch from default values (wrong if simulation was
+-# shifted) to the minimum bias trigger time (wrong, always).
+-# 
+-# Note that `TrigModuleName` configuration parameter is not covered by
+-# `InheritClockConfig`, so overriding that in a job with inheriting enabled
+-# does use the overridden trigger and does not cause errors.
+-#
+-# Use as:
+-#     
+-#     services.DetectorClocksService: @local::icarus_detectorclocks_simulation
+-#     
+-#
+-icarus_detectorclocks_simulation: {
+-    @table::icarus_detectorclocks
+-
+-    TrigModuleName: "shifted"
+-
+-} # icarus_detectorclocks_simulation
+-
+-
+ #
+ #
+ #
+@@ -1658,28 +1597,6 @@
+                                      # Run 3: run>=11590
+ }
+ 
+-# These are the standard tags for analyses on Run 1, Run 2, Run 3 and Run 4 data (as of Oct 2025)
+-# These tagged versions of the databases contain tables relevant for Run 1, Run 2, Run 3 and Run 4.
+-# Notes: 
+-#   - New cosmics corrections for Run 4 (run>=12837)
+-PMT_CalibrationTags_Oct2025: {
+-  pmt_cables_delays_data:    "v2r5"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=10369, run>=10441, run>=10865
+-                                     # Run 4: run>=12040, run>=12455, run>=12777
+-  pmt_laser_timing_data:     "v2r3"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=10908, run>=11590
+-                                     # Run 4: run>=12058, run>=12837
+-  pmt_cosmics_timing_data:   "v2r3"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=11590
+-                                     # Run 4: run>=12837
+-}
+-
+ END_PROLOG
+ # File:    calibration_database_GlobalTags.fcl
+ # Purpose: Collection of tag info for the TPC calibration database
+@@ -1702,7 +1619,7 @@
+ ## - Files decoded with release >=v09_66_02 should use v3r2
+ TPC_CalibrationTags_Feb2024: {
+ 
+-  tpc_channelstatus_data: "v3r2"
++  tpc_channelstatus_data: "v3r4"
+   tpc_elifetime_data: "v2r1"
+   tpc_dqdxcalibration_data: "v2r1"
+   tpc_yz_correction_data: "v2r1"
+@@ -1710,38 +1627,15 @@
+ }
+ 
+ ## TPC_CalibrationTags_Feb2024 but updating tpc_yz_correction_data to tpc_yz_correction_allplanes_data
+-## Update to mask out additional bad noisy channels
+ TPC_CalibrationTags_Jan2025: {
+ 
+-  tpc_channelstatus_data: "v3r4"
++  tpc_channelstatus_data: "v3r2"
+   tpc_elifetime_data: "v2r1"
+   tpc_dqdxcalibration_data: "v2r1"
+   tpc_yz_correction_allplanes_data: "v1r0"
+ 
+ }
+ 
+-## TPC_CalibrationTags_Jul2025 
+-# Update to 2D deconv tags. Change TPC equalization to be per-plane
+-TPC_CalibrationTags_Jul2025: {
+-
+-  tpc_channelstatus_data: "v3r4"
+-  tpc_elifetime_data: "v3r0"
+-  tpc_dqdxcalibration_allplanes_data: "v1r0"
+-  tpc_yz_correction_allplanes_data: "v2r0"
+-
+-}
+-
+-## TPC_CalibrationTags_Oct2025 
+-# Include Run 4 in calibrations
+-TPC_CalibrationTags_Oct2025: {
+-
+-  tpc_channelstatus_data: "v4r0"
+-  tpc_elifetime_data: "v3r1"
+-  tpc_dqdxcalibration_allplanes_data: "v1r1"
+-  tpc_yz_correction_allplanes_data: "v2r1"
+-
+-}
+-
+ END_PROLOG
+ # File:    calibration_database_GlobalTags.fcl
+ # Purpose: Collection of tag info for the TPC calibration database
+@@ -1760,8 +1654,8 @@
+ BEGIN_PROLOG
+ 
+ ICARUS_Calibration_GlobalTags: {
+-  @table::TPC_CalibrationTags_Oct2025
+-  @table::PMT_CalibrationTags_Oct2025
++  @table::TPC_CalibrationTags_Jan2025
++  @table::PMT_CalibrationTags_Run3_Feb2025
+   @table::CRT_CalibrationTags_Oct2023
+ }
+ 
+@@ -2094,28 +1988,6 @@
+                                      # Run 3: run>=11590
+ }
+ 
+-# These are the standard tags for analyses on Run 1, Run 2, Run 3 and Run 4 data (as of Oct 2025)
+-# These tagged versions of the databases contain tables relevant for Run 1, Run 2, Run 3 and Run 4.
+-# Notes: 
+-#   - New cosmics corrections for Run 4 (run>=12837)
+-PMT_CalibrationTags_Oct2025: {
+-  pmt_cables_delays_data:    "v2r5"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=10369, run>=10441, run>=10865
+-                                     # Run 4: run>=12040, run>=12455, run>=12777
+-  pmt_laser_timing_data:     "v2r3"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=10908, run>=11590
+-                                     # Run 4: run>=12058, run>=12837
+-  pmt_cosmics_timing_data:   "v2r3"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=11590
+-                                     # Run 4: run>=12837
+-}
+-
+ END_PROLOG
+ # File:    calibration_database_GlobalTags.fcl
+ # Purpose: Collection of tag info for the TPC calibration database
+@@ -2138,7 +2010,7 @@
+ ## - Files decoded with release >=v09_66_02 should use v3r2
+ TPC_CalibrationTags_Feb2024: {
+ 
+-  tpc_channelstatus_data: "v3r2"
++  tpc_channelstatus_data: "v3r4"
+   tpc_elifetime_data: "v2r1"
+   tpc_dqdxcalibration_data: "v2r1"
+   tpc_yz_correction_data: "v2r1"
+@@ -2146,38 +2018,15 @@
+ }
+ 
+ ## TPC_CalibrationTags_Feb2024 but updating tpc_yz_correction_data to tpc_yz_correction_allplanes_data
+-## Update to mask out additional bad noisy channels
+ TPC_CalibrationTags_Jan2025: {
+ 
+-  tpc_channelstatus_data: "v3r4"
++  tpc_channelstatus_data: "v3r2"
+   tpc_elifetime_data: "v2r1"
+   tpc_dqdxcalibration_data: "v2r1"
+   tpc_yz_correction_allplanes_data: "v1r0"
+ 
+ }
+ 
+-## TPC_CalibrationTags_Jul2025 
+-# Update to 2D deconv tags. Change TPC equalization to be per-plane
+-TPC_CalibrationTags_Jul2025: {
+-
+-  tpc_channelstatus_data: "v3r4"
+-  tpc_elifetime_data: "v3r0"
+-  tpc_dqdxcalibration_allplanes_data: "v1r0"
+-  tpc_yz_correction_allplanes_data: "v2r0"
+-
+-}
+-
+-## TPC_CalibrationTags_Oct2025 
+-# Include Run 4 in calibrations
+-TPC_CalibrationTags_Oct2025: {
+-
+-  tpc_channelstatus_data: "v4r0"
+-  tpc_elifetime_data: "v3r1"
+-  tpc_dqdxcalibration_allplanes_data: "v1r1"
+-  tpc_yz_correction_allplanes_data: "v2r1"
+-
+-}
+-
+ END_PROLOG
+ # File:    calibration_database_GlobalTags.fcl
+ # Purpose: Collection of tag info for the TPC calibration database
+@@ -2196,8 +2045,8 @@
+ BEGIN_PROLOG
+ 
+ ICARUS_Calibration_GlobalTags: {
+-  @table::TPC_CalibrationTags_Oct2025
+-  @table::PMT_CalibrationTags_Oct2025
++  @table::TPC_CalibrationTags_Jan2025
++  @table::PMT_CalibrationTags_Run3_Feb2025
+   @table::CRT_CalibrationTags_Oct2023
+ }
+ 
+@@ -3865,67 +3714,6 @@
+     
+ } # icarus_detectorclocks_data_notiming
+ 
+-
+-# ##############################################################################
+-#
+-# Simulation settings
+-#
+-# Executive summary: use this configuration for simulation
+-#                    (shifted or not, with data overlay or not).
+-#
+-# These settings have dual (and a half) use.
+-# The explicit use is for simulation samples that underwent a time shift
+-# (e.g. via `AdjustSimForTrigger`) and have a new time reference in `shifted`
+-# data product. The implicit usage is for simulation samples that have not been
+-# shifted, yet or at all. The half is that an overlay workflow follows for the
+-# most part (only exception the data decoding) the simulation time reference.
+-# 
+-# The standard time reference (`icarus_detectorclocks`) is from `daqTrigger`,
+-# which is normally decoded from data and never available in simulation.
+-# In absence of the configured trigger data product, timing configuration
+-# silently falls back to default values from the configuration, which are
+-# in fact suitable for standard simulation jobs.
+-# 
+-# This configuration table replaces the non-existing `daqTrigger` data product,
+-# which exists only when decoding data, with the non-existing `shifted`
+-# data product, which exists only after `AdjustSimForTrigger` is executed
+-# (with the standard module name).
+-# 
+-# In normal Monte Carlo jobs, this change is indifferent since DetectorClocks
+-# will always fall back to the configured default values.
+-# 
+-# In case of shifted simulation jobs, this configuration does the right thing,
+-# picking the now available `shifted` data product as the time reference
+-# (and unfortunately it still silently falls back to configured defaults if
+-# for any reason that product is not available).
+-# 
+-# Finally, in case of simulation overlaid on data ("overlay"), the data itself
+-# is supposed to be "time-invariant" (off-beam, minimum bias), and the time
+-# reference is taken from the simulation, again from the defaults or from the
+-# `shifted` data product, depending on whether simulation is being shifted.
+-# It is to be noted that, in an overlay workflow the default time reference of
+-# the standard configuration, `daqTrigger` is sooner or later decoded, and its
+-# availability depends on the relative order of simulation and decoding. At that
+-# point, time reference will switch from default values (wrong if simulation was
+-# shifted) to the minimum bias trigger time (wrong, always).
+-# 
+-# Note that `TrigModuleName` configuration parameter is not covered by
+-# `InheritClockConfig`, so overriding that in a job with inheriting enabled
+-# does use the overridden trigger and does not cause errors.
+-#
+-# Use as:
+-#     
+-#     services.DetectorClocksService: @local::icarus_detectorclocks_simulation
+-#     
+-#
+-icarus_detectorclocks_simulation: {
+-    @table::icarus_detectorclocks
+-
+-    TrigModuleName: "shifted"
+-
+-} # icarus_detectorclocks_simulation
+-
+-
+ #
+ #
+ #
+@@ -4268,28 +4056,6 @@
+                                      # Run 3: run>=11590
+ }
+ 
+-# These are the standard tags for analyses on Run 1, Run 2, Run 3 and Run 4 data (as of Oct 2025)
+-# These tagged versions of the databases contain tables relevant for Run 1, Run 2, Run 3 and Run 4.
+-# Notes: 
+-#   - New cosmics corrections for Run 4 (run>=12837)
+-PMT_CalibrationTags_Oct2025: {
+-  pmt_cables_delays_data:    "v2r5"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=10369, run>=10441, run>=10865
+-                                     # Run 4: run>=12040, run>=12455, run>=12777
+-  pmt_laser_timing_data:     "v2r3"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=10908, run>=11590
+-                                     # Run 4: run>=12058, run>=12837
+-  pmt_cosmics_timing_data:   "v2r3"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=11590
+-                                     # Run 4: run>=12837
+-}
+-
+ END_PROLOG
+ # File:    calibration_database_GlobalTags.fcl
+ # Purpose: Collection of tag info for the TPC calibration database
+@@ -4312,7 +4078,7 @@
+ ## - Files decoded with release >=v09_66_02 should use v3r2
+ TPC_CalibrationTags_Feb2024: {
+ 
+-  tpc_channelstatus_data: "v3r2"
++  tpc_channelstatus_data: "v3r4"
+   tpc_elifetime_data: "v2r1"
+   tpc_dqdxcalibration_data: "v2r1"
+   tpc_yz_correction_data: "v2r1"
+@@ -4320,38 +4086,15 @@
+ }
+ 
+ ## TPC_CalibrationTags_Feb2024 but updating tpc_yz_correction_data to tpc_yz_correction_allplanes_data
+-## Update to mask out additional bad noisy channels
+ TPC_CalibrationTags_Jan2025: {
+ 
+-  tpc_channelstatus_data: "v3r4"
++  tpc_channelstatus_data: "v3r2"
+   tpc_elifetime_data: "v2r1"
+   tpc_dqdxcalibration_data: "v2r1"
+   tpc_yz_correction_allplanes_data: "v1r0"
+ 
+ }
+ 
+-## TPC_CalibrationTags_Jul2025 
+-# Update to 2D deconv tags. Change TPC equalization to be per-plane
+-TPC_CalibrationTags_Jul2025: {
+-
+-  tpc_channelstatus_data: "v3r4"
+-  tpc_elifetime_data: "v3r0"
+-  tpc_dqdxcalibration_allplanes_data: "v1r0"
+-  tpc_yz_correction_allplanes_data: "v2r0"
+-
+-}
+-
+-## TPC_CalibrationTags_Oct2025 
+-# Include Run 4 in calibrations
+-TPC_CalibrationTags_Oct2025: {
+-
+-  tpc_channelstatus_data: "v4r0"
+-  tpc_elifetime_data: "v3r1"
+-  tpc_dqdxcalibration_allplanes_data: "v1r1"
+-  tpc_yz_correction_allplanes_data: "v2r1"
+-
+-}
+-
+ END_PROLOG
+ # File:    calibration_database_GlobalTags.fcl
+ # Purpose: Collection of tag info for the TPC calibration database
+@@ -4370,8 +4113,8 @@
+ BEGIN_PROLOG
+ 
+ ICARUS_Calibration_GlobalTags: {
+-  @table::TPC_CalibrationTags_Oct2025
+-  @table::PMT_CalibrationTags_Oct2025
++  @table::TPC_CalibrationTags_Jan2025
++  @table::PMT_CalibrationTags_Run3_Feb2025
+   @table::CRT_CalibrationTags_Oct2023
+ }
+ 
+@@ -4704,28 +4447,6 @@
+                                      # Run 3: run>=11590
+ }
+ 
+-# These are the standard tags for analyses on Run 1, Run 2, Run 3 and Run 4 data (as of Oct 2025)
+-# These tagged versions of the databases contain tables relevant for Run 1, Run 2, Run 3 and Run 4.
+-# Notes: 
+-#   - New cosmics corrections for Run 4 (run>=12837)
+-PMT_CalibrationTags_Oct2025: {
+-  pmt_cables_delays_data:    "v2r5"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=10369, run>=10441, run>=10865
+-                                     # Run 4: run>=12040, run>=12455, run>=12777
+-  pmt_laser_timing_data:     "v2r3"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=10908, run>=11590
+-                                     # Run 4: run>=12058, run>=12837
+-  pmt_cosmics_timing_data:   "v2r3"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=11590
+-                                     # Run 4: run>=12837
+-}
+-
+ END_PROLOG
+ # File:    calibration_database_GlobalTags.fcl
+ # Purpose: Collection of tag info for the TPC calibration database
+@@ -4748,7 +4469,7 @@
+ ## - Files decoded with release >=v09_66_02 should use v3r2
+ TPC_CalibrationTags_Feb2024: {
+ 
+-  tpc_channelstatus_data: "v3r2"
++  tpc_channelstatus_data: "v3r4"
+   tpc_elifetime_data: "v2r1"
+   tpc_dqdxcalibration_data: "v2r1"
+   tpc_yz_correction_data: "v2r1"
+@@ -4756,38 +4477,15 @@
+ }
+ 
+ ## TPC_CalibrationTags_Feb2024 but updating tpc_yz_correction_data to tpc_yz_correction_allplanes_data
+-## Update to mask out additional bad noisy channels
+ TPC_CalibrationTags_Jan2025: {
+ 
+-  tpc_channelstatus_data: "v3r4"
++  tpc_channelstatus_data: "v3r2"
+   tpc_elifetime_data: "v2r1"
+   tpc_dqdxcalibration_data: "v2r1"
+   tpc_yz_correction_allplanes_data: "v1r0"
+ 
+ }
+ 
+-## TPC_CalibrationTags_Jul2025 
+-# Update to 2D deconv tags. Change TPC equalization to be per-plane
+-TPC_CalibrationTags_Jul2025: {
+-
+-  tpc_channelstatus_data: "v3r4"
+-  tpc_elifetime_data: "v3r0"
+-  tpc_dqdxcalibration_allplanes_data: "v1r0"
+-  tpc_yz_correction_allplanes_data: "v2r0"
+-
+-}
+-
+-## TPC_CalibrationTags_Oct2025 
+-# Include Run 4 in calibrations
+-TPC_CalibrationTags_Oct2025: {
+-
+-  tpc_channelstatus_data: "v4r0"
+-  tpc_elifetime_data: "v3r1"
+-  tpc_dqdxcalibration_allplanes_data: "v1r1"
+-  tpc_yz_correction_allplanes_data: "v2r1"
+-
+-}
+-
+ END_PROLOG
+ # File:    calibration_database_GlobalTags.fcl
+ # Purpose: Collection of tag info for the TPC calibration database
+@@ -4806,8 +4504,8 @@
+ BEGIN_PROLOG
+ 
+ ICARUS_Calibration_GlobalTags: {
+-  @table::TPC_CalibrationTags_Oct2025
+-  @table::PMT_CalibrationTags_Oct2025
++  @table::TPC_CalibrationTags_Jan2025
++  @table::PMT_CalibrationTags_Run3_Feb2025
+   @table::CRT_CalibrationTags_Oct2023
+ }
+ 
+@@ -5240,28 +4938,6 @@
+                                      # Run 3: run>=11590
+ }
+ 
+-# These are the standard tags for analyses on Run 1, Run 2, Run 3 and Run 4 data (as of Oct 2025)
+-# These tagged versions of the databases contain tables relevant for Run 1, Run 2, Run 3 and Run 4.
+-# Notes: 
+-#   - New cosmics corrections for Run 4 (run>=12837)
+-PMT_CalibrationTags_Oct2025: {
+-  pmt_cables_delays_data:    "v2r5"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=10369, run>=10441, run>=10865
+-                                     # Run 4: run>=12040, run>=12455, run>=12777
+-  pmt_laser_timing_data:     "v2r3"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=10908, run>=11590
+-                                     # Run 4: run>=12058, run>=12837
+-  pmt_cosmics_timing_data:   "v2r3"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=11590
+-                                     # Run 4: run>=12837
+-}
+-
+ END_PROLOG
+ # File:    calibration_database_GlobalTags.fcl
+ # Purpose: Collection of tag info for the TPC calibration database
+@@ -5284,7 +4960,7 @@
+ ## - Files decoded with release >=v09_66_02 should use v3r2
+ TPC_CalibrationTags_Feb2024: {
+ 
+-  tpc_channelstatus_data: "v3r2"
++  tpc_channelstatus_data: "v3r4"
+   tpc_elifetime_data: "v2r1"
+   tpc_dqdxcalibration_data: "v2r1"
+   tpc_yz_correction_data: "v2r1"
+@@ -5292,38 +4968,15 @@
+ }
+ 
+ ## TPC_CalibrationTags_Feb2024 but updating tpc_yz_correction_data to tpc_yz_correction_allplanes_data
+-## Update to mask out additional bad noisy channels
+ TPC_CalibrationTags_Jan2025: {
+ 
+-  tpc_channelstatus_data: "v3r4"
++  tpc_channelstatus_data: "v3r2"
+   tpc_elifetime_data: "v2r1"
+   tpc_dqdxcalibration_data: "v2r1"
+   tpc_yz_correction_allplanes_data: "v1r0"
+ 
+ }
+ 
+-## TPC_CalibrationTags_Jul2025 
+-# Update to 2D deconv tags. Change TPC equalization to be per-plane
+-TPC_CalibrationTags_Jul2025: {
+-
+-  tpc_channelstatus_data: "v3r4"
+-  tpc_elifetime_data: "v3r0"
+-  tpc_dqdxcalibration_allplanes_data: "v1r0"
+-  tpc_yz_correction_allplanes_data: "v2r0"
+-
+-}
+-
+-## TPC_CalibrationTags_Oct2025 
+-# Include Run 4 in calibrations
+-TPC_CalibrationTags_Oct2025: {
+-
+-  tpc_channelstatus_data: "v4r0"
+-  tpc_elifetime_data: "v3r1"
+-  tpc_dqdxcalibration_allplanes_data: "v1r1"
+-  tpc_yz_correction_allplanes_data: "v2r1"
+-
+-}
+-
+ END_PROLOG
+ # File:    calibration_database_GlobalTags.fcl
+ # Purpose: Collection of tag info for the TPC calibration database
+@@ -5342,8 +4995,8 @@
+ BEGIN_PROLOG
+ 
+ ICARUS_Calibration_GlobalTags: {
+-  @table::TPC_CalibrationTags_Oct2025
+-  @table::PMT_CalibrationTags_Oct2025
++  @table::TPC_CalibrationTags_Jan2025
++  @table::PMT_CalibrationTags_Run3_Feb2025
+   @table::CRT_CalibrationTags_Oct2023
+ }
+ 
+@@ -5374,9 +5027,9 @@
+ }
+ 
+ tpcgain: {
+-  tool_type: NormalizeTPCPerPlane
++  tool_type: NormalizeTPC
+   Timeout: 200
+-  URL: "https://dbdata0vm.fnal.gov:9443/icarus_con_prod/app/data?f=tpc_dqdxcalibration_allplanes_data&t="
++  URL: "https://dbdata0vm.fnal.gov:9443/icarus_con_prod/app/data?f=tpc_dqdxcalibration_data&t="
+   Verbose: false
+ }
+ 
+@@ -5384,15 +5037,14 @@
+   tool_type: NormalizeDriftSQLite
+   DBFileName: tpc_elifetime_data 
+   DBTag: @local::ICARUS_Calibration_GlobalTags.tpc_elifetime_data
+-  Verbose: true
++  Verbose: false
+ }
+ 
+ tpcgain_sql: {
+-  tool_type: NormalizeTPCPerPlaneSQL
+-  DBFileName: tpc_dqdxcalibration_allplanes_data
+-  DBTag: @local::ICARUS_Calibration_GlobalTags.tpc_dqdxcalibration_allplanes_data
++  tool_type: NormalizeTPCSQL
++  DBFileName: tpc_dqdxcalibration_data
++  DBTag: @local::ICARUS_Calibration_GlobalTags.tpc_dqdxcalibration_data
+   Verbose: false
+-  MC: -1
+ }
+ 
+ tpcgain_local: {
+@@ -5407,16 +5059,14 @@
+   DBFileName: tpc_yz_correction_allplanes_data
+   DBTag: @local::ICARUS_Calibration_GlobalTags.tpc_yz_correction_allplanes_data
+   Verbose: false
+-  MC: -1
+ }
+ 
+-icarus_calonormtools: [@local::driftnorm_sql, @local::yznorm_sql, @local::tpcgain_sql]
+-icarus_calonormtoolsMC: [@local::yznorm_sql, @local::tpcgain_sql]
++#icarus_calonormtools: [@local::driftnorm, @local::yznorm, @local::tpcgain]
++ icarus_calonormtools: [@local::driftnorm_sql, @local::yznorm_sql, @local::tpcgain_sql]
+ 
+-# GP 8/4/25 -- Update gain to re-measurement with Run 2 stopping muons and 
+-# fixed recombination. Details about this change are located in the Run 2+4
+-# Calibration Tech Note (SBN DocDB 44460).
+-icarus_data_calconst: [0.016751, 0.012755, 0.012513]
++# Gain with angular dep. recombination. Measurement from: https://arxiv.org/pdf/2407.12969
++# Assume equal on planes -- this is __wrong__ -- will need to be fixed when they are calibrated
++icarus_data_calconst: [0.0133333, 0.0133333, 0.0133333]
+ 
+ END_PROLOG
+ 
+@@ -5425,11 +5075,10 @@
+ icarus_calorimetryalgdata:	@local::standard_calorimetryalgdata
+ icarus_calorimetryalgmc:	  @local::standard_calorimetryalgmc
+ 
+-# GP 8/4/25: with re-calibration and application of EMB recombination,
+-# MC and data gains match. Note that we should not being making any
+-# updates to the MC that would cause the MC gain to differ from that of
+-# data.
+-icarus_calorimetryalgmc.CalAreaConstants: @local::icarus_data_calconst
++# Calorimetry constants from G. Putnam (Nov 2022)
++# Informed by MC calibration -- docdb 28639.
++# NOTE: needs to be revisted if/when the data processing is updated
++icarus_calorimetryalgmc.CalAreaConstants: [0.01343, 0.01338, 0.01219]
+ icarus_calorimetryalgmc.ModBoxA: 0.904
+ icarus_calorimetryalgmc.ModBoxBTF1: "[0]/TMath::Sqrt(TMath::Sin(x*TMath::Pi()/180)**2 + TMath::Cos(x*TMath::Pi()/180)**2/[1]**2)"
+ icarus_calorimetryalgmc.ModBoxBParam: [0.204, 1.25]
+@@ -5477,11 +5126,6 @@
+     # MaximumPIDA:            30 # Optional argument: limits PIDA values that are considered for median or mean
+ }
+ 
+-standard_likelihoodpidalg:
+-{
+-    maxrr: 26.0
+-}
+-
+ standard_pidaalg:
+ {
+   ExponentConstant: 0.42
+@@ -5505,14 +5149,6 @@
+  Chi2PIDAlg:             @local::standard_chi2pidalg
+ }
+ 
+-standard_likelihoodpid:
+-{
+- module_type:            "LikelihoodParticleID"
+- TrackModuleLabel:       "spacepts"
+- CalorimetryModuleLabel: "calo"
+- LikelihoodPIDAlg:       @local::standard_likelihoodpidalg
+-}
+-
+ standard_pidaanalyzer:
+ {
+   module_type:      "PIDAAnalyzer"
+@@ -13467,340 +13103,51 @@
+ 
+ 
+ END_PROLOG
+-##########################################################
+-## Hadron reinteraction uncertainties
+-##
+-## References:
+-##
+-##   * K. Duffy, Pion Secondary Interaction Systematics (from GEANTReweight), DocDB 25379
+-##   * J. Calcutt, GEANTReweight documentation DocDB 25084, repository https://cdcvs.fnal.gov/redmine/projects/geant4reweight/repository
+-##
+-## From MicroBooNE, ubsim UBOONE_SUITE_v08_00_00_69
+-## (uBooNE author: Kirsty Duffy (kduffy@fnal.gov))
+-##
+-##########################################################
+-
+-BEGIN_PROLOG
+-
+-## PiPlus available process keys: "abs", "cex", "prod", "dcex", "inel"
+-
+-PiPlusParameters: [
+-  {
+-    Name:       "fPiPlusInelLow"
+-    Cut:        "inel"
+-    Range:      [10., 200.]
+-    Nominal:    1.0
+-    Sigma:      0.2
+-  } ,
+-  {
+-    Name:       "fPiPlusInelHigh"
+-    Cut:        "inel"
+-    Range:      [700., 2005.]
+-    Nominal:    1.0
+-    Sigma:      0.2
+-  } ,
+-
+-  {
+-    Name:       "fPiPlusAbs"
+-    Cut:        "abs"
+-    Range:      [10.0, 2005.00]
+-    Nominal:    1.0
+-    Sigma:      0.2
+-  },
+-
+-  {
+-    Name:       "fPiPlusCex"
+-    Cut:        "cex"
+-    Range:      [10.0, 2005.00]
+-    Nominal:    1.0
+-    Sigma:      0.2
+-  },
+-
+-  {
+-    Name:       "fPiPlusDCex"
+-    Cut:        "dcex"
+-    Range:      [10.0, 2005.00]
+-    Nominal:    1.0
+-    Sigma:      0.2
+-  },
+ 
+-  {
+-    Name:       "fPiPlusPiProd"
+-    Cut:        "prod"
+-    Range:      [10.0, 2005.00]
+-    Nominal:    1.0
+-    Sigma:      0.2
+-  }
+-
+-]
+-
+-END_PROLOG
+ BEGIN_PROLOG
+ 
+-## PiMinus available process keys: "abs", "cex", "prod", "dcex", "inel"
+-
+-PiMinusParameters: [ 
+-  {
+-    Name:       "fPiMinusInelLow"
+-    Cut:        "inel"
+-    Range:      [10., 200.]
+-    Nominal:    1
+-    Sigma:      0.2
+-  } ,
+-  {
+-    Name:       "fPiMinusInelHigh"
+-    Cut:        "inel"
+-    Range:      [700., 2005.]
+-    Nominal:    1.0
+-    Sigma:      0.2
+-  } ,
+-
+-  {
+-    Name:       "fPiMinusAbs"
+-    Cut:        "abs"
+-    Range:      [10.0, 2005.00]
+-    Nominal:    1.0
+-    Sigma:      0.2
+-  },
++mcrecopart:
++{
++    SavePathPDGList : [13,-13,211,-211,321,-321,2212]
++}
+ 
+-  {
+-    Name:       "fPiMinusCex"
+-    Cut:        "cex"
+-    Range:      [10.0, 2005.00]
+-    Nominal:    1.0
+-    Sigma:      0.2
+-  },
++mcrecoedep:
++{
++    DebugMode : false
++    SaveMCHit : false
++}
+ 
+-  {
+-    Name:       "fPiMinusDCex"
+-    Cut:        "dcex"
+-    Range:      [10.0, 2005.00]
+-    Nominal:    1.0
+-    Sigma:      0.2
+-  },
++mcshowerrecopart:
++{
++    DebugMode : false
++}
+ 
+-  {
+-    Name:       "fPiMinusPiProd"
+-    Cut:        "prod"
+-    Range:      [10.0, 2005.00]
+-    Nominal:    1.0
+-    Sigma:      0.2
+-  }
++mcshowerrecoalg:
++{
++    MCShowerRecoPart: @local::mcshowerrecopart
+     
+-]
+-
+-END_PROLOG
+-BEGIN_PROLOG
+-
+-## Proton available process keys: "total"
+-
+-ProtonParameters: [
+-  {
+-    Name:       "fProtonTotal"
+-    Cut:        "total"
+-    Range:      [10.0, 2005.0]
+-    Nominal:    1.0
+-    Sigma:      0.2
+-  }
+-]
+-
+-END_PROLOG 
+-BEGIN_PROLOG
+-
+-## Neutron available process keys: "total"
+-
+-NeutronParameters: [ 
+-  {
+-    Name:       "fNeutronTotal"
+-    Cut:        "total"
+-    Range:      [100.0, 2005.0]
+-    Nominal:    1.0
+-    Sigma:      0.2
+-  }
+-]
+-
+-END_PROLOG 
+-BEGIN_PROLOG
+-
+-## KPlus available process keys: "total"
+-
+-KPlusParameters: [
+-  {
+-    Name:       "fKPlusTotal"
+-    Cut:        "total"
+-    Range:      [10.0, 2005.0]
+-    Nominal:    1.0
+-    Sigma:      0.2
+-  }
+-]
+-
+-END_PROLOG 
+-BEGIN_PROLOG
+-
+-## KMinus available process keys: "total"
+-
+-KMinusParameters: [
+-  {
+-    Name:       "fKMinusTotal"
+-    Cut:        "total"
+-    Range:      [10.0, 2005.0]
+-    Nominal:    1.0
+-    Sigma:      0.2
+-  }
+-]
+-
+-END_PROLOG 
+-
+-BEGIN_PROLOG
+-
+-# LAr parameters for geant4reweight, stolen out of the ND-Lar 2x2 implementation
+-# A more complete solution would be to get this info out of the geometry instead...
+-
+-LAr: {
+-  Name: "liquidArgon"
+-  Density: 1.390
+-  Components: [
+-    {
+-      Z:    18
+-      Mass: 39.95
+-      Fraction: 1.
+-    }
+-  ]
++    DebugMode: false
++    MinShowerEnergy: 10
++    MinNumDaughters: 0
+ }
+ 
+-END_PROLOG
+-
+-BEGIN_PROLOG
+-
+-sbn_eventweight_geant4: {
+-  module_type: "SBNEventWeight"
+-  AllowMissingTruth: true
+-  min_weight: 0.0
+-  max_weight: 100
+-
+-  weight_functions_reint: [ reinteractions_piplus , reinteractions_piminus, reinteractions_proton , reinteractions_neutron , reinteractions_kplus , reinteractions_kminus ]
+-
+-  reinteractions_piplus: {
+-    type: Geant4
+-    material: @local::LAr
+-    random_seed: 58
+-    parameters: @local::PiPlusParameters
+-    mode: multisim
+-    number_of_multisims: 1000
+-    fracsfile: "$SBNDATA_DIR/systematics/reint/g4_fracs_piplus.root"
+-    makeoutputtree: true
+-    pdg_to_reweight: 211
+-    debug: false
+-  }
+-
+-  reinteractions_piminus: {
+-    type: Geant4
+-    material: @local::LAr
+-    random_seed: 59
+-    parameters: @local::PiMinusParameters
+-    mode: multisim
+-    number_of_multisims: 1000
+-    fracsfile: "$SBNDATA_DIR/systematics/reint/g4_fracs_piminus.root"
+-    makeoutputtree: true
+-    pdg_to_reweight: -211
+-    debug: false
+-  }
+-
+-  reinteractions_proton: {
+-    type: Geant4
+-    material: @local::LAr
+-    random_seed: 60
+-    parameters: @local::ProtonParameters
+-    #mode: multisigma
+-    #number_of_sigmas: 3
+-    mode: multisim
+-    number_of_multisims: 1000
+-    fracsfile: "$SBNDATA_DIR/systematics/reint/g4_fracs_proton.root" # dummy file, cross section pulled directly from Geant4
+-    makeoutputtree: true
+-    pdg_to_reweight: 2212
+-    debug: false
+-  }
+-
+-  reinteractions_neutron: {
+-    type: Geant4
+-    material: @local::LAr
+-    random_seed: 61
+-    parameters: @local::NeutronParameters
+-    #mode: multisigma
+-    #number_of_sigmas: 3
+-    mode: multisim
+-    number_of_multisims: 1000
+-    fracsfile: "$SBNDATA_DIR/systematics/reint/g4_fracs_proton.root" # dummy file, cross section pulled directly from Geant4
+-    makeoutputtree: true
+-    pdg_to_reweight: 2112
+-    debug: false
+-  }
+-
+-  reinteractions_kplus: {
+-    type: Geant4
+-    material: @local::LAr
+-    random_seed: 62
+-    parameters: @local::KPlusParameters
+-    #mode: pm1sigma
+-    mode: multisim
+-    number_of_multisims: 1000
+-    fracsfile: "$SBNDATA_DIR/systematics/reint/g4_fracs_proton.root" # dummy file, cross section pulled directly from Geant4
+-    makeoutputtree: true
+-    pdg_to_reweight: 321
+-    debug: false
+-  }
+-
+-  reinteractions_kminus: {
+-    type: Geant4
+-    material: @local::LAr
+-    random_seed: 63
+-    parameters: @local::KMinusParameters
+-    #mode: pm1sigma
+-    mode: multisim
+-    number_of_multisims: 1000
+-    fracsfile: "$SBNDATA_DIR/systematics/reint/g4_fracs_proton.root" # dummy file, cross section pulled directly from Geant4
+-    makeoutputtree: true
+-    pdg_to_reweight: -321
+-    debug: false
+-  }
+-
++mctrackrecoalg:
++{
++    DebugMode: false
+ }
+ 
+-###
+-# Reweighting parameters should be defined as
+-#
+-# TheParameters: [
+-#  {
+-#    Cut:    "reac"
+-#    Name: "fReacLow"
+-#    Range: [10., 200.]
+-#    Nominal: 1.0
+-#    Sigma: 0.3
+-#  },
+-# {...}
+-# ]
+-#
+-# - Range defines the energy range over which that parameter has an effect (MeV)
+-# - Nominal is not used in "multisim" mode. In "pm1sigma" mode it defines the
+-#   nominal (around which you calculate +/- 1 sigma variations). In any other
+-#   mode, the parameter is set to the value under Nominal (so it's not really a
+-#   "nominal" value in that case, just the set value)
+-# - Sigma defines the 1-sigma range for multisims and unisims. Currently the
+-#   code can only accept a single value for sigma, giving symmetric
+-#   uncertainty bounds: nominal-sigma and nominal+sigma 
+-# - Cut must be one of the following:
+-#      "total" <- total scattering cross section, pulled from Geant4
+-#      "abs" <- absorption cross section (pi+ and pi- only at the moment -- Oct 2019)
+-#      "cex" <- charge exchange cross section (pi+ and pi- only at the moment -- Oct 2019)
+-#      "dcex" <- double charge exchange cross section (pi+ and pi- only at the moment -- Oct 2019)
+-#      "prod" <- pion production cross section (pi+ and pi- only at the moment -- Oct 2019)
+-#      "inel" <- quasi-elastic inelastic scattering cross section (pi+ and pi- only at the moment -- Oct 2019)
+-# - Name can be anything you like (but should uniquely identify that parameter/
+-#   variation)
+-###
++standard_mcreco:
++{
++    module_type: "MCReco"
++    MCRecoPart: @local::mcrecopart
++    MCRecoEdep: @local::mcrecoedep
++    MCShowerRecoAlg: @local::mcshowerrecoalg
++    MCTrackRecoAlg:  @local::mctrackrecoalg
++    
++    G4ModName: "largeant"
++}
+ 
+ END_PROLOG
+-
+ BEGIN_PROLOG
+ mcs_sbn: {
+   module_type: MCSFitAllPID
+@@ -14741,23 +14088,14 @@
+ {
+   tool_type:             SnippetHit3DBuilder
+   HitFinderTagVec:       ["gaushit"]
+-  EnableMonitoring:      true    # enable monitoring of functions
+-  HitWidthScaleFactor:   3.0     #
+-  RangeNumSigma:         3.0     #
+-  LongHitsStretchFactor: 1.5     # Allows to stretch long hits widths if desired
+-  PulseHeightFraction:   0.4     # If multiple hits are under this fraction of the peak hit amplitude consider rejecting
+-  PHLowSelection:        8.      # If matching the above then require hits larger than this
+-  MinPHFor2HitPoints:    4.      # Don't consider hits less than this for 2 hit space points
+-  DeltaPeakTimeSig:      1.75    # "Significance" of agreement between 2 hit peak times
+-  ZPosOffset:            0.00
+-  MaxHitChiSquare:       6.00
++  EnableMonitoring:      true  # enable monitoring of functions
++  LongHitsStretchFactor: 1.0   # Allows to stretch long hits widths if desired
++  HitWidthScaleFactor:   3.0   #
++  PulseHeightFraction:   0.4
++  DeltaPeakTimeSig:      1.75  # "Significance" of agreement between 2 hit peak times
+   WirePitchScaleFactor:  1.9
+-  SaveBadChannelPairs:   true    # Create and save space points with one channel "bad"
+-  SaveMythicalPoints:    true    # Create and save 2 hit combinations
+-  MaxMythicalChiSquare:  25.     # Cut on 2 hit points
+-  UseT0Offsets:          false
++  MaxHitChiSquare:       6.0
+   OutputHistograms:      false
+-  MakeAssociations:      false
+ }
+ 
+ standard_spacepointhit3dbuilder:
+@@ -15990,7 +15328,7 @@
+     EnableLineGaps:                              true
+     UseGlobalCoordinates:                        true
+     UseActiveBoundingBox:                        true
+-    UseHitWidths:                                true
++    UseHitWidths:                                false
+     ShouldRunAllHitsCosmicReco:                  false
+     ShouldRunStitching:                          false
+     ShouldRunCosmicHitRemoval:                   false
+@@ -16741,7 +16079,6 @@
+     UseStartPosition: true #The direction of the PCA is in the direction of
+     #(Shower Center - Start Position)
+     ChargeWeighted:   false #Apply a charge weighting in the PCA.
+-    WritePCAxis:      true #Write the PCA to the event as a PCAxis product
+     ShowerStartPositionInputLabel: "ShowerStartPosition"
+     ShowerDirectionOutputLabel: "ShowerDirection"
+     ShowerCentreOutputLabel: "ShowerCentre"
+@@ -16768,9 +16105,6 @@
+      # PFParticleLabel: "pandora"
+      ShowerEnergyOutputLabel: "ShowerEnergy"
+      ShowerBestPlaneOutputLabel: "ShowerBestPlane"
+-     ShowerDirectionInputLabel: "ShowerDirection"
+-     ApplyCorrectionsInNorm: false
+-     ApplyLifetimeCorrection: true
+  }
+ 
+ 
+@@ -16849,8 +16183,6 @@
+     ShowerDirectionInputLabel: "ShowerDirection"
+     ShowerdEdxOutputLabel: "ShowerdEdx"
+     ShowerBestPlaneOutputLabel: "ShowerBestPlane"
+-    ApplyCorrectionsInNorm: false # do not expect INormalizeCharge tools
+-    NormTools: []                 # empty list of INormalizeCharge tools
+ }
+ 
+ showertrackhitdirection:{
+@@ -16888,9 +16220,6 @@
+     UsePositionInfo:  true #Don't use the directionAt point rather than definition above.
+     #i.e. ((Position of traj point + 1) - (Position of traj point)
+     DebugEVD:         false
+-    InitialTrackInputLabel: "InitialTrack"
+-    ShowerStartPositionInputLabel: "ShowerStartPosition"
+-    ShowerDirectionOutputLabel: "ShowerDirection"
+ }
+ 
+ showertracktrajpointdirection: {
+@@ -17018,8 +16347,7 @@
+     SCECorrectPitch:      false
+     SCECorrectEField:     false
+     SCEInputCorrected:    false
+-    SumHitSnippets:       false
+-    ResultsOverrideMode:  0
++    SumHitSnippets: false
+     # PFParticleLabel: "pandora"
+     ShowerStartPositionInputLabel: "ShowerStartPosition"
+     InitialTrackSpacePointsInputLabel: "InitialTrackSpacePoints"
+@@ -17028,8 +16356,6 @@
+     ShowerdEdxOutputLabel: "ShowerdEdx"
+     ShowerBestPlaneOutputLabel: "ShowerBestPlane"
+     ShowerdEdxVecOutputLabel: "ShowerdEdxVec"
+-    ApplyCorrectionsInNorm: false # do not expect INormalizeCharge tools
+-    NormTools: []                 # empty list of INormalizeCharge tools
+ }
+ 
+ showerincrementaltrackhitfinder:{
+@@ -17091,27 +16417,6 @@
+     ShowerOpeningAngleOutputLabel: "ShowerOpeningAngle"
+ }
+ 
+-showerrefinedpcadirection:{
+-    tool_type: ShowerRefinedPCADirection
+-    BaseTools: @local::showerbasetools
+-    # PFParticleLabel: "pandora"
+-    WritePCAxis: true
+-    ChargeWeighted: true
+-    QuadraticLongitudinalWeight: true
+-    QuadraticTransverseWeight: true
+-    MinPCAPoints: 10
+-    MaxIterations: 50
+-    ConvergenceAngle: 0.005
+-    TransverseScale: 3.
+-    LongitudinalScale: 7.
+-    DistanceFloor: 1.
+-    ShowerStartPositionInputLabel: "ShowerStartPosition"
+-    ShowerDirectionInputLabel: "ShowerDirection"
+-    ShowerDirectionOutputLabel: "ShowerDirection"
+-    ShowerCentreOutputLabel: "ShowerCentre"
+-    ShowerPCAOutputLabel: "ShowerPCA"
+-}
+-
+ showerpcaeigenvaluelength:{
+     tool_type: ShowerPCAEigenvalueLength
+     BaseTools: @local::showerbasetools
+@@ -17642,7 +16947,6 @@
+     UseStartPosition: true #The direction of the PCA is in the direction of
+     #(Shower Center - Start Position)
+     ChargeWeighted:   false #Apply a charge weighting in the PCA.
+-    WritePCAxis:      true #Write the PCA to the event as a PCAxis product
+     ShowerStartPositionInputLabel: "ShowerStartPosition"
+     ShowerDirectionOutputLabel: "ShowerDirection"
+     ShowerCentreOutputLabel: "ShowerCentre"
+@@ -17669,9 +16973,6 @@
+      # PFParticleLabel: "pandora"
+      ShowerEnergyOutputLabel: "ShowerEnergy"
+      ShowerBestPlaneOutputLabel: "ShowerBestPlane"
+-     ShowerDirectionInputLabel: "ShowerDirection"
+-     ApplyCorrectionsInNorm: false
+-     ApplyLifetimeCorrection: true
+  }
+ 
+ 
+@@ -17750,8 +17051,6 @@
+     ShowerDirectionInputLabel: "ShowerDirection"
+     ShowerdEdxOutputLabel: "ShowerdEdx"
+     ShowerBestPlaneOutputLabel: "ShowerBestPlane"
+-    ApplyCorrectionsInNorm: false # do not expect INormalizeCharge tools
+-    NormTools: []                 # empty list of INormalizeCharge tools
+ }
+ 
+ showertrackhitdirection:{
+@@ -17789,9 +17088,6 @@
+     UsePositionInfo:  true #Don't use the directionAt point rather than definition above.
+     #i.e. ((Position of traj point + 1) - (Position of traj point)
+     DebugEVD:         false
+-    InitialTrackInputLabel: "InitialTrack"
+-    ShowerStartPositionInputLabel: "ShowerStartPosition"
+-    ShowerDirectionOutputLabel: "ShowerDirection"
+ }
+ 
+ showertracktrajpointdirection: {
+@@ -17919,8 +17215,7 @@
+     SCECorrectPitch:      false
+     SCECorrectEField:     false
+     SCEInputCorrected:    false
+-    SumHitSnippets:       false
+-    ResultsOverrideMode:  0
++    SumHitSnippets: false
+     # PFParticleLabel: "pandora"
+     ShowerStartPositionInputLabel: "ShowerStartPosition"
+     InitialTrackSpacePointsInputLabel: "InitialTrackSpacePoints"
+@@ -17929,8 +17224,6 @@
+     ShowerdEdxOutputLabel: "ShowerdEdx"
+     ShowerBestPlaneOutputLabel: "ShowerBestPlane"
+     ShowerdEdxVecOutputLabel: "ShowerdEdxVec"
+-    ApplyCorrectionsInNorm: false # do not expect INormalizeCharge tools
+-    NormTools: []                 # empty list of INormalizeCharge tools
+ }
+ 
+ showerincrementaltrackhitfinder:{
+@@ -17992,27 +17285,6 @@
+     ShowerOpeningAngleOutputLabel: "ShowerOpeningAngle"
+ }
+ 
+-showerrefinedpcadirection:{
+-    tool_type: ShowerRefinedPCADirection
+-    BaseTools: @local::showerbasetools
+-    # PFParticleLabel: "pandora"
+-    WritePCAxis: true
+-    ChargeWeighted: true
+-    QuadraticLongitudinalWeight: true
+-    QuadraticTransverseWeight: true
+-    MinPCAPoints: 10
+-    MaxIterations: 50
+-    ConvergenceAngle: 0.005
+-    TransverseScale: 3.
+-    LongitudinalScale: 7.
+-    DistanceFloor: 1.
+-    ShowerStartPositionInputLabel: "ShowerStartPosition"
+-    ShowerDirectionInputLabel: "ShowerDirection"
+-    ShowerDirectionOutputLabel: "ShowerDirection"
+-    ShowerCentreOutputLabel: "ShowerCentre"
+-    ShowerPCAOutputLabel: "ShowerPCA"
+-}
+-
+ showerpcaeigenvaluelength:{
+     tool_type: ShowerPCAEigenvalueLength
+     BaseTools: @local::showerbasetools
+@@ -18291,28 +17563,6 @@
+                                      # Run 3: run>=11590
+ }
+ 
+-# These are the standard tags for analyses on Run 1, Run 2, Run 3 and Run 4 data (as of Oct 2025)
+-# These tagged versions of the databases contain tables relevant for Run 1, Run 2, Run 3 and Run 4.
+-# Notes: 
+-#   - New cosmics corrections for Run 4 (run>=12837)
+-PMT_CalibrationTags_Oct2025: {
+-  pmt_cables_delays_data:    "v2r5"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=10369, run>=10441, run>=10865
+-                                     # Run 4: run>=12040, run>=12455, run>=12777
+-  pmt_laser_timing_data:     "v2r3"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=10908, run>=11590
+-                                     # Run 4: run>=12058, run>=12837
+-  pmt_cosmics_timing_data:   "v2r3"  # tables for run>=0 (null)
+-                                     # Run 1: run>=8046
+-                                     # Run 2: run>=9301, run>=9628, run>=9773
+-                                     # Run 3: run>=11590
+-                                     # Run 4: run>=12837
+-}
+-
+ END_PROLOG
+ # File:    calibration_database_GlobalTags.fcl
+ # Purpose: Collection of tag info for the TPC calibration database
+@@ -18335,7 +17585,7 @@
+ ## - Files decoded with release >=v09_66_02 should use v3r2
+ TPC_CalibrationTags_Feb2024: {
+ 
+-  tpc_channelstatus_data: "v3r2"
++  tpc_channelstatus_data: "v3r4"
+   tpc_elifetime_data: "v2r1"
+   tpc_dqdxcalibration_data: "v2r1"
+   tpc_yz_correction_data: "v2r1"
+@@ -18343,38 +17593,15 @@
+ }
+ 
+ ## TPC_CalibrationTags_Feb2024 but updating tpc_yz_correction_data to tpc_yz_correction_allplanes_data
+-## Update to mask out additional bad noisy channels
+ TPC_CalibrationTags_Jan2025: {
+ 
+-  tpc_channelstatus_data: "v3r4"
++  tpc_channelstatus_data: "v3r2"
+   tpc_elifetime_data: "v2r1"
+   tpc_dqdxcalibration_data: "v2r1"
+   tpc_yz_correction_allplanes_data: "v1r0"
+ 
+ }
+ 
+-## TPC_CalibrationTags_Jul2025 
+-# Update to 2D deconv tags. Change TPC equalization to be per-plane
+-TPC_CalibrationTags_Jul2025: {
+-
+-  tpc_channelstatus_data: "v3r4"
+-  tpc_elifetime_data: "v3r0"
+-  tpc_dqdxcalibration_allplanes_data: "v1r0"
+-  tpc_yz_correction_allplanes_data: "v2r0"
+-
+-}
+-
+-## TPC_CalibrationTags_Oct2025 
+-# Include Run 4 in calibrations
+-TPC_CalibrationTags_Oct2025: {
+-
+-  tpc_channelstatus_data: "v4r0"
+-  tpc_elifetime_data: "v3r1"
+-  tpc_dqdxcalibration_allplanes_data: "v1r1"
+-  tpc_yz_correction_allplanes_data: "v2r1"
+-
+-}
+-
+ END_PROLOG
+ # File:    calibration_database_GlobalTags.fcl
+ # Purpose: Collection of tag info for the TPC calibration database
+@@ -18393,8 +17620,8 @@
+ BEGIN_PROLOG
+ 
+ ICARUS_Calibration_GlobalTags: {
+-  @table::TPC_CalibrationTags_Oct2025
+-  @table::PMT_CalibrationTags_Oct2025
++  @table::TPC_CalibrationTags_Jan2025
++  @table::PMT_CalibrationTags_Run3_Feb2025
+   @table::CRT_CalibrationTags_Oct2023
+ }
+ 
+@@ -18425,9 +17652,9 @@
+ }
+ 
+ tpcgain: {
+-  tool_type: NormalizeTPCPerPlane
++  tool_type: NormalizeTPC
+   Timeout: 200
+-  URL: "https://dbdata0vm.fnal.gov:9443/icarus_con_prod/app/data?f=tpc_dqdxcalibration_allplanes_data&t="
++  URL: "https://dbdata0vm.fnal.gov:9443/icarus_con_prod/app/data?f=tpc_dqdxcalibration_data&t="
+   Verbose: false
+ }
+ 
+@@ -18435,15 +17662,14 @@
+   tool_type: NormalizeDriftSQLite
+   DBFileName: tpc_elifetime_data 
+   DBTag: @local::ICARUS_Calibration_GlobalTags.tpc_elifetime_data
+-  Verbose: true
++  Verbose: false
+ }
+ 
+ tpcgain_sql: {
+-  tool_type: NormalizeTPCPerPlaneSQL
+-  DBFileName: tpc_dqdxcalibration_allplanes_data
+-  DBTag: @local::ICARUS_Calibration_GlobalTags.tpc_dqdxcalibration_allplanes_data
++  tool_type: NormalizeTPCSQL
++  DBFileName: tpc_dqdxcalibration_data
++  DBTag: @local::ICARUS_Calibration_GlobalTags.tpc_dqdxcalibration_data
+   Verbose: false
+-  MC: -1
+ }
+ 
+ tpcgain_local: {
+@@ -18458,16 +17684,14 @@
+   DBFileName: tpc_yz_correction_allplanes_data
+   DBTag: @local::ICARUS_Calibration_GlobalTags.tpc_yz_correction_allplanes_data
+   Verbose: false
+-  MC: -1
+ }
+ 
+-icarus_calonormtools: [@local::driftnorm_sql, @local::yznorm_sql, @local::tpcgain_sql]
+-icarus_calonormtoolsMC: [@local::yznorm_sql, @local::tpcgain_sql]
++#icarus_calonormtools: [@local::driftnorm, @local::yznorm, @local::tpcgain]
++ icarus_calonormtools: [@local::driftnorm_sql, @local::yznorm_sql, @local::tpcgain_sql]
+ 
+-# GP 8/4/25 -- Update gain to re-measurement with Run 2 stopping muons and 
+-# fixed recombination. Details about this change are located in the Run 2+4
+-# Calibration Tech Note (SBN DocDB 44460).
+-icarus_data_calconst: [0.016751, 0.012755, 0.012513]
++# Gain with angular dep. recombination. Measurement from: https://arxiv.org/pdf/2407.12969
++# Assume equal on planes -- this is __wrong__ -- will need to be fixed when they are calibrated
++icarus_data_calconst: [0.0133333, 0.0133333, 0.0133333]
+ 
+ END_PROLOG
+ 
+@@ -18476,11 +17700,10 @@
+ icarus_calorimetryalgdata:	@local::standard_calorimetryalgdata
+ icarus_calorimetryalgmc:	  @local::standard_calorimetryalgmc
+ 
+-# GP 8/4/25: with re-calibration and application of EMB recombination,
+-# MC and data gains match. Note that we should not being making any
+-# updates to the MC that would cause the MC gain to differ from that of
+-# data.
+-icarus_calorimetryalgmc.CalAreaConstants: @local::icarus_data_calconst
++# Calorimetry constants from G. Putnam (Nov 2022)
++# Informed by MC calibration -- docdb 28639.
++# NOTE: needs to be revisted if/when the data processing is updated
++icarus_calorimetryalgmc.CalAreaConstants: [0.01343, 0.01338, 0.01219]
+ icarus_calorimetryalgmc.ModBoxA: 0.904
+ icarus_calorimetryalgmc.ModBoxBTF1: "[0]/TMath::Sqrt(TMath::Sin(x*TMath::Pi()/180)**2 + TMath::Cos(x*TMath::Pi()/180)**2/[1]**2)"
+ icarus_calorimetryalgmc.ModBoxBParam: [0.204, 1.25]
+@@ -18540,17 +17763,10 @@
+   @local::showertrajpointdedx
+ ]
+ 
+-icarus_pandorashower_3dTraj.ShowerFinderTools[3].CalorimetryAlg:      @local::icarus_calorimetryalgmc
+-
+-icarus_pandorashower_3dTraj.ShowerFinderTools[5].CalorimetryAlg:      @local::icarus_calorimetryalgmc
+-icarus_pandorashower_3dTraj.ShowerFinderTools[5].dEdxTrackLength:     5
+-
+-icarus_pandorashower_3dTraj.ShowerFinderTools[7].CalorimetryAlg:      @local::icarus_calorimetryalgmc
+-icarus_pandorashower_3dTraj.ShowerFinderTools[7].MinAngleToWire:      0.26
+-icarus_pandorashower_3dTraj.ShowerFinderTools[7].ResultsOverrideMode: 1 # override results from showerunidirectiondedx plane-by-plane
+-icarus_pandorashower_3dTraj.ShowerFinderTools[7].dEdxTrackLength:     5
+-icarus_pandorashower_3dTraj.ShowerFinderTools[7].MinDistCutOff:       2 # same as default, used only when CutStartPosition is true
+-icarus_pandorashower_3dTraj.ShowerFinderTools[7].CutStartPosition:    true
++icarus_pandorashower_3dTraj.ShowerFinderTools[3].CalorimetryAlg:    @local::icarus_calorimetryalgmc
++icarus_pandorashower_3dTraj.ShowerFinderTools[5].CalorimetryAlg:    @local::icarus_calorimetryalgmc
++icarus_pandorashower_3dTraj.ShowerFinderTools[7].CalorimetryAlg:    @local::icarus_calorimetryalgmc
++icarus_pandorashower_3dTraj.ShowerFinderTools[7].MinAngleToWire:    0.26
+ 
+ # An "experimental" configuration. Uses the incremental track hit 
+ # finder and values for some parameters from the study in SBN-doc-19390
+@@ -18821,6 +18037,8 @@
+ 
+ # Producers for making analysis level products
+ recoana_caf_preprocess_producers: {
++  mcreco: @local::standard_mcreco
++
+   pandoraTrackMCSCryoE: @local::mcs_sbn
+   pandoraTrackMCSCryoW: @local::mcs_sbn
+ 
+@@ -18837,7 +18055,6 @@
+   genieweight: @local::sbn_eventweight_genie
+   systtools: @local::sbn_systtools
+   fluxweight: @local::sbn_eventweight_flux
+-  geant4weight: @local::sbn_eventweight_geant4
+ }
+ 
+ # Overwrite labels
+@@ -18857,7 +18074,6 @@
+ 
+ recoana_caf_preprocess_producers.genieweight.weight_functions: @local::recoana_caf_preprocess_producers.genieweight.weight_functions_genie
+ recoana_caf_preprocess_producers.fluxweight.weight_functions: @local::recoana_caf_preprocess_producers.fluxweight.weight_functions_flux
+-recoana_caf_preprocess_producers.geant4weight.weight_functions: @local::recoana_caf_preprocess_producers.geant4weight.weight_functions_reint
+ 
+ # Producers for making SCE products
+ recoana_sce_producers: {
+@@ -18962,7 +18178,7 @@
+ }
+ 
+ # Sequences
+-caf_preprocess_sequence: [ 
++caf_preprocess_sequence: [ mcreco,
+     # Calorimetry
+     pandoraCaloGausCryoE, pandoraCaloGausCryoW,
+     pandoraPidGausCryoE, pandoraPidGausCryoW,
+@@ -18990,9 +18206,9 @@
+     ShowerCosmicDistCryoE, ShowerCosmicDistCryoW
+     ]
+ 
+-caf_preprocess_evtw_sequence: [@sequence::caf_preprocess_sequence, rns, genieweight, fluxweight, geant4weight]
++caf_preprocess_evtw_sequence: [@sequence::caf_preprocess_sequence, rns, genieweight, fluxweight]
+ 
+-caf_preprocess_sce_sequence: [ 
++caf_preprocess_sce_sequence: [ mcreco,
+   # Run the SCE correction
+   pandoraGausSCECryoE, pandoraGausSCECryoW,
+   # Then remake tracks
+@@ -19012,14 +18228,11 @@
+   # TODO: rns??
+ ]
+ 
+-caf_preprocess_sce_evtw_sequence: [@sequence::caf_preprocess_sce_sequence, rns, genieweight, fluxweight, geant4weight]
++caf_preprocess_sce_evtw_sequence: [@sequence::caf_preprocess_sce_sequence, rns, genieweight, fluxweight]
+ 
+ # CAFMaker config
+ cafmaker: @local::standard_cafmaker
+ 
+-# time shift and calibration settings
+-cafmaker.ShiftTimeFromTriggerToBeamGate: true
+-
+ # Set the labels to ICARUS
+ cafmaker.PandoraTagSuffixes: ["CryoE", "CryoW"]
+ cafmaker.FlashMatchOpDetSuffixes: ["", "op"]
+@@ -19049,7 +18262,7 @@
+ cafmaker.OpFlashLabel: "opflash"
+ # cafmaker.TriggerLabel: "daqTrigger" # see also https://github.com/SBNSoftware/icaruscode/issues/556
+ cafmaker.TriggerLabel: "emuTrigger"
+-cafmaker.CRTSimChanLabel: "shifted"
++cafmaker.UnshiftedTriggerLabel: "emuTriggerUnshifted"
+ cafmaker.FlashTrigLabel: "" # unavailable
+ cafmaker.SimChannelLabel: "largeant"
+ cafmaker.SystWeightLabels: ["genieweight", "fluxweight"]
+@@ -19059,11 +18272,6 @@
+ cafmaker.NuGraphSlicesLabel: "NCCSlices"
+ cafmaker.NuGraphFilterLabel: "NGMultiSlice:filter"
+ cafmaker.NuGraphSemanticLabel: "NGMultiSlice:semantic"
+-cafmaker.PFOCharLabels.EndFractionName: "LArThreeDChargeFeatureTool_ICARUS_EndFraction" # override with some ICARUS-specific tool names
+-cafmaker.PFOCharLabels.FractionalSpreadName: "LArThreeDChargeFeatureTool_ICARUS_FractionalSpread"
+-cafmaker.PFOCharLabels.HaloTotalRatioName: "LArConeChargeFeatureTool_ICARUS_HaloTotalRatio"
+-cafmaker.PFOCharLabels.ConcentrationName: "LArConeChargeFeatureTool_ICARUS_Concentration"
+-cafmaker.PFOCharLabels.ConicalnessName: "LArConeChargeFeatureTool_ICARUS_Conicalness"
+ 
+ # Add CAFMaker to the list of producers
+ caf_preprocess_producers.cafmaker: @local::cafmaker
+@@ -19083,47 +18291,6 @@
+   SpaceChargeService: @local::icarus_spacecharge
+ }
+ 
+-#
+-# File:    override_services_for_simulation.fcl
+-# Purpose: Change the configuration of services for use in simulation jobs
+-# Author:  Gianluca Petrillo (petrillo@slac.stanford.edu)
+-# Date:    April 17, 2026
+-# 
+-# Usage: drop this override after defining the services table or after including
+-#        the driver configuration file:
+-#        
+-#        #include "override_services_for_simulation.fcl"
+-#        
+-#        Note that this is a configuration override, which requires a services
+-#        configuration to have already been defined and must live outside of
+-#        PROLOG blocks.
+-#        
+-# Description:
+-# 
+-# ICARUS reconstruction workflows are based on "driver" configurations that are
+-# written for data processing, while simulation definitions are included
+-# separately and then overriding of the driver configuration with the
+-# simulation-specific definitions is done explicitly in each job configuration.
+-# 
+-# This override file simplifies the explicit override of service configurations,
+-# by performing it with a single-line inclusion (see Usage above).
+-# 
+-# The current changes are:
+-#  * DetectorClocksService: timing reference should be based on
+-#      * `shifted` trigger time if `AdjustSimForTrigger` was used
+-#      * default trigger time otherwise
+-#      * never from data-based `daqTrigger`
+-#    This holds true also, and especially, for overlay workflows, where
+-#    `daqTrigger` should be used only in the independent overlay data decoding
+-#    stage.
+-# 
+-#
+-
+-services: {
+-  @table::services
+-  DetectorClocksService: @local::icarus_detectorclocks_simulation
+-}
+-
+ outputs:
+ {
+   outpid:
+@@ -19162,9 +18329,9 @@
+ # FlashMatcher Cryo suffixes
+ physics.producers.cafmaker.FlashMatchSCECryoSuffixes: ["CryoE", "CryoW"]
+ 
+-physics.runprod: [ @sequence::caf_preprocess_sequence, rns, systtools, geant4weight, fluxweight, cafmaker ]
++physics.runprod: [ @sequence::caf_preprocess_sequence, rns, systtools, fluxweight, cafmaker ]
+ 
+-physics.producers.cafmaker.SystWeightLabels: ["systtools", "geant4weight", "fluxweight"]
++physics.producers.cafmaker.SystWeightLabels: ["systtools", "fluxweight"]
+ 
+ # over-write labels to use Wire-Cell SimChannels
+ physics.producers.cafmaker.SimChannelLabel: "merge" # 2D, YZ sim
+@@ -19172,6 +18339,33 @@
+ # SimChannel's get re-made by 2D drift simulation -- use these to backtrack
+ services.BackTrackerService.BackTracker.SimChannelModuleLabel: "merge"
+ 
++# MCReco also needs correct SimChannels
++# need to use new config names to make MCParticle/SimChannel labels different
++physics.producers.mcreco.G4ModName: @erase 
++physics.producers.mcreco.MCParticleLabel: "largeant"
++physics.producers.mcreco.SimChannelLabel: "merge"
++
++# Mini production, pre signal shape tuning
++# this_cal_constants: [1.343e-2, 1.338e-2, 0.01227]
++# Post signal shape tuning, post gain fixing
++# See docdb 32139
++this_cal_constants: [1.343e-2, 1.338e-2, 0.0128041]
++# Tracks
++physics.producers.pandoraCaloGausCryoE.CaloAlg.CalAreaConstants: @local::this_cal_constants
++physics.producers.pandoraCaloGausCryoW.CaloAlg.CalAreaConstants: @local::this_cal_constants
++# Stubs
++physics.producers.vertexChargeCryoE.CaloAlg.CalAreaConstants: @local::this_cal_constants
++physics.producers.vertexChargeCryoW.CaloAlg.CalAreaConstants: @local::this_cal_constants
++physics.producers.vertexStubCryoE.CaloAlg.CalAreaConstants: @local::this_cal_constants
++physics.producers.vertexStubCryoW.CaloAlg.CalAreaConstants: @local::this_cal_constants
++# Showers
++physics.producers.SBNShowerGausCryoE.ShowerFinderTools[3].CalorimetryAlg.CalAreaConstants: @local::this_cal_constants
++physics.producers.SBNShowerGausCryoE.ShowerFinderTools[5].CalorimetryAlg.CalAreaConstants: @local::this_cal_constants
++physics.producers.SBNShowerGausCryoE.ShowerFinderTools[7].CalorimetryAlg.CalAreaConstants: @local::this_cal_constants
++physics.producers.SBNShowerGausCryoW.ShowerFinderTools[3].CalorimetryAlg.CalAreaConstants: @local::this_cal_constants
++physics.producers.SBNShowerGausCryoW.ShowerFinderTools[5].CalorimetryAlg.CalAreaConstants: @local::this_cal_constants
++physics.producers.SBNShowerGausCryoW.ShowerFinderTools[7].CalorimetryAlg.CalAreaConstants: @local::this_cal_constants
++
+ ## no yz simulation
+ physics.producers.cafmaker.SimChannelLabel: "daq:simpleSC" 
+ services.BackTrackerService.BackTracker.SimChannelModuleLabel: "daq:simpleSC"
