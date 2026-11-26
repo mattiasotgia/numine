@@ -1,0 +1,5034 @@
+BEGIN_PROLOG
+
+standard_larg4:
+{
+    module_type: "larg4Main"
+    enableVisualization: false
+    macroPath: ".:./macros"
+    visMacro: "vis.mac"
+}
+
+END_PROLOG
+#
+# File:    services_icarus_simulation.fcl
+# Purpose: Configuration presets for simulation jobs in ICARUS.
+#
+#
+# This file defines a set of service configurations for ICARUS simulation.
+# Simulation consists of 3 steps:
+#
+#  (0) event generator ... making a particle to inject into G4
+#  (1) Geant4 ............ G4 particle tracking simulation in the detector
+#  (2) readout ........... Readout electronics simulation (make waveforms)
+#
+# Fhicl configurations for each simulation steps above are:
+# 
+#  (0) icarus_gen_services
+#  (1) icarus_g4_dark_services
+#  (2) icarus_detsim_dark_services
+#
+#  (all) icarus_simulation_dark_services ... include all services in (0), (1), and (2).
+#
+# Above configurations do not include scintillation light or optical detector
+# readout simulation. If you wish to include those, use followings:
+#
+#  (1*) icarus_g4_services
+#  (2*) icarus_detsim_services
+#
+#  (all*) icarus_simulation_services, icarus_legacy_services_v08_50_00
+#
+# 
+# Avaialble presets:
+# * `icarus_gen_service` (internally used): basic services plus magnetic field
+# * `icarus_g4_dark_services`: G4 simulation services without optical system
+# * `icarus_detsim_dark_services`: digitization services without optical system
+#
+
+BEGIN_PROLOG
+
+#for now the parameter sets for the different experiments are all the same
+
+standard_largeantparameters:
+{
+ OpticalSimVerbosity:      0       #verbosity of optical simulation, soon to be depricated
+ ParticleKineticEnergyCut: 0.01e-3  #in GeV
+ StoreTrajectories:        true
+ VisualizationEnergyCut:   10.e-3  #depricated, in GeV
+ VisualizeNeutrals:        false   #depricated
+ UseCustomPhysics:         false   #Whether to use a custom list of physics processes or the default
+ ModifyProtonCut:          false   #Whether to modify the default proton cut
+ NewProtonCut:             0.0     #new ProtonCut value, ModifyProtonCut must be set to set new value
+ KeepEMShowerDaughters:    false   #save secondary, tertiary, etc particles in EM showers
+ LongitudinalDiffusion:    6.2e-9  #in cm^2/ns
+ TransverseDiffusion:      16.3e-9 #in cm^2/ns
+ ElectronClusterSize:      600.0   #number of ionization electrons to drift in a unit
+ MinNumberOfElCluster:     0	   #minimum number of electron clusters
+ EnabledPhysics:           [ "Em", "SynchrotronAndGN", "Ion", "Hadron",
+                             "Decay", "HadronElastic", "Stopping", "NeutronTrackingCut" ]
+ CosmogenicK0Bias:         0 # 0 is off. N is the number of secondaries to produce.
+ CosmogenicXSMNBiasOn:     0 # 0 is off. 1 works. 2 still in development.
+ CosmogenicXSMNBiasFactor: 1 # Not more than 5-ish cuz of numerical instabilities.
+ DisableWireplanes:        false #if set true, charge drift simulation does not run - used for optical sim jobs OR just when you don't wanna drift the e's.
+ SkipWireSignalInTPCs:     []    # put here TPC id's which should not receive ionization electrons - used to simulate TPC geom volumes which are actually dead LAr volumes in protoDUNE
+ UseModBoxRecomb:          true  # use Modified Box recombination instead of Birks
+ UseEllipsModBoxRecomb:    false # use Ellipsoid Modified Box recomination instead of Birks
+ UseModLarqlRecomb:        false # use LArQL recombination corrections (dependence on EF)
+
+ #* Recombination factor coefficients come from Nucl.Instrum.Meth.A523:275-286,2004
+ #* * @f$ dE/dx @f$ is given by the voxel energy deposition, but have to convert it to MeV/cm from GeV/voxel width
+ #* * electric field: @f$ E @f$ in kV/cm
+ #* * @f$ R = A/(1 + (dE/dx)*k/E) @f$
+ #* * @f$ A = 0.800 \pm 0.003 @f$
+ #* * @f$ k = 0.0486 @f$ needs to be scaled with Electric field
+ RecombA: 0.800      #< _A_ constant.
+ Recombk: 0.0486     #< _k_ constant, in g/(MeV cm&sup2;)*kV/cm.
+
+ #* Recombination factor coefficients come from Nucl.Instrum.Meth.A523:275-286,2004
+ #* * @f$ dE/dx @f$ is given by the voxel energy deposition, but have to convert it to MeV/cm from GeV/voxel width
+ #* * electric field: @f$ E @f$ in kV/cm
+ #* * `kModBoxB` needs to be scaled with the electric field.
+ ModBoxA: 0.930
+ ModBoxB: 0.212
+
+ #* Recombination factor coefficients come from Gray Putnam: https://arxiv.org/abs/2407.12969
+ #* * @f$ dE/dx @f$ is given by the voxel energy deposition, but have to convert it to MeV/cm from GeV/voxel width
+ #* * electric field: @f$ E @f$ in kV/cm
+ #* * `EllipsModBoxB` needs to be scaled with the electric field.
+ EllipsModBoxA: 0.904 # +/- 0.008
+ EllipsModBoxB: 0.204 # +/- 0.008
+ EllipsModBoxR: 1.25  # +/- 0.02
+
+ #* Recombination factor coefficients for LArQL
+ #* https://doi.org/10.1088/1748-0221/17/07/C07009
+ #* * @f$ dE/dx @f$ is given by the energy deposition in MeV/cm
+ #* * electric field: @f$ E @f$ in kV/cm
+ LarqlChi0A: 0.00338427
+ LarqlChi0B: -6.57037
+ LarqlChi0C: 1.88418
+ LarqlChi0D: 0.000129379
+ LarqlAlpha: 0.0372
+ LarqlBeta: 0.0124
+
+  #* alpha particle quenching factor
+  #* Doke et al. Jpn. J. Appl. Phys. Vol. 41 (2002) pp. 1538
+ QAlpha: 0.72
+
+  #* ion+excitation work function in eV
+  #* https://doi.org/10.1016/0168-9002(90)90011-T
+ Wph: 19.5
+
+ # The following parameters specify details of wireplanes or similar
+ # areas with optically parameterized transmissions (Ben J 2013)
+
+ #  volume names to be associated with an optical wireplane model
+ OpticalParamVolumes:      ["volTPCPlaneVert_PV"]
+
+ #  specification of which model to use for each volume
+ OpticalParamModels:       ["OverlaidWireplanes"]
+
+ # orientation of each wireplane set
+ #  0 = Xdrift, 1 = Ydrift, 2 = Zdrift
+ OpticalParamOrientations: [0]
+
+ # This a set of floats which is specific to the particular model used.
+ # For overlaid wireplanes, should be a vector of vectors of
+ #                                 [plane angle, pitch/mm, wire diameter/mm]
+ #
+ # This format is chosen to allow for future extensions to the model
+ #  for, eg, DUNE wireplane development.
+ #
+ OpticalParamParameters:   [ [ [60,  3, 0.15],
+ 	 		       [-60, 3, 0.15],
+                               [0,   3, 0.15] ] ]
+ UseLitePhotons: false
+}
+
+jp250L_largeantparameters:     @local::standard_largeantparameters
+bo_largeantparameters:         @local::standard_largeantparameters
+argoneut_largeantparameters:   @local::standard_largeantparameters
+# The following line is already in simulationservices_microboone.fcl
+# and so it should not also be included here, for clarity's sake.
+#microboone_largeantparameters: @local::standard_largeantparameters
+dune35t_largeantparameters:    @local::standard_largeantparameters
+dunefd_largeantparameters:   @local::standard_largeantparameters
+
+standard_larvoxelcalculator:
+{
+ VoxelSizeX:     0.03    #in cm
+ VoxelSizeY:     0.03    #in cm
+ VoxelSizeZ:     0.03    #in cm
+ VoxelSizeT:     5000.0  #in ns
+ VoxelOffsetX:   0.0     #in cm
+ VoxelOffsetY:   0.0     #in cm
+ VoxelOffsetZ:   0.0     #in cm
+ VoxelOffsetT:   -2500.0 #in ns
+ VoxelEnergyCut: 1.e-6   #in GeV
+}
+
+bo_larvoxelcalculator:         @local::standard_larvoxelcalculator
+jp250L_larvoxelcalculator:     @local::standard_larvoxelcalculator
+argoneut_larvoxelcalculator:   @local::standard_larvoxelcalculator
+# The following line is already in simulationservices_microboone.fcl
+# and so it should not also be included here, for clarity's sake.
+#microboone_larvoxelcalculator: @local::standard_larvoxelcalculator
+dune35t_larvoxelcalculator:    @local::standard_larvoxelcalculator
+dunefd_larvoxelcalculator:     @local::standard_larvoxelcalculator
+
+END_PROLOG
+BEGIN_PROLOG
+
+PIProv: {
+  G4ModuleLabel: "largeant"
+  EveIdCalculator: "EmEveIdCalculator"
+}
+standard_particleinventoryservice: {
+  ParticleInventory: @local::PIProv
+}
+
+jp250L_particleinventoryservice:     @local::standard_particleinventoryservice
+bo_particleinventoryservice:         @local::standard_particleinventoryservice
+argoneut_particleinventoryservice:   @local::standard_particleinventoryservice
+microboone_particleinventoryservice: @local::standard_particleinventoryservice
+#dune35t_particleinventoryservice:    @local::standard_particleinventoryservice
+#dunefd_particleinventoryservice:     @local::standard_particleinventoryservice
+
+END_PROLOG
+
+
+
+BEGIN_PROLOG
+
+providerBKConf:{
+ G4ModuleLabel:            "largeant" # module that produced the sim::Particle objects
+ SimChannelModuleLabel:    "largeant" # module that produced the sim::SimChannel objects, if not provided defaults to using the G4ModuleLabel
+ MinimumHitEnergyFraction: 0.1        # minimum fraction of energy a G4 trackID contributes to a hit to be 
+                                      # counted in hit based efficiency and purity calculations
+}
+
+standard_backtrackerservice:
+
+{
+ BackTracker: @local::providerBKConf
+}
+
+jp250L_backtrackerservice:     @local::standard_backtrackerservice
+
+bo_backtrackerservice:         @local::standard_backtrackerservice
+
+argoneut_backtrackerservice:   @local::standard_backtrackerservice
+
+microboone_backtrackerservice: @local::standard_backtrackerservice
+
+#dune35t_backtrackerservice:    @local::standard_backtrackerservice
+
+#dunefd_backtrackerservice:     @local::standard_backtrackerservice
+
+END_PROLOG
+
+BEGIN_PROLOG
+
+PIProv: {
+  G4ModuleLabel: "largeant"
+  EveIdCalculator: "EmEveIdCalculator"
+}
+standard_particleinventoryservice: {
+  ParticleInventory: @local::PIProv
+}
+
+jp250L_particleinventoryservice:     @local::standard_particleinventoryservice
+bo_particleinventoryservice:         @local::standard_particleinventoryservice
+argoneut_particleinventoryservice:   @local::standard_particleinventoryservice
+microboone_particleinventoryservice: @local::standard_particleinventoryservice
+#dune35t_particleinventoryservice:    @local::standard_particleinventoryservice
+#dunefd_particleinventoryservice:     @local::standard_particleinventoryservice
+
+END_PROLOG
+
+
+BEGIN_PROLOG
+
+providerPBKConf:{
+ G4ModuleLabel:            "largeant" # module that produced the sim::Particle and sim::SimChannel objects
+ G4ModuleLabels:         ["largeant"] # list of modules that produced the sim::Particle and sim::SimChannel objects
+ MinimumHitEnergyFraction: 0.1        # minimum fraction of energy a G4 trackID contributes to a hit to be 
+                                      # counted in hit based efficiency and purity calculations
+ Delay:                    0          # difference between when light arrives at the detector, and the time recorded in OpHits. This number is experiment specific and should be set by each experiment. 
+}
+
+standard_photonbacktrackerservice:
+{
+ PhotonBackTracker: @local::providerPBKConf
+}
+
+END_PROLOG
+
+
+
+BEGIN_PROLOG
+
+#
+# Configuration for LArG4Parameters service
+#
+# Use as:
+#
+#     service.LArG4Parmeters: @local::icarus_largeantparameters
+#
+#
+
+icarus_largeantparameters:                       @local::standard_largeantparameters # from simulationservices.fcl
+icarus_largeantparameters.UseCustomPhysics:      true
+icarus_largeantparameters.LongitudinalDiffusion: 4.0e-9  #in cm^2/ns
+icarus_largeantparameters.TransverseDiffusion:   8.8e-9  #in cm^2/ns
+icarus_largeantparameters.ElectronClusterSize:   20.0    #number of ionization electrons to drift in a unit
+icarus_largeantparameters.EnabledPhysics:        [ "Em", "SynchrotronAndGN", "Ion", "Hadron",
+                                                   "Decay", "HadronElastic", "Stopping"
+                                                   , "FastOptical"           # either: use photon library
+                                                   # , OpFastScintillation   #     or: let Geant4 do the work (for photon visibility library generation)
+                                                   # , "NeutronTrackingCut"  # if NeutronTrackingCut is enabled, neutrons will be cut
+                                                 ]
+icarus_largeantparameters.FillSimEnergyDeposits: true
+icarus_largeantparameters.UseModLarqlRecomb:     true   # use LArQL recombination corrections (dependence on EF)
+icarus_largeantparameters.IonAndScintCalculator: "Correlated" # adopt the "correlated" model for ionization and scintillation (SBN DocDB 17964)
+icarus_largeantparameters.UseModBoxRecomb:       false
+icarus_largeantparameters.UseEllipsModBoxRecomb: true
+
+#
+# ICARUS LArVoxelCalculator service configuration.
+#
+# Use as:
+#
+#     services.LArVoxelCalculator: @local::icarus_larvoxelcalculator
+#
+#
+icarus_larvoxelcalculator: {
+    VoxelSizeX:     0.03    #in cm
+    VoxelSizeY:     0.03    #in cm
+    VoxelSizeZ:     0.03    #in cm
+    VoxelSizeT:     5000.0  #in ns
+    VoxelOffsetX:   0.0     #in cm
+    VoxelOffsetY:   0.0     #in cm
+    VoxelOffsetZ:   0.0     #in cm
+    VoxelOffsetT:   -2500.0 #in ns
+    VoxelEnergyCut: 1.e-6   #in GeV
+}
+
+
+
+#
+# Backtracking services
+#
+# All serviced needed for service-driven backtracking
+# Use as:
+#
+# services: {
+#   ...
+#   @table::icarus_backtracking_services
+#   ...
+# }
+#
+icarus_backtracking_services: {
+    BackTrackerService:         @local::standard_backtrackerservice       # from `backtrackerservice.fcl` (`larsim`)
+    PhotonBackTrackerService:   @local::standard_photonbacktrackerservice # from `photonbacktrackerservice.fcl` (`larsim`)
+    ParticleInventoryService:   @local::standard_particleinventoryservice
+} # icarus_backtracking_services
+
+
+END_PROLOG
+#
+# File:    correctionservices_icarus.fcl
+# Purpose: configuration of services pertaining detector corrections.
+#
+# The services in here are usually used or simulation, and may be used
+# in the reverse direction for reconstruction.
+#
+# Available configurations:
+#
+# * `icarus_spacecharge`: `SpaceChargeService` configuration
+#
+#
+BEGIN_PROLOG
+
+#
+# SpaceCharge service configuration for ICARUS
+#
+# Use as:
+#     
+#     services.SpaceChargeService: @local::icarus_spacecharge
+#
+icarus_spacecharge: {
+    service_provider:       SpaceChargeServiceICARUS
+    
+    EnableSimSpatialSCE:    false
+    EnableSimEfieldSCE:     false
+    EnableCorrSCE:          false
+    EnableCalSpatialSCE:    false
+    EnableCalEfieldSCE:     false
+    RepresentationType:     "Voxelized_TH3"
+    InputFilename:          "SCEoffsets/SCEoffsets_ICARUS_E500_voxelTH3.root"
+} # icarus_spacecharge
+
+
+END_PROLOG
+
+#
+# File:    services_common_icarus.fcl
+# Purpose: presets for service configurations for non-simulation jobs.
+#
+# The configuration presets can be used as a starting point, with more services added,
+# some removed, and some configuration amended or rewritten.
+# A complete example of these cases:
+#
+#     services: {
+#
+#         @table::icarus_common_services  # include all ICARUS basic services
+#
+#         # rewrite the configuration of a service:
+#         messages: @local::icarus_message_services_prod
+#
+#         # rewrite the configuration of a service explicitly:
+#         TFileService: {
+#           fileName: "TreeFile.root"
+#         }
+#
+#         # add a set of services
+#         @table::icarus_backtracking_services
+#
+#         # remove a service
+#         TimeTracker: @erase
+#
+#     } # services
+#
+#     # amend a single configuration parameter of a service
+#     services.NuRandomService.policy: "random"
+#
+#
+# Available configurations:
+#
+# * `icarus_common_services`: minimal set of art + LArSoft services
+# * `icarus_wirecalibration_services`: for signal processing and TPC wire signal
+#      calibration
+#
+#
+
+#
+# File:    seedservice_icarus.fcl
+# Purpose: preset configurations for random number generator seeds in ICARUS.
+# Author:  Gianluca Petrillo (petrillo@slac.stanford.edu)
+# Date:    September 9, 2022
+#
+# A "standard" configuration for ICARUS random number generators is defined:
+#     
+#     services.NuRandomService: @local::icarus_default_NuRandomService
+#     
+# includes it in a job configuration.
+#
+# This configuration file includes all the presets from LArSoft, and it adds
+# one with per-event seed policy but with a fallback policy as described in
+# LArSoft Redmine issue #26116 and icaruscode issues #243.
+# 
+# This configuration should be good enough for all applications.
+#
+
+#
+# File:    NuRandomService.fcl
+# Brief:   Default configuration for random seed service
+# Author:  Gianluca Petrillo (petrillo@fnal.gov)
+# Date:    February 5th, 2015
+# Version: 1.0
+# 
+# The default configuration for the seed service uses the autoIncrement policy.
+# 
+# Use this as:
+# 
+# services.NuRandomService: @local::standard_NuRandomService
+# 
+# 
+# Changes:
+# 20150205 (petrillo@fnal.gov) [v1.0]
+#   first version
+#
+
+BEGIN_PROLOG
+
+
+autoincrement_NuRandomService: {
+  # policy: autoIncrement
+  # each time a seed is requested, a counter is increased and its value returned
+  # as seed; the first seed returned is baseSeed
+  policy            :    "autoIncrement"
+  
+  # this is the first seed that is returned;
+  # override it with:
+  # 
+  # services.NuRandomService.baseSeed: MySeed
+  # 
+  baseSeed          : 2829
+  
+  # since this is a generic configuration and we don't know how many seeds there
+  # are going to be around, we just skip the range check
+  checkRange        : false
+  
+  # print into the log all seeds at the end of the job
+  endOfJobSummary   :  true
+} # autoincrement_NuRandomService
+
+
+linearmapping_NuRandomService: {
+  # policy: linearIncrement
+  # each time a seed is requested, a counter is increased and its value returned
+  # as seed; the first seed returned is nJob x maxUniqueEngines
+  policy            :    "linearMapping"
+  
+  # this is the number of this job in an absolute batch count; override it with:
+  # 
+  # services.NuRandomService.nJob: NJOB
+  #
+  nJob            :  1
+  maxUniqueEngines: 20
+  
+  # make sure that we don't try to use more engines than we are allowed;
+  # that would mean overlapping random seeds with the next job
+  checkRange      :  true
+  
+  # print into the log all seeds at the end of the job
+  endOfJobSummary   :  true
+} # linearmapping_NuRandomService
+
+
+random_NuRandomService: {
+  # policy: random
+  # each time a seed is requested, a random number is returned.
+  # 
+  policy            :    "random"
+  
+  # if you really want this sequence of seeds to be reproducible,
+  # insert here a seed for the random seed generator
+  # baseSeed          : 64429
+  
+  # print into the log all seeds at the end of the job
+  endOfJobSummary   :  true
+} # random_NuRandomService
+
+
+per_event_NuRandomService: {
+  # policy: perEvent
+  # on each event, the seed is computed from event information
+  # 
+  policy            :    "perEvent"
+  
+  # print into the log all seeds at the end of the job
+  endOfJobSummary   :  false
+} # per_event_NuRandomService
+
+
+# choose our autoIncrement configuration as "standard"
+standard_NuRandomService: @local::autoincrement_NuRandomService
+
+
+END_PROLOG
+
+
+BEGIN_PROLOG
+#-------------------------------------------------------------------------------
+
+## # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Per-event with random fallback
+#
+# This policy guarantees reproducibility for all random numbers used while
+# processing an event, just like the perEvent policy does.
+# In addition, it explicitly assigns an unreproducible random number sequence
+# for use before the first event is encountered (as for example in a generator
+# randomly selecting before the job starts which pools to extract pre-generated
+# events from, like the CORSIKA implementation in LArSoft does).
+# 
+# In practice, there may be some way to reproduce also the "unreproducible"
+# random sequence by setting the master seed to the value printed by the job;
+# although the success of this process also depends on providing the exact input
+# data file sequence to the job, which can't be guaranteed when SAM is feeding
+# the input.
+#
+per_event_with_random_fallback_NuRandomService: {
+  
+  @table::per_event_NuRandomService
+  
+  initSeedPolicy: { policy: "random" }
+  
+} # per_event_with_random_fallback_NuRandomService
+
+
+## # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# ICARUS "default" seed configuration
+#
+# If there are no specific needs, this is the configuration that should be used.
+#
+
+icarus_default_NuRandomService: @local::per_event_with_random_fallback_NuRandomService
+
+
+#-------------------------------------------------------------------------------
+END_PROLOG
+BEGIN_PROLOG
+
+no_mag:
+{
+FieldDescriptions: [ { UseField:         0  # 0--off 1--Constant field
+                                            # 2--Field map (not implemented)
+                       ConstantField:    [ 0.0, 0.0, 0.0 ]
+                       MagnetizedVolume: "volWorld" } ]
+service_provider:  MagneticFieldServiceStandard
+}
+
+no_mag_larsoft: @local::no_mag
+
+END_PROLOG
+
+#
+# File:    services_basic_icarus.fcl
+# Purpose: presets for basic service configurations - geometry, detector properties, LAr properties
+#
+# The configuration presets can be used as a starting point, with more services added,
+# some removed, and some configuration amended or rewritten.
+# A complete example of these cases:
+#
+#     services: {
+#
+#         @table::icarus_basic_services  # include all ICARUS basic services
+#
+#         # rewrite the configuration of a service:
+#         messages: @local::icarus_message_services_prod
+#
+#         # rewrite the configuration of a service explicitly:
+#         TFileService: {
+#           fileName: "TreeFile.root"
+#         }
+#
+#         # add a set of services
+#         @table::icarus_backtracking_services
+#
+#         # remove a service
+#         TimeTracker: @erase
+#
+#     } # services
+#
+#     # amend a single configuration parameter of a service
+#     services.NuRandomService.policy: "random"
+#
+#
+# Available configurations:
+#
+# * `icarus_basic_services`: the very basic services
+#
+#
+
+#
+# File:    messages_icarus.fcl
+# Purpose: presets for art message logging
+# Author:  Gianluca Petrillo
+# Date:    October 13, 2020
+# Version: 1.1
+# 
+# Provided presets:
+# - icarus_message_services: kind of "standard"
+# - icarus_message_services_prod: non-interactive jobs (like in production)
+# - icarus_message_services_prod_debug: non-interactive jobs with debugging
+# - icarus_message_services_interactive: interactive jobs
+# - icarus_message_services_interactive_debug: interactive jobs with debugging
+# 
+# Reminder: to limit a number of messages in a specific category,
+# add in a destination a configuration for that category:
+#     
+#     categories: {
+#       
+#       # suppress all the messages in "UselessMessage" category
+#       UselessMessage: { limit: 0 }
+#       
+#       # reduce the messages from "AnnoyingMessage" category;
+#       # they will still appear now and then
+#       AnnoyingMessage: { limit: 5 timespan: 10 }
+#       
+#       # this means no limit
+#       default: {}
+#     
+#     }
+#     
+# 
+# Usage:
+#     
+#     services.message: @local::icarus_message_services
+#     
+# 
+# Changes:
+# 20180521 (petrillo@slac.stanford.edu) [v1.0]
+#   adapted from messages_sbnd.fcl (sbndcode v06_76_00)
+# 20201013 (petrillo@slac.stanford.edu) [v1.1]
+#
+
+
+BEGIN_PROLOG
+
+#
+# standard ICARUS message destinations
+#
+message_debugfile_icarus: {
+  #
+  # message destination: all debug messages to a file
+  #
+  type:       "file"
+  filename:   "debug.log"
+  append:     false
+  threshold:  "DEBUG"
+  categories: {
+    default: {}
+  }
+} # message_debugfile_icarus
+
+
+message_infofile_icarus: {
+  #
+  # message destination: all debug messages to a file
+  #
+  type:       "file"
+  filename:   "messages.log"
+  append:     false
+  threshold:  "INFO"
+  categories: {
+    default: {}
+  }
+} # message_infofile_icarus
+
+
+message_errorfile_icarus: {
+  #
+  # message destination: all error messages to "errors.log" file
+  #
+  type:       "file"
+  filename:   "errors.log"
+  append:     false
+  threshold:  "ERROR"
+  categories: {
+    default:  {}
+  }
+} # message_errorfile_icarus
+
+
+message_stdout_warning_icarus: {
+  #
+  # message destination: all warning messages to standard output
+  #
+  type:       "cout"
+  threshold:  "WARNING"
+  categories:{
+    default:  {}
+  }
+} # message_stdout_warning_icarus
+
+
+message_stdout_icarus: {
+  #
+  # message destination: all messages to standard output;
+  # special suppression for NuRandomService messages
+  # (recover them with `message_randomseeds_file_icarus`)
+  #
+  type:       "cout"
+  threshold:  "INFO"
+  categories:{
+    default:  {}
+    NuRandomService: { limit: 0 }
+  }
+} # message_stdout_icarus
+
+
+message_stderr_icarus: {
+  #
+  # message destination: all error messages to standard error
+  #
+  type:       "cerr"
+  threshold:  "ERROR"
+  categories:{
+    default: {}
+  }
+} # message_stderr_icarus
+
+
+message_randomseeds_file_icarus: {
+  #
+  # message destination: all NuRandomService messages to "randomseeds.log" file
+  #
+  type:       "file"
+  filename:   "randomseeds.log"
+  append:     false
+  threshold:  "INFO"
+  categories: {
+    NuRandomService: { limit: -1 }
+    default:         { limit:  0 }
+  }
+} # message_randomseeds_file_icarus
+
+#
+# icarus_message_services
+# ------------------------
+# 
+# Enables debug messages. Errors saved in a file.
+#
+# - standard output with only WARNING and worse
+# - "errors.log" collecting error messages (also included in standard output)
+# - "debug.log" with DEBUG (that is, every message) for all modules;
+#   in non-debug qualifier builds, LOG_DEBUG and LOG_TRACE are disabled and
+#   their messages are never produced (that is, won't be in "debug.log" either).
+# 
+# No special stream for errors.
+#
+icarus_message_services:
+{
+  destinations: {
+    LogStandardOut:   @local::message_stdout_warning_icarus
+    LogInfoFile:      @local::message_infofile_icarus
+    LogErrorFile:     @local::message_errorfile_icarus
+  }
+  
+} # icarus_message_services
+
+
+#
+# icarus_message_services_prod_debug
+# -----------------------------------
+# 
+# Enables debug messages.
+#
+# - standard error with only ERROR and worse
+# - standard output with only WARNING and worse (will also repeat the error
+#   messages, that will appear in error messages being printed twice if the
+#   standard output and error are directed to the same file or to the console)
+# - "debug.log" with DEBUG (that is, every message) for all modules;
+#   in non-debug qualifier builds, LOG_DEBUG and LOG_TRACE are disabled and
+#   their messages are never produced (that is, won't be in "debug.log" either).
+#
+icarus_message_services_prod_debug:
+{
+  destinations: {
+    LogDebugFile:     @local::message_debugfile_icarus
+    LogStandardOut:   @local::message_stdout_warning_icarus
+    LogStandardError: @local::message_stderr_icarus
+  }
+} # icarus_message_services_prod_debug
+
+
+icarus_message_services_prod_debug.destinations.LogDebugFile.categories:{
+  default: { }
+}
+
+
+#
+# icarus_message_services_prod
+# -----------------------------
+# 
+# - standard error with only ERROR and worse
+# - standard output with only WARNING and worse (will also repeat the error
+#   messages, that will appear in error messages being printed twice if the
+#   standard output and error are directed to the same file or to the console)
+#
+#
+icarus_message_services_prod:
+{
+  destinations: {
+    LogStandardOut:   @local::message_stdout_warning_icarus
+    LogStandardError: @local::message_stderr_icarus
+  }
+}
+
+
+#
+# icarus_message_services_interactive
+# ------------------------------------
+# 
+# - standard output with only INFO and worse
+# - "errors.log" collecting warning and error messages (also included in
+#   standard output)
+# 
+# No special stream for errors.
+#
+#
+icarus_message_services_interactive:
+{
+  destinations: {
+    LogStandardOut:   @local::message_stdout_icarus
+    LogSeeds:         @local::message_randomseeds_file_icarus
+    LogErrorFile:     @local::message_errorfile_icarus
+  }
+}
+icarus_message_services_interactive.destinations.LogErrorFile.threshold: "WARNING"
+
+
+#
+# icarus_message_services_interactive_debug
+# ------------------------------------------
+# 
+# Enables debug messages.
+#
+# - standard output with only INFO and worse
+# - "errors.log" collecting warning and error messages (also included in
+#   standard output)
+# - "debug.log" with DEBUG (that is, every message) for all modules;
+#   in non-debug qualifier builds, LOG_DEBUG and LOG_TRACE are disabled and
+#   their messages are never produced (that is, won't be in "debug.log" either).
+# 
+# No special stream for errors.
+#
+#
+icarus_message_services_interactive_debug: {
+  @table::icarus_message_services_interactive
+}
+icarus_message_services_interactive_debug.destinations.LogDebugFile: @local::message_debugfile_icarus
+
+
+END_PROLOG
+#
+# File:    geometry_icarus.fcl
+# Purpose: Configuration of LArSoft geometry and geometry service for ICARUS.
+#
+#
+# Suggested usage
+# ----------------
+#
+# Unless there are special needs, the geometry configuration should be included
+# via a configuration bundle.
+# The default one is called `icarus_geometry_services`.
+# To use it in a complete configuration:
+#
+#     services: {
+#       # ...
+#       @table::icarus_geometry_services  # from geometry_icarus.fcl
+#       # ...
+#     } # services
+#
+# To add it to a preexisting configuration, overwriting any existing geometry
+# configuration:
+#
+#     services: {
+#       @table::services
+#       @table::icarus_geometry_services  # from geometry_icarus.fcl
+#     } # services
+#
+#
+# Options
+# --------
+#
+# Currently the following configuration is provided:
+#
+# * `icarus_geometry_services`: current default configuration, the "standard"
+#      of the experiment with a concrete overburden
+# 
+# Since the documentation is often not updated, check the definitions below
+# to see which are the current defaults.
+#
+#
+# Configuration for unit tests
+# -----------------------------
+#
+# The "service" configuration `icarus_unit_test_geometry` includes a
+# configuration of ICARUS geometry suitable for tests that use the LArSoft unit
+# test service helpers. It should be loaded in place of `icarus_geometry` in the
+# `services.Geometry` configuration table.
+#
+#
+# Legacy options
+# ---------------
+# 
+# Some older configurations are still kept (but not officially supported).
+# See the "Legacy configurations" section below.
+#
+#
+# Notes
+# ------
+# 
+# A special policy in ICARUS is to have a copy of the channel mapping algorithm
+# configuration in the `Geometry` service configuration.
+# This is required by the off-art geometry loading utilities in ICARUS.
+# One day LArSoft will also support something like that and that will become
+# the only location of the channel mapping configuration.
+#
+#
+# Changes
+# --------
+#
+# 20200709 (petrillo@slac.stanford.edu)
+#   adopted split wire geometry fixed by
+#   Alessandro Menegolli (alessandro.menegolli@unipv.it)
+# 20220505 (petrillo@slac.stanford.edu)
+#   geometry default changed to include overburden
+# 20220523 (petrillo@slac.stanford.edu)
+#   new geometry (20220518) with CRT changes;
+#   no configuration for no-overburden detector;
+#   legacy (`icarus_v3`) configurations added;
+#   configurations renamed ("icarus_standard_geometry")
+# 20250206 (Kyle Knoepfel, petrillo@slac.stanford.edu, et al)
+#   updates for LArSoft v10
+#
+
+
+BEGIN_PROLOG
+
+################################################################################
+#
+# Basic definitions for ICARUS configurations; no serviceable parts here!
+#
+
+icarus_geometry_template: {
+  SurfaceY:        6.9e2    # in cm, vertical distance to the surface
+  Name:           "icarus_v4"
+  GDML:           "icarus_refactored_nounderscore_20230918.gdml"
+} # icarus_geometry_template
+
+
+
+################################################################################
+###
+###  Split first induction plane wires (9 m)
+###
+################################################################################
+### Complete geometry (including CRT) with two logical TPCs per drift volume and
+### 9 meter long wires on each half of the first induction planes.
+### This reflects the actual configuration of the ICARUS detector.
+###
+### Default for this configuration is defined below:
+### `icarus_split_induction_geometry_services`.
+###
+
+#
+# WireReadout
+#
+icarus_standard_wire_readout: {
+  service_provider: WireReadoutICARUS
+  SortingParameters: {
+    tool_type: WireReadoutSorterStandard
+  }
+  Mapper: {
+    
+    WirelessChannels: {
+      
+      FirstInductionPreChannels:        0
+      FirstInductionPostChannels:      96 # 32 ghost, then 64 virtual
+      
+      # C:x S:0 (east TPC)
+      SecondInductionEvenPreChannels:  96 # 32 ghost, then 64 wireless
+      SecondInductionEvenPostChannels: 64 # 64 wireless
+      CollectionEvenPreChannels:       64 # 64 wireless
+      CollectionEvenPostChannels:      96 # 64 wireless, then 32 ghost
+  
+      # C:x S:1 (west TPC)
+      SecondInductionOddPreChannels:   64 # 64 wireless
+      SecondInductionOddPostChannels:  96 # 64 wireless, then 32 ghost
+      CollectionOddPreChannels:        96 # 32 ghost, then 64 wireless
+      CollectionOddPostChannels:       64 # 64 wireless
+    
+    } # WirelessChannels
+    
+  } # Mapper
+  
+} # icarus_standard_wire_readout
+
+
+################################################################################
+###
+### "Standard" configuration (`icarus_standard_geometry_services`).
+### 
+### Includes an overburden and two logical TPC for each physical one
+### ("split wires" configuration).
+###
+### This is the most accurate description of ICARUS detector as of June 2022.
+###
+### Override a geometry configuration by:
+###
+###     services: {
+###       @table::services
+###       @table::icarus_standard_geometry_services
+###     }
+###
+###
+
+#
+# Geometry service configuration:
+#
+icarus_standard_geometry: {
+  @table::icarus_geometry_template
+
+  SortingParameters: {
+    tool_type: GeoObjectSorterPMTasTPC
+  }
+}
+
+#
+# AuxDetGeometry service configuration:
+#
+icarus_standard_auxdetgeometry: {
+  @table::icarus_geometry_template
+
+  SortingParameters: {
+    tool_type: AuxDetGeoObjectSorterICARUS
+  }
+} # icarus_standard_geometry
+
+#
+# geometry configuration bundle
+#
+icarus_standard_geometry_services: {
+
+  AuxDetGeometry: @local::icarus_standard_auxdetgeometry
+  Geometry:       @local::icarus_standard_geometry
+  WireReadout:    @local::icarus_standard_wire_readout
+  GeometryConfigurationWriter: {}
+
+} # icarus_standard_geometry_services
+
+
+################################################################################
+###
+### Default ICARUS geometry configuration
+###
+### Complete geometry (including CRT) with one TPC per drift volume and 18 meter
+### long wires on first induction plane.
+### Options are avaialble for the presence of overburden; the geometry global
+### default includes a choice for that option: see `icarus_geometry_services`.
+###
+################################################################################
+### Default ICARUS geometry configuration
+### (`icarus_geometry_services`)
+###
+### This configuration includes 3-m overburden and long first induction wires
+### (18 m) as of now.
+###
+### Override a geometry configuration by:
+###
+###     services: {
+###       @table::services
+###       @table::icarus_geometry_services
+###     }
+###
+###
+
+#
+# geometry configuration bundle
+#
+icarus_geometry_services: @local::icarus_standard_geometry_services
+
+#
+# Geometry service configuration:
+#
+icarus_geometry: @local::icarus_geometry_services.Geometry
+icarus_geo:      @local::icarus_geometry # backward compatibility
+
+icarus_wire_readout:  @local::icarus_geometry_services.WireReadout
+
+icarus_unit_test_geometry: @local::icarus_geometry
+
+
+################################################################################
+###  Legacy configurations
+################################################################################
+#
+# Legacy configurations are not officially supported, but are provided here
+# nevertheless. A legacy configuration bundle is called
+# `icarus_geometry_services[_<variant>]_legacy_<DetectorName>`, where
+# <DetectorName> is the geometry tag (e.g. `icarus_v2`), and variants may also
+# be available (e.g. "no_overburden").
+# 
+# Legacy configurations are hard-coded and should not depend from the content
+# above.
+#
+################################################################################
+### Base legacy configuration, only used for FHiCL stability; i.e., if changed,
+### all existing legacy configurations need to explicitly revert the change.
+###
+icarus_legacy_base_wire_readout: {
+  service_provider: IcarusWireReadout
+  SortingParameters: {
+    tool_type: WireReadoutSorterStandard
+  }
+  Mapper: {
+    tool_type: "ICARUSsplitInductionWireReadoutSetupTool"
+    WirelessChannels: {
+      
+      FirstInductionPreChannels:        0
+      FirstInductionPostChannels:      96 # 32 ghost, then 64 virtual
+      
+      # C:x S:0 (east TPC)
+      SecondInductionEvenPreChannels:  96 # 32 ghost, then 64 wireless
+      SecondInductionEvenPostChannels: 64 # 64 wireless
+      CollectionEvenPreChannels:       64 # 64 wireless
+      CollectionEvenPostChannels:      96 # 64 wireless, then 32 ghost
+  
+      # C:x S:1 (west TPC)
+      SecondInductionOddPreChannels:   64 # 64 wireless
+      SecondInductionOddPostChannels:  96 # 64 wireless, then 32 ghost
+      CollectionOddPreChannels:        96 # 32 ghost, then 64 wireless
+      CollectionOddPostChannels:       64 # 64 wireless
+    
+    } # WirelessChannels
+    
+  } # Mapper
+} # icarus_legacy_base_wire_readout
+
+icarus_legacy_base_geometry: {
+
+  SurfaceY:        6.9e2    # in cm, vertical distance to the surface
+  DisableWiresInG4: true
+
+  Name: @nil
+  GDML: @nil
+  ROOT: @nil
+
+  ChannelMapping: @local::icarus_legacy_base_wire_readout.Mapper
+  
+} # icarus_legacy_base_geometry
+
+icarus_legacy_base_geometry_services: {
+  Geometry:               @local::icarus_legacy_base_geometry
+  WireReadout:            @local::icarus_legacy_base_wire_readout
+  GeometryConfigurationWriter: {}
+} # icarus_legacy_base_geometry_services
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### icarus_geometry_services_legacy_icarus_v3:
+###   geometry tagged as `icarus_v3` for samples produced with v09_52_00
+###   and earlier
+### 
+### Also versions with explicit overburden specification.
+###
+icarus_geometry_services_no_overburden_legacy_icarus_v3: @local::icarus_legacy_base_geometry_services
+icarus_geometry_services_no_overburden_legacy_icarus_v3.Geometry.Name: icarus_v3
+icarus_geometry_services_no_overburden_legacy_icarus_v3.Geometry.GDML: "icarus_complete_20210527_no_overburden.gdml"
+icarus_geometry_services_no_overburden_legacy_icarus_v3.Geometry.ROOT: "icarus_complete_20210527_no_overburden.gdml"
+
+icarus_geometry_services_overburden_legacy_icarus_v3: @local::icarus_legacy_base_geometry_services
+icarus_geometry_services_overburden_legacy_icarus_v3.Geometry.Name: icarus_v3
+icarus_geometry_services_overburden_legacy_icarus_v3.Geometry.GDML: "icarus_complete_20210527_overburden.gdml"
+icarus_geometry_services_overburden_legacy_icarus_v3.Geometry.ROOT: "icarus_complete_20210527_overburden.gdml"
+
+icarus_geometry_services_legacy_icarus_v3:
+  @local::icarus_geometry_services_no_overburden_legacy_icarus_v3
+
+
+###
+### icarus_geometry_services_legacy_icarus_v2:
+###   geometry tagged as `icarus_v2` for samples produced with v09_24_02_02
+###   and earlier
+### 
+### Also versions with explicit overburden specification.
+###
+icarus_geometry_services_no_overburden_legacy_icarus_v2: @local::icarus_legacy_base_geometry_services
+icarus_geometry_services_no_overburden_legacy_icarus_v2.Geometry.Name: icarus_v2
+icarus_geometry_services_no_overburden_legacy_icarus_v2.Geometry.GDML: "icarus_complete_20210311_no_overburden_rotUV.gdml"
+icarus_geometry_services_no_overburden_legacy_icarus_v2.Geometry.ROOT: "icarus_complete_20210311_no_overburden_rotUV.gdml"
+
+icarus_geometry_services_overburden_legacy_icarus_v2: @local::icarus_legacy_base_geometry_services
+icarus_geometry_services_overburden_legacy_icarus_v2.Geometry.Name: icarus_v2
+icarus_geometry_services_overburden_legacy_icarus_v2.Geometry.GDML: "icarus_complete_20210311_rotUV.gdml"
+icarus_geometry_services_overburden_legacy_icarus_v2.Geometry.ROOT: "icarus_complete_20210311_rotUV.gdml"
+
+icarus_geometry_services_legacy_icarus_v2:
+  @local::icarus_geometry_services_no_overburden_legacy_icarus_v2
+
+
+###
+### icarus_geometry_services_legacy_icarus_splitwires:
+###   geometry tagged as `icarus_splitwires` for samples produced with v09_17_02
+###   and earlier
+### 
+### Also versions with explicit overburden specification.
+###
+icarus_geometry_services_no_overburden_legacy_icarus_splitwires: @local::icarus_legacy_base_geometry_services
+icarus_geometry_services_no_overburden_legacy_icarus_splitwires.Geometry.Name: icarus_splitwires
+icarus_geometry_services_no_overburden_legacy_icarus_splitwires.Geometry.GDML: "icarus_complete_20201107_no_overburden.gdml"
+icarus_geometry_services_no_overburden_legacy_icarus_splitwires.Geometry.ROOT: "icarus_complete_20201107_no_overburden.gdml"
+
+icarus_geometry_services_overburden_legacy_icarus_splitwires: @local::icarus_legacy_base_geometry_services
+icarus_geometry_services_overburden_legacy_icarus_splitwires.Geometry.Name: icarus_splitwires
+icarus_geometry_services_overburden_legacy_icarus_splitwires.Geometry.GDML: "icarus_complete_20201107.gdml"
+icarus_geometry_services_overburden_legacy_icarus_splitwires.Geometry.ROOT: "icarus_complete_20201107.gdml"
+
+icarus_geometry_services_legacy_icarus_splitwires:
+  @local::icarus_geometry_services_no_overburden_legacy_icarus_splitwires
+
+
+################################################################################
+###
+### These are old names for the configuration presets.
+###
+icarus_split_induction_overburden_geometry: @local::icarus_standard_geometry
+icarus_split_induction_wire_readout: @local::icarus_standard_wire_readout
+icarus_split_induction_overburden_geometry_services: @local::icarus_standard_geometry_services
+
+################################################################################
+
+
+END_PROLOG
+#
+# File:    larproperties_icarus.fcl
+# Purpose: Configuration for LArProperties service.
+#
+# Available configurations:
+#
+# * `icarus_properties`: standard ICARUS configuration
+#
+#
+
+BEGIN_PROLOG
+
+standard_properties:
+{
+ service_provider: "LArPropertiesServiceStandard"
+
+ # For following parameters, see http://pdg.lbl.gov/AtomicNuclearProperties/
+ RadiationLength:  19.55   # g/cm^2
+ AtomicNumber:     18      # Ar atomic number.
+ AtomicMass:       39.948  # Ar atomic mass (g/mol).
+ ExcitationEnergy: 188.0   # Ar mean excitation energy (eV).
+
+# Argon39DecayRate: 0.00141 # decays per cm^3 per second.  Assumes 1.01 Bq/kg and a density of 1.396 g/cc
+# The following parameter was formerly used to steer an ad-hoc 39Ar decay model as part of the G4 step.
+# Users are now recommended to use the radiological generator: see larsim/EventGenerators/radiological_gen.fcl
+# As of February 2017, this value is no longer used.
+ Argon39DecayRate: 0.0
+
+ # Optical properties
+ # Fast and slow scintillation emission spectra, from [J Chem Phys vol 91 (1989) 1469]
+ FastScintEnergies:    [ 7.2,  7.9,  8.3,  8.6,  8.9,  9.1,  9.3,  9.6,  9.7,  9.8,  10,  10.2,  10.3,  10.6,  11,  11.6,  11.9]
+ SlowScintEnergies:    [ 7.2,  7.9,  8.3,  8.6,  8.9,  9.1,  9.3,  9.6,  9.7,  9.8,  10,  10.2,  10.3,  10.6,  11,  11.6,  11.9]
+ FastScintSpectrum:    [ 0.0,  0.04, 0.12, 0.27, 0.44, 0.62, 0.80, 0.91, 0.92, 0.85, 0.70, 0.50, 0.31, 0.13, 0.04,  0.01, 0.0]
+ SlowScintSpectrum:    [ 0.0,  0.04, 0.12, 0.27, 0.44, 0.62, 0.80, 0.91, 0.92, 0.85, 0.70, 0.50, 0.31, 0.13, 0.04,  0.01, 0.0]
+ ScintResolutionScale: 1.     # resolution factor used by G4 scintillation
+ ScintFastTimeConst:   6.     # fast scintillation time constant (ns)
+ ScintSlowTimeConst:   1590.  # slow scintillation time constant (ns)
+ ScintBirksConstant:   0.069  # birks constant for LAr (1/MeV cm)
+ ScintYield:           24000. # total scintillation yield (ph/Mev)
+ ScintPreScale:        0.03   # Scale factor to reduce number of photons simulated
+                              # Later QE should be corrected for this scale
+ ScintYieldRatio:      0.3    # fast / slow scint ratio (needs revisitting)
+ ScintByParticleType:  false  # whether to use different yields and
+                              # quenching per particle in fast op sim
+ EnableCerenkovLight: true    # whether to switch on cerenkov light (slow)
+
+
+
+
+ # Scintillation yields and fast/slow ratios per particle type
+ MuonScintYield:          24000
+ MuonScintYieldRatio:     0.23
+ PionScintYield:          24000
+ PionScintYieldRatio:     0.23
+ ElectronScintYield:      20000
+ ElectronScintYieldRatio: 0.27
+ KaonScintYield:          24000
+ KaonScintYieldRatio:     0.23
+ ProtonScintYield:        19200
+ ProtonScintYieldRatio:   0.29
+ AlphaScintYield:         16800
+ AlphaScintYieldRatio:    0.56
+
+
+ # Refractive index as a function of energy (eV) from arXiv:2002.09346
+ RIndexEnergies: [ 1.18626, 1.68626, 2.18626, 2.68626, 3.18626, 3.68626, 4.18626, 4.68626, 5.18626, 5.68626, 6.18626, 6.68626, 7.18626, 7.68626, 8.18626, 8.68626, 9.18626, 9.68626, 10.1863, 10.6863, 11.1863 ]
+ RIndexSpectrum: [ 1.24664, 1.2205, 1.22694, 1.22932, 1.23124, 1.23322, 1.23545, 1.23806, 1.24116, 1.24489, 1.24942, 1.25499, 1.26197, 1.2709, 1.28263, 1.29865, 1.32169, 1.35747, 1.42039, 1.56011, 2.16626 ]
+
+ # absorption length as function of energy
+ AbsLengthEnergies: [ 4,     5,     6,     7,     8,     9,     10,    11   ]
+ AbsLengthSpectrum: [ 8000., 8000., 8000., 8000., 8000., 2000., 2000., 2000.]
+
+ # Rayleigh scattering length (cm) @ 90K as a function of energy (eV) from arXiv:2002.09346
+
+RayleighEnergies: [ 1.18626, 1.68626, 2.18626, 2.68626, 3.18626, 3.68626, 4.18626, 4.68626, 5.18626, 5.68626, 6.18626, 6.68626, 7.18626, 7.68626, 8.18626, 8.68626, 9.18626, 9.68626, 10.1863, 10.6863, 11.1863 ]
+RayleighSpectrum: [ 1200800, 390747, 128633, 54969.1, 27191.8, 14853.7, 8716.9, 5397.42, 3481.37, 2316.51, 1577.63, 1092.02, 763.045, 534.232, 371.335, 252.942, 165.38, 99.9003, 51.2653, 17.495, 0.964341 ]
+
+ # Surface reflectivity data - vector of energy spectrum per
+ #   surface type
+ ReflectiveSurfaceEnergies:           [ 7, 9, 10 ]
+ ReflectiveSurfaceNames:            [ "STEEL_STAINLESS_Fe7Cr2Ni" ]
+ ReflectiveSurfaceReflectances:     [ [ 0.25, 0.25, 0.25 ] ]
+ ReflectiveSurfaceDiffuseFractions: [ [ 0.5,  0.5,  0.5  ] ]
+
+ # Information related with the simulation of the Wavelength Shifter (TPB)
+ LoadExtraMatProperties: false
+
+ # TPB - WLS
+ TpbTimeConstant: 2.5 #wls time constant in s J. Lumin 81(1999) 285
+
+ # WLS - TPB properties original tpb [0.0, 0.0, 0.0, 0.0588,0.235, 0.853, 1.0,1.0,0.9259,0.704,0.0296,0.011, 0.0,0.0, 0.]
+ TpbEmmisionEnergies: [0.05,1.0,1.5, 2.25, 2.481, 2.819, 2.952,2.988,3.024, 3.1, 3.14,3.1807, 3.54, 5.5, 50.39]
+ TpbEmmisionSpectrum: [0.0, 0.0, 0.0, 0.0588,0.235, 0.853, 1.0,1.0,0.9259,0.704,0.0296,0.011, 0.0,0.0, 0.]
+ TpbAbsorptionEnergies: [0.05,1.77,2.0675, 7.42, 7.75, 8.16, 8.73, 9.78,10.69, 50.39]
+ TpbAbsorptionSpectrum: [100000.0,100000.0, 100000.0,0.001,0.00000000001,0.00000000001, 0.00000000001, 0.00000000001, 0.00000000001, 0.00000000001]
+
+}
+
+END_PROLOG
+
+#
+# File:    opticalproperties_icarus.fcl
+# Purpose: Collection of optical properties.
+#
+# Available configurations:
+#
+# * `icarus_opticalproperties`: standard LAr properties for LArProperties service
+#
+
+
+BEGIN_PROLOG
+
+# ------------------------------------------------------------------------------
+# Configuration used until January 2024 for standard processing
+#
+icarus_opticalproperties_2022: {
+    
+    ScintYield:     24000  # 24000 ph/MeV assume 500 mV/cm
+    ScintPreScale:  0.121  # see JINST 13 (2018) 12, P12020
+                           # MUST match between g4 and detsim
+    # ScintPreScale:  0.0093   # DocDB 4914, @MToups
+
+    ScintYieldRatio:         0.23
+    MuonScintYield:          24000
+    MuonScintYieldRatio:     0.23
+    ScintByParticleType:     true
+    PionScintYield:          24000
+    PionScintYieldRatio:     0.23
+    ElectronScintYield:      20000
+    ElectronScintYieldRatio: 0.27
+    KaonScintYield:          24000
+    KaonScintYieldRatio:     0.23
+    ProtonScintYield:        19200
+    ProtonScintYieldRatio:   0.29
+    AlphaScintYield:         16800
+    AlphaScintYieldRatio:    0.56
+    
+    EnableCerenkovLight: false # Cerenkov light OFF by default
+    
+
+    # reflectivities stolen from SBND (sbndcode v09_00_00)
+    # note that this is ignored when using FastOptical simulation, and needs
+    # services.DetectorPropertiesService.SimpleBoundaryProcess: false
+    # when using Optical (check) Redmine issue #25016 is resolved
+    ReflectiveSurfaceEnergies:     [ 1.77, 2.0675, 2.481, 2.819, 2.953, 3.1807, 3.54, 4.135, 4.962, 5.39, 7., 15. ]
+    ReflectiveSurfaceNames:        [ # in ICARUS geometry (20201107):
+      "STEEL_STAINLESS_Fe7Cr2Ni",    # wires, race track, cathode, structure
+      "copper",                      # unused
+      "G10",                         # unused
+      "vm2000",                      # unused
+      "ALUMINUM_Al",                 # CRT...
+      "ALUMINUM_PMT",                # PMT passive
+      "ALUMINUM_CRYO"                # cryostat shell
+    ]
+    ReflectiveSurfaceReflectances: [
+      [ 0.66,  0.64,  0.62,  0.60,  0.59,  0.57,  0.53,  0.47,  0.39,  0.36,  0.27, 0.25 ], # STEEL_STAINLESS_Fe7Cr2Ni
+      [ 0.902, 0.841, 0.464, 0.379, 0.345, 0.299, 0.287, 0.264, 0.337, 0.3,   0.0,  0.0  ], # copper
+      [ 0.393, 0.405, 0.404, 0.352, 0.323, 0.243, 0.127, 0.065, 0.068, 0.068, 0.0,  0.0  ], # "G10"
+      [ 0.93,  0.93,  0.93,  0.93,  0.93,  0.93,  0.1,   0.1,   0.7,   0.3,   0.0,  0.0  ], # "vm2000"
+      [ 0.9,   0.9,   0.9,   0.9,   0.9,   0.9,   0.9,   0.47,  0.39,  0.36,  0.27, 0.25 ], # "ALUMINUM_Al"
+      [ 0.9,   0.9,   0.9,   0.9,   0.9,   0.9,   0.9,   0.47,  0.39,  0.36,  0.27, 0.25 ], # "ALUMINUM_PMT"
+      [ 0.9,   0.9,   0.9,   0.9,   0.9,   0.9,   0.9,   0.47,  0.39,  0.36,  0.27, 0.25 ]  # "ALUMINUM_CRYO"
+    ]
+
+
+} # icarus_opticalproperties_2022
+
+
+# ------------------------------------------------------------------------------
+# The following is based on SBN DocDB 34640, showing an empirical choice
+# to reconciliate the mean value of MC hit amplitude with data
+#
+icarus_opticalproperties_202401patch: {
+    @table::icarus_opticalproperties_2022
+    
+    ScintPreScale:  0.073  # test value, empiric; see SBN DocDB 34640
+                           # MUST match between g4 and detsim
+    
+} # icarus_opticalproperties_202401patch
+
+
+# ##############################################################################
+# Standard optical properties for LArProperties
+#
+# Use as:
+#    
+#     service.LArPropertiesService: {
+#         ...
+#         @table::icarus_opticalproperties
+#         ...
+#     }
+#
+#
+icarus_opticalproperties: @local::icarus_opticalproperties_202401patch
+
+END_PROLOG
+
+
+
+BEGIN_PROLOG
+
+
+#
+# Standard ICARUS configuration
+#
+# Use as:
+#     
+#     services.LArPropertiesService: @local::icarus_properties
+#     
+icarus_properties: {
+
+    @table::standard_properties # from `larproperties.fcl` (`lardata`)
+
+    @table::icarus_opticalproperties # from `opticalproperties_icarus.fcl`
+
+} # icarus_properties
+
+#
+#
+#
+
+END_PROLOG
+
+BEGIN_PROLOG
+
+standard_detproperties :
+{
+ service_provider: "DetectorPropertiesServiceStandard"
+
+ # Drift properties 
+ Temperature:      91                #Kelvin
+ Efield:           [0.5,0.66,0.8 ]   #kV/cm
+ Electronlifetime: 750               #microseconds
+ 
+ SternheimerA:     0.1956  # Ar Sternheimer parameter a.
+ SternheimerK:     3.0000  # Ar Sternheimer parameter k.
+ SternheimerX0:    0.2000  # Ar Sternheimer parameter x0.
+ SternheimerX1:    3.0000  # Ar Sternheimer parameter x0.
+ SternheimerCbar:  5.2146  # Ar Sternheimer parameter Cbar.
+
+ DriftVelFudgeFactor: 1.
+
+ UseIcarusMicrobooneDriftModel: false # if true, use alternative drift velocity formulation
+
+ # Historically, ConvertTicksToX has allowed for the drift time between the
+ # wire planes. This is appropriate for recob::RawDigits, and recob::Wires from
+ # the 1D unfolding, but is not appropriate for recob::Wires from WireCell. The
+ # default value is 'true', retaining the 'classic' behaviour.
+ IncludeInterPlanePitchInXTickOffsets: true
+
+ ElectronsToADC:    1.208041e-3  # in ADC/e; 6241.5 electrons = 1fC = 7.54 ADC counts for ArgoNeuT
+ NumberTimeSamples: 2048         # ticks of the clock per readout frame
+ TimeOffsetU:       -5.193
+ TimeOffsetV:       0.585
+ TimeOffsetZ:       0
+ ReadOutWindowSize: 2048
+
+ SimpleBoundaryProcess: true  #enable opticalBoundaryProcessSimple instead of G4 default
+
+}
+
+# be sure to make the necessary changes when microboone and
+# lbne have different electronics simulations from argoneut
+
+END_PROLOG
+
+BEGIN_PROLOG
+
+icarus_detproperties: {
+  @table::standard_detproperties
+
+  ElectronsToADC:            1.208041e-3     # in ADC/e; 6241.5 electrons = 1fC
+  Temperature:               87.5
+  Electronlifetime:          3000            # As agreed 3/17/22 to match measured value in East croystat
+  # Active volume E-field calculated based on SBN-doc-23259 (H. Carranza and Z. Williams) using Vp = 75150 (from M. Mooney)
+  Efield:                    [0.4938,0.733,0.933 ] #kV/cm to first,second,third wire planes
+
+  # Set this true to use the non-default "ICARUS+MicroBooNE" calcultaion for drift velocity
+  UseIcarusMicrobooneDriftModel: true
+
+  SternheimerA:              0.1956           # Ar Sternheimer parameter a.
+  SternheimerK:              3.0000           # Ar Sternheimer parameter k.
+  SternheimerX0:             0.2000           # Ar Sternheimer parameter x0.
+  SternheimerX1:             3.0000           # Ar Sternheimer parameter x0.
+  SternheimerCbar:           5.2146           # Ar Sternheimer parameter Cbar.
+
+  DriftVelFudgeFactor: 0.99733
+
+  NumberTimeSamples:         4096
+  TimeOffsetU:               0.
+  TimeOffsetV:               0.
+  TimeOffsetY:               0.
+  TimeOffsetZ:               0.
+  ReadOutWindowSize:         4096
+  InheritNumberTimeSamples:  true
+
+  SimpleBoundaryProcess:     false # relevant only when using full Optical simulation
+
+  IncludeInterPlanePitchInXTickOffsets: false # removed by deconvolution
+
+} // icarus_detproperties
+
+END_PROLOG
+#
+# File:    detectorclocks_icarus.fcl
+# Purpose: Configuration of DetectorClocks service for ICARUS.
+#
+# Available configurations:
+#
+# * `icarus_detectorclocks`: standard ICARUS configuration
+# * `icarus_detectorclocks+data_notiming`: readout all at the same time
+#
+#
+
+
+BEGIN_PROLOG
+
+
+#
+# Standard ICARUS configuration
+#
+# Use as:
+#     
+#     services.DetectorClocksService: @local::icarus_detectorclocks
+#     
+#
+icarus_detectorclocks: {
+    service_provider: "DetectorClocksServiceStandard"
+
+    TrigModuleName:    "daqTrigger"
+    InheritClockConfig: true
+    G4RefTime:        -1.5e3  # G4 time [us] where electronics clock counting start
+    TriggerOffsetTPC: -0.340e3 # Time offset for TPC readout start time w.r.t. trigger [us]
+    FramePeriod:       1638.4  # Frame period [us]; 4096 * 400 ns
+    ClockSpeedTPC:     2.5     # TPC clock speed in MHz;
+    ClockSpeedOptical: 500     # Optical clock speed in MHz
+    ClockSpeedTrigger: 16      # Trigger clock speed in MHz
+    ClockSpeedExternal:31.25   # External clock speed in MHz
+    DefaultTrigTime:   1.5e3  # Default trigger time in electronics clock [us]
+    DefaultBeamTime:   1.5e3  # Default beam gate time in electronics clock [us]
+    
+} # icarus_detectorclocks
+
+
+# ##############################################################################
+#
+# Data read out all at the same time
+#
+# Use as:
+#     
+#     services.DetectorClocksService: @local::icarus_detectorclocks_data_notiming
+#     
+#
+icarus_detectorclocks_data_notiming: {
+    @table::icarus_detectorclocks
+
+    InheritClockConfig: false
+    G4RefTime:              0.0   # G4 time [us] where electronics clock counting start
+    TriggerOffsetTPC:       0.0   # Time offset for TPC readout start time w.r.t. trigger [us]
+    DefaultTrigTime:        0.0   # Default trigger time in electronics clock [us]
+    DefaultBeamTime:        0.0   # Default beam gate time in electronics clock [us]
+    
+} # icarus_detectorclocks_data_notiming
+
+#
+#
+#
+
+END_PROLOG
+
+
+BEGIN_PROLOG
+
+
+################################################################################
+###  icarus_basic_services
+###
+#
+# Standard ICARUS configuration of basic services, including message service,
+# art services, geometry and properties, but not calibration services.
+#
+icarus_basic_services:
+{
+    message:                             @local::icarus_message_services_interactive # from `messages_icarus.fcl`
+
+                                         @table::icarus_geometry_services
+
+    DetectorPropertiesService:           @local::icarus_detproperties  # from `detectorproperties_icarus.fcl`
+    LArPropertiesService:                @local::icarus_properties     # from `larproperties_icarus.fcl`
+    DetectorClocksService:               @local::icarus_detectorclocks # from `detectorclocks_icarus.fcl`
+
+} # icarus_basic_services
+
+
+END_PROLOG
+
+
+BEGIN_PROLOG
+
+
+FieldResponseTool:
+{
+    tool_type:                FieldResponse
+    Plane:                    0
+    ResponseType:             0
+    SignalType:               0
+    FieldResponseFileName:    "t600_response"
+    FieldResponseFileVersion: "v0.0"
+    FieldResponseHistName:    "t600_response"
+    FieldResponseAmplitude:   1.
+    TimeCorrectionFactor:     1000. 
+}
+
+ElectronicsResponseTool:
+{
+    tool_type:                ElectronicsResponse
+    Plane:                    0
+    FCperADCMicroS:           0.0321  # Scaling to match data, from electronics tests it was 0.027
+    ASICShapingTime:          1.3
+    ADCPerPCAtLowestASICGain: 5500.
+}
+
+ElectronicsResponseBesselApproxTool:
+{
+    tool_type:                ElectronicsResponseBesselApprox
+    Plane:                    0
+    FCperADCMicroS:           0.0321  # Scaling to match data, from electronics tests it was 0.027
+    ASICShapingTime:          1.3
+    ADCPerPCAtLowestASICGain: 5500.
+    TimeOffset:               0.0 # note that 1.625 will produce a plot that matches electronics paper
+                                  # unfortunately, that leads to a time offset in the response we'd rather not have
+}
+
+FilterTool:
+{
+    tool_type: Filter
+    Plane:                       0
+    #-----------------------------------------------------------------------------
+    #************* THIS BLOCK CONTAINS HISTORICAL CONFIGURATIONS *****************
+    # This is the original Wiener filter
+    #FilterFunction:               "(x>0.0)? (gaus(0)*exp(-0.5*pow(x/[3],[4]))): 0.0"
+    #FilterParametersVec:          [ 1.849030, 1.46, 1.33, 0.23, 4.89 ]
+    # This defines the gaussian filter
+    #FilterFunction:              "(x>0.0)*gaus"
+    #FilterParametersVec:         [1., 0., 0.1 ]  # Offset and sigma are MHz by the way the filter is constructed
+    #-----------------------------------------------------------------------------
+    # For MCC1.1 we use the following filter for all three planes
+    # The filter function is a mating of two gaussians to provide both low and high frequency filtering
+    # Note that as of release v08_00_00 the parameters are in units of MHz
+    FilterFunction:              "(x>0.0) ? ((1. - gaus(0)) * gaus(3)) : 0.0"
+    FilterParametersVec:         [1., 0., 4.0,   1., 0., 100.]
+    FilterWidthCorrectionFactor: 1.0
+}
+
+ResponseTool:
+{
+    tool_type: Response
+    Plane:               0
+    Correction3D:        1.
+    TimeScaleFactor:     1.
+    UseEmpiricalOffsets: true
+    FieldResponse:       @local::FieldResponseTool
+    ElectronicsResponse: @local::ElectronicsResponseBesselApproxTool
+    Filter:              @local::FilterTool
+}
+
+icarus_signalshapingservice:
+{
+    PlaneForNormalization: 2
+    PrintResponses:        "false"
+    DeconNorm:             1.
+    InitialFFTSize:        4096
+                           # Setting the default scaling as per Justin Mueller study (3/17/22)
+    NoiseFactVec:          [ [ 1.151, 1.151, 1.151, 1.151 ], [ 1.152, 1.152, 1.152, 1.152], [ 1.096, 1.096, 1.096, 1.096 ] ]
+    StoreHistograms:       true
+
+    ResponseTools:
+    {
+        ResponsePlane0: @local::ResponseTool
+        ResponsePlane1: @local::ResponseTool
+        ResponsePlane2: @local::ResponseTool
+    }
+}
+
+icarus_signalshapingservice.ResponseTools.ResponsePlane0.Plane:                       0
+icarus_signalshapingservice.ResponseTools.ResponsePlane0.FieldResponse.Plane:         0
+icarus_signalshapingservice.ResponseTools.ResponsePlane0.FieldResponse.SignalType:    0
+icarus_signalshapingservice.ResponseTools.ResponsePlane0.ElectronicsResponse.Plane:   0
+icarus_signalshapingservice.ResponseTools.ResponsePlane0.Filter.Plane:                0
+
+icarus_signalshapingservice.ResponseTools.ResponsePlane1.Plane:                       1
+icarus_signalshapingservice.ResponseTools.ResponsePlane1.FieldResponse.Plane:         1
+icarus_signalshapingservice.ResponseTools.ResponsePlane1.FieldResponse.ResponseType:  1
+icarus_signalshapingservice.ResponseTools.ResponsePlane1.FieldResponse.SignalType:    0
+icarus_signalshapingservice.ResponseTools.ResponsePlane1.ElectronicsResponse.Plane:   1
+icarus_signalshapingservice.ResponseTools.ResponsePlane1.Filter.Plane:                1
+
+icarus_signalshapingservice.ResponseTools.ResponsePlane2.Plane:                       2
+icarus_signalshapingservice.ResponseTools.ResponsePlane2.FieldResponse.Plane:         2
+icarus_signalshapingservice.ResponseTools.ResponsePlane2.FieldResponse.ResponseType:  2
+icarus_signalshapingservice.ResponseTools.ResponsePlane2.FieldResponse.SignalType:    1
+icarus_signalshapingservice.ResponseTools.ResponsePlane2.ElectronicsResponse.Plane:   2
+icarus_signalshapingservice.ResponseTools.ResponsePlane2.Filter.Plane:                2
+icarus_signalshapingservice.ResponseTools.ResponsePlane2.Filter.FilterFunction:       "(x>0.0) ? gaus(0) : 0.0"
+icarus_signalshapingservice.ResponseTools.ResponsePlane2.Filter.FilterParametersVec:  [ 1., 0.0, 100. ]
+
+END_PROLOG
+#
+# File:    correctionservices_icarus.fcl
+# Purpose: configuration of services pertaining detector corrections.
+#
+# The services in here are usually used or simulation, and may be used
+# in the reverse direction for reconstruction.
+#
+# Available configurations:
+#
+# * `icarus_spacecharge`: `SpaceChargeService` configuration
+#
+#
+BEGIN_PROLOG
+
+#
+# SpaceCharge service configuration for ICARUS
+#
+# Use as:
+#     
+#     services.SpaceChargeService: @local::icarus_spacecharge
+#
+icarus_spacecharge: {
+    service_provider:       SpaceChargeServiceICARUS
+    
+    EnableSimSpatialSCE:    false
+    EnableSimEfieldSCE:     false
+    EnableCorrSCE:          false
+    EnableCalSpatialSCE:    false
+    EnableCalEfieldSCE:     false
+    RepresentationType:     "Voxelized_TH3"
+    InputFilename:          "SCEoffsets/SCEoffsets_ICARUS_E500_voxelTH3.root"
+} # icarus_spacecharge
+
+
+END_PROLOG
+
+#
+# File:    calibrations_icarus.fcl
+# Purpose: Configuration for services delivering calibration information.
+# Date:    August 9th, 2018
+# Author:  Gianluca Petrillo (petrillo@fslac.stanford.edu)
+#
+# Included configurations:
+# * `icarus_channelstatusservice`: standard ICARUS `ChannelStatusService`
+# * `icarus_detpedestalservice`: standard ICARUS `DetPedestalService`
+#
+# Included presets:
+# * `icarus_calibration_services`: incudes all the calibration services
+#
+#
+
+#
+# File:    database_icarus.fcl
+# Purpose: Configuration for services delivering database related information.
+# Date:    March 7, 2023
+# Author:  Gianluca Petrillo (petrillo@fslac.stanford.edu) <== we'll blame him
+#
+# Included configurations:
+# * `icarus_channelstatusservice`: standard ICARUS `ChannelStatusService`
+# * `icarus_detpedestalservice`: standard ICARUS `DetPedestalService`
+#
+# Included presets:
+# * `icarus_calibration_services`: incudes all the calibration services
+#
+#
+
+BEGIN_PROLOG
+
+standard_databaseretrievalalg:
+{
+  AlgName: "DatabaseRetrievalAlg"
+  DBFolderName:  ""
+  DBUrl: ""
+  DBTag: ""
+}
+
+
+
+standard_pedestalretrievalalg:
+{
+    AlgName:            "DetPedestalRetrievalAlg"
+    DatabaseRetrievalAlg: @local::standard_databaseretrievalalg
+    
+    UseDB: false
+    UseFile: false
+    
+    DefaultCollMean: 400.0
+    DefaultCollRms:  0.3
+    DefaultIndMean:  2048.0
+    DefaultIndRms:   0.3
+    DefaultMeanErr:  0.0
+    DefaultRmsErr:   0.0
+}
+
+standard_siov_detpedestal_service:
+{
+  service_provider: SIOVDetPedestalService
+  DetPedestalRetrievalAlg: @local::standard_pedestalretrievalalg
+}
+
+
+
+standard_siov_channelstatus_provider:
+{
+  AlgName:       "SIOVChannelStatusProvider"
+  DatabaseRetrievalAlg: @local::standard_databaseretrievalalg
+  
+  UseDB: false
+  UseFile: false
+}
+
+standard_siov_channelstatus_service:
+{
+  service_provider: SIOVChannelStatusService
+  ChannelStatusProvider: @local::standard_siov_channelstatus_provider 
+}
+
+END_PROLOG
+# File:    calibration_database_PMT_TagSets_icarus.fcl
+# Author:  M. Vicenzi (mvicenzi@bnl.gov), J. Kim (jae.sung.kim.3426@gmail.com)
+# Date:    February 20, 2025
+# Purpose: Tags definitions for the PMT timing calibration databases
+
+BEGIN_PROLOG
+
+# These are the standard tags for analyses on Run 1 data
+# These tagged versions of the databases only contain tables relevant for Run 1
+PMT_CalibrationTags_Run1: {
+  pmt_cables_delays_data:    "v1r0"  # tables for run>=0 (null) and run>=8046
+  pmt_laser_timing_data:     "v1r0"  # tables for run>=0 (null) and run>=8046
+  pmt_cosmics_timing_data:   "v1r0"  # tables for run>=0 (null) and run>=8046 
+}
+
+# These are the standard tags for analyses on Run 1 and Run 2 data (as of August 2023)
+# These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+# Notes: 
+#  - No cosmics corrections are available for Run 2
+#  - Laser and cable corrections do not cover the entire Run 2 period
+PMT_CalibrationTags_Run2_August2023: {
+  pmt_cables_delays_data:    "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9773
+  pmt_laser_timing_data:     "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9773
+  pmt_cosmics_timing_data:   "v1r0"  # tables for run>=0 (null) and run>=8046 
+}
+
+# These are the standard tags for analyses on Run 1 and Run 2 data (as of September 2023)
+# These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+# Notes: 
+#  - No cosmics corrections are available for Run 2
+PMT_CalibrationTags_Run2_Sept2023: {
+  pmt_cables_delays_data:    "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+  pmt_laser_timing_data:     "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+  pmt_cosmics_timing_data:   "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9301 (null) 
+}
+
+# These are the standard tags for analyses on Run 1 and Run 2 data (as of December 2023)
+# These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+# Notes: 
+#  - Updated cable delays with new phase offsets
+#  - Full laser and cosmics corrections for all Run 2.
+PMT_CalibrationTags_Run2_Dec2023: {
+  pmt_cables_delays_data:    "v2r3"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773 and run>=10369
+  pmt_laser_timing_data:     "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+  pmt_cosmics_timing_data:   "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773 
+}
+
+# These are the standard tags for analyses on Run 1, Run 2 and pre-Run 3 data (as of December 2023)
+# These tagged versions of the databases contain tables relevant for Run 1, Run 2 and pre-Run 3.
+# Notes: 
+#   - New cable delays (mapping changes, upgrades to laser distribution)
+#   - New laser table for the beginning of Run 3 (new signal cables)
+PMT_CalibrationTags_Run3_Dec2023: {
+  pmt_cables_delays_data:    "v2r4"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773, run>=10369 and run>=10865
+  pmt_laser_timing_data:     "v2r2"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773 and run>=10908
+  pmt_cosmics_timing_data:   "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773 
+}
+
+# These are the standard tags for analyses on Run 1, Run 2, Run 3 and pre-Run 4 data (as of Feb 2025)
+# These tagged versions of the databases contain tables relevant for Run 1, Run 2, Run 3 and pre-Run 4.
+# Notes: 
+#   - New cable delays for Run 4 (after summer 2024 laser and PPS changes)
+#   - New laser tables up to final Run 4 gain equalization
+#   - New cosmics corrections for Run 3, updates to Run 1,2 tables (more statistics)
+PMT_CalibrationTags_Run3_Feb2025: {
+  pmt_cables_delays_data:    "v2r5"  # tables for run>=0 (null)
+                                     # Run 1: run>=8046
+                                     # Run 2: run>=9301, run>=9628, run>=9773
+                                     # Run 3: run>=10369, run>=10441, run>=10865
+                                     # Run 4: run>=12040, run>=12455, run>=12777
+  pmt_laser_timing_data:     "v2r3"  # tables for run>=0 (null)
+                                     # Run 1: run>=8046
+                                     # Run 2: run>=9301, run>=9628, run>=9773
+                                     # Run 3: run>=10908, run>=11590
+                                     # Run 4: run>=12058, run>=12837
+  pmt_cosmics_timing_data:   "v2r2"  # tables for run>=0 (null)
+                                     # Run 1: run>=8046
+                                     # Run 2: run>=9301, run>=9628, run>=9773
+                                     # Run 3: run>=11590
+}
+
+END_PROLOG
+# File:    calibration_database_GlobalTags.fcl
+# Purpose: Collection of tag info for the TPC calibration database
+
+BEGIN_PROLOG
+
+## Valid for Run A,1, and 2
+## - Files decoded with release <v09_66_02 should use v3r1 
+TPC_CalibrationTags_Oct2023: {
+
+  tpc_channelstatus_data: "v3r1"
+  tpc_elifetime_data: "v2r1"
+  tpc_dqdxcalibration_data: "v2r1"
+  tpc_yz_correction_data: "v2r1"
+
+}
+
+## Valid for Run A,1, and 2
+## - tpc_channelstatus_data updated to v3r2, where we reverted back "flange=WE20M AND board=1 or 5" to "Good" status.
+## - Files decoded with release >=v09_66_02 should use v3r2
+TPC_CalibrationTags_Feb2024: {
+
+  tpc_channelstatus_data: "v3r4"
+  tpc_elifetime_data: "v2r1"
+  tpc_dqdxcalibration_data: "v2r1"
+  tpc_yz_correction_data: "v2r1"
+
+}
+
+## TPC_CalibrationTags_Feb2024 but updating tpc_yz_correction_data to tpc_yz_correction_allplanes_data
+TPC_CalibrationTags_Jan2025: {
+
+  tpc_channelstatus_data: "v3r2"
+  tpc_elifetime_data: "v2r1"
+  tpc_dqdxcalibration_data: "v2r1"
+  tpc_yz_correction_allplanes_data: "v1r0"
+
+}
+
+END_PROLOG
+# File:    calibration_database_GlobalTags.fcl
+# Purpose: Collection of tag info for the TPC calibration database
+
+BEGIN_PROLOG
+
+## Valid for Run A,1, and 2
+CRT_CalibrationTags_Oct2023: {
+
+  crt_gain_reco_data: "v1r0"
+
+}
+
+END_PROLOG
+
+BEGIN_PROLOG
+
+ICARUS_Calibration_GlobalTags: {
+  @table::TPC_CalibrationTags_Jan2025
+  @table::PMT_CalibrationTags_Run3_Feb2025
+  @table::CRT_CalibrationTags_Oct2023
+}
+
+
+END_PROLOG
+
+BEGIN_PROLOG
+
+icarus_siov_channelstatus_service: @local::standard_siov_channelstatus_service
+
+icarus_siov_channelstatus_service.service_provider:                                        SIOVChannelStatusICARUSService
+icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.DBFolderName: "tpc_channelstatus_data"
+icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.DBTag:        @local::ICARUS_Calibration_GlobalTags.tpc_channelstatus_data
+icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.DBUrl:        "https://dbdata0vm.fnal.gov:9443/icarus_con_prod/app/"
+icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.UseSQLite:    true
+icarus_siov_channelstatus_service.ChannelStatusProvider.UseDB:                             true
+
+END_PROLOG
+
+
+BEGIN_PROLOG
+
+# ##############################################################################
+# ChannelStatusService: noisy and dead channels
+# ------------------------------------------------------------------------------
+#
+# This configuration declare the channels all good.
+#
+# Use as:
+#    
+#    services.ChannelStatusService: @local::icarus_channelstatusservice
+#    
+# In the below, "standard" means no DB and a perfect Detector
+# Change this to "icarus" to access the channel status DB
+icarus_channelstatusservice: @local::icarus_siov_channelstatus_service # from `database_standard.fcl` (`larevt`)
+
+
+# ##############################################################################
+# DetPedestalService: TPC wire pedestal access
+# ------------------------------------------------------------------------------
+# the default implementation with default  configuration has no database access,
+# and returns a fixed value no matter what.
+# We could override that value here.
+#
+#Use as:
+#    
+#    services.DetPedestalService: @local::icarus_detpedestalservice
+#
+icarus_detpedestalservice: {
+
+  @table::standard_siov_detpedestal_service # from `database_standard.fcl` (`larevt`)
+
+  # DefaultCollMean: 400
+  # DefaultIndMean: 2048
+  
+} # icarus_detpedestalservice
+
+
+# ##############################################################################
+# Configuration preset: enables all calibration services
+#
+icarus_calibration_services: {
+  
+  DetPedestalService:             @local::icarus_detpedestalservice
+  ChannelStatusService:           @local::icarus_channelstatusservice
+  # ElectronicsCalibService:        @local::icarus_electronicscalib_service
+
+} # icarus_calibration_services:
+
+
+# ##############################################################################
+
+END_PROLOG
+
+#
+# File:    sam_icarus.fcl
+# Purpose: Configuration for SAM database (metadata)
+# Version: 1.1
+#
+# Changes:
+# 20160721 (petrillo@fnal.gov) [v1.1]
+#   added "extra" configuration
+#
+#
+
+BEGIN_PROLOG
+
+# Standard configurations for art's built-in FileCatalogMetadata service.
+# Metadata fields are standard, but values are still icarus-specific.
+art_file_catalog:
+{
+  # Note sam application name is taken from "process_name" fcl parameter in main job file.
+  #applicationFamily:   "art"
+  #applicationVersion:  "v08_37_00"
+  group:               "icarus"
+  fileType:            "unknown"
+  runType:             "physics"
+}
+
+
+art_file_catalog_mc:           @local::art_file_catalog
+art_file_catalog_mc.fileType:  "mc"
+
+art_file_catalog_data:           @local::art_file_catalog
+art_file_catalog_data.fileType:  "data"
+
+art_file_catalog_tfile:
+{
+  JSONFileName:          "tfile.json"
+  GenerateTFileMetadata: true
+  dataTier:              "root-tuple"
+  fileFormat:            "root"
+}
+
+END_PROLOG
+
+BEGIN_PROLOG
+
+
+################################################################################
+###  icarus_art_services
+###
+#
+# A set of basic art services you never want to be without.
+# Includes:
+#  * resource monitoring (`TimeTracker`, `MemoryTracker`)
+#  * message facility, with interactive (non-debug) configuration
+#
+# Although you may want to use different message facility service settings.
+#
+icarus_art_services: {
+
+  scheduler:   { defaultExceptions: false }    # Make all uncaught exceptions fatal.
+
+  message:     @local::icarus_basic_services.message # from `services_basic_icarus.fcl`
+
+  TimeTracker: {
+    printSummary: true
+    dbOutput: {
+      filename:  "TimingReport.db"
+      overwrite: true
+    }
+  }
+  MemoryTracker: {
+    dbOutput: {
+      filename:  "MemoryReport.db"
+      overwrite: true
+    }
+  }
+
+  DuplicateEventTracker: {}
+
+} # icarus_art_services
+
+
+################################################################################
+###  icarus_random_services
+###
+#
+# Standard ICARUS configuration of random number related services.
+#
+icarus_random_services:
+{
+    RandomNumberGenerator:               {}
+    NuRandomService:                     @local::icarus_default_NuRandomService  # seedservice_icarus.fcl
+
+} # icarus_random_services
+
+
+################################################################################
+###  icarus_minimum_services
+###
+#
+# Standard ICARUS configuration of the minimum needed services, including
+# message service, art services, geometry and properties,
+# but not calibration services.
+#
+icarus_minimum_services:
+{
+    @table::icarus_art_services
+
+    # Load the service that manages root files for histograms.
+    TFileService:                        { fileName: "Supplemental-%ifb_%tc-%p.root" }
+
+    FileCatalogMetadata:                 @local::art_file_catalog_mc
+
+                                         @table::icarus_basic_services
+
+} # icarus_common_services
+
+
+################################################################################
+###  icarus_common_services
+###
+#
+# Standard ICARUS configuration of common services, including message service,
+# art services, geometry and properties, but not calibration services.
+#
+icarus_common_services:
+{
+    @table::icarus_minimum_services
+
+    @table::icarus_random_services
+
+} # icarus_common_services
+
+
+################################################################################
+###  icarus_wirecalibration_minimum_services
+###
+#
+# Standard ICARUS configuration of services required for wire signal calibration
+# (usually the first step of reconstruction).
+#
+icarus_wirecalibration_minimum_services: {
+
+                                    @table::icarus_minimum_services
+
+    SignalShapingICARUSService:     @local::icarus_signalshapingservice
+
+                                    @table::icarus_calibration_services
+
+} # icarus_wirecalibration_minimum_services
+
+
+################################################################################
+###  icarus_wirecalibration_services
+###
+#
+# Standard ICARUS configuration of services required for wire signal calibration
+# (usually the first step of reconstruction).
+#
+icarus_wirecalibration_services: {
+
+                     @table::icarus_wirecalibration_minimum_services
+
+                     @table::icarus_random_services
+
+} # icarus_wirecalibration_services
+
+
+################################################################################
+
+icarus_prod_services: {
+                       @table::icarus_common_services
+  FileCatalogMetadata: @local::art_file_catalog_mc
+} # icarus_prod_services
+
+END_PROLOG
+
+
+#
+# File:    calibrations_icarus.fcl
+# Purpose: Configuration for services delivering calibration information.
+# Date:    August 9th, 2018
+# Author:  Gianluca Petrillo (petrillo@fslac.stanford.edu)
+#
+# Included configurations:
+# * `icarus_channelstatusservice`: standard ICARUS `ChannelStatusService`
+# * `icarus_detpedestalservice`: standard ICARUS `DetPedestalService`
+#
+# Included presets:
+# * `icarus_calibration_services`: incudes all the calibration services
+#
+#
+
+#
+# File:    database_icarus.fcl
+# Purpose: Configuration for services delivering database related information.
+# Date:    March 7, 2023
+# Author:  Gianluca Petrillo (petrillo@fslac.stanford.edu) <== we'll blame him
+#
+# Included configurations:
+# * `icarus_channelstatusservice`: standard ICARUS `ChannelStatusService`
+# * `icarus_detpedestalservice`: standard ICARUS `DetPedestalService`
+#
+# Included presets:
+# * `icarus_calibration_services`: incudes all the calibration services
+#
+#
+
+BEGIN_PROLOG
+
+standard_databaseretrievalalg:
+{
+  AlgName: "DatabaseRetrievalAlg"
+  DBFolderName:  ""
+  DBUrl: ""
+  DBTag: ""
+}
+
+
+
+standard_pedestalretrievalalg:
+{
+    AlgName:            "DetPedestalRetrievalAlg"
+    DatabaseRetrievalAlg: @local::standard_databaseretrievalalg
+    
+    UseDB: false
+    UseFile: false
+    
+    DefaultCollMean: 400.0
+    DefaultCollRms:  0.3
+    DefaultIndMean:  2048.0
+    DefaultIndRms:   0.3
+    DefaultMeanErr:  0.0
+    DefaultRmsErr:   0.0
+}
+
+standard_siov_detpedestal_service:
+{
+  service_provider: SIOVDetPedestalService
+  DetPedestalRetrievalAlg: @local::standard_pedestalretrievalalg
+}
+
+
+
+standard_siov_channelstatus_provider:
+{
+  AlgName:       "SIOVChannelStatusProvider"
+  DatabaseRetrievalAlg: @local::standard_databaseretrievalalg
+  
+  UseDB: false
+  UseFile: false
+}
+
+standard_siov_channelstatus_service:
+{
+  service_provider: SIOVChannelStatusService
+  ChannelStatusProvider: @local::standard_siov_channelstatus_provider 
+}
+
+END_PROLOG
+# File:    calibration_database_PMT_TagSets_icarus.fcl
+# Author:  M. Vicenzi (mvicenzi@bnl.gov), J. Kim (jae.sung.kim.3426@gmail.com)
+# Date:    February 20, 2025
+# Purpose: Tags definitions for the PMT timing calibration databases
+
+BEGIN_PROLOG
+
+# These are the standard tags for analyses on Run 1 data
+# These tagged versions of the databases only contain tables relevant for Run 1
+PMT_CalibrationTags_Run1: {
+  pmt_cables_delays_data:    "v1r0"  # tables for run>=0 (null) and run>=8046
+  pmt_laser_timing_data:     "v1r0"  # tables for run>=0 (null) and run>=8046
+  pmt_cosmics_timing_data:   "v1r0"  # tables for run>=0 (null) and run>=8046 
+}
+
+# These are the standard tags for analyses on Run 1 and Run 2 data (as of August 2023)
+# These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+# Notes: 
+#  - No cosmics corrections are available for Run 2
+#  - Laser and cable corrections do not cover the entire Run 2 period
+PMT_CalibrationTags_Run2_August2023: {
+  pmt_cables_delays_data:    "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9773
+  pmt_laser_timing_data:     "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9773
+  pmt_cosmics_timing_data:   "v1r0"  # tables for run>=0 (null) and run>=8046 
+}
+
+# These are the standard tags for analyses on Run 1 and Run 2 data (as of September 2023)
+# These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+# Notes: 
+#  - No cosmics corrections are available for Run 2
+PMT_CalibrationTags_Run2_Sept2023: {
+  pmt_cables_delays_data:    "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+  pmt_laser_timing_data:     "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+  pmt_cosmics_timing_data:   "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9301 (null) 
+}
+
+# These are the standard tags for analyses on Run 1 and Run 2 data (as of December 2023)
+# These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+# Notes: 
+#  - Updated cable delays with new phase offsets
+#  - Full laser and cosmics corrections for all Run 2.
+PMT_CalibrationTags_Run2_Dec2023: {
+  pmt_cables_delays_data:    "v2r3"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773 and run>=10369
+  pmt_laser_timing_data:     "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+  pmt_cosmics_timing_data:   "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773 
+}
+
+# These are the standard tags for analyses on Run 1, Run 2 and pre-Run 3 data (as of December 2023)
+# These tagged versions of the databases contain tables relevant for Run 1, Run 2 and pre-Run 3.
+# Notes: 
+#   - New cable delays (mapping changes, upgrades to laser distribution)
+#   - New laser table for the beginning of Run 3 (new signal cables)
+PMT_CalibrationTags_Run3_Dec2023: {
+  pmt_cables_delays_data:    "v2r4"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773, run>=10369 and run>=10865
+  pmt_laser_timing_data:     "v2r2"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773 and run>=10908
+  pmt_cosmics_timing_data:   "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773 
+}
+
+# These are the standard tags for analyses on Run 1, Run 2, Run 3 and pre-Run 4 data (as of Feb 2025)
+# These tagged versions of the databases contain tables relevant for Run 1, Run 2, Run 3 and pre-Run 4.
+# Notes: 
+#   - New cable delays for Run 4 (after summer 2024 laser and PPS changes)
+#   - New laser tables up to final Run 4 gain equalization
+#   - New cosmics corrections for Run 3, updates to Run 1,2 tables (more statistics)
+PMT_CalibrationTags_Run3_Feb2025: {
+  pmt_cables_delays_data:    "v2r5"  # tables for run>=0 (null)
+                                     # Run 1: run>=8046
+                                     # Run 2: run>=9301, run>=9628, run>=9773
+                                     # Run 3: run>=10369, run>=10441, run>=10865
+                                     # Run 4: run>=12040, run>=12455, run>=12777
+  pmt_laser_timing_data:     "v2r3"  # tables for run>=0 (null)
+                                     # Run 1: run>=8046
+                                     # Run 2: run>=9301, run>=9628, run>=9773
+                                     # Run 3: run>=10908, run>=11590
+                                     # Run 4: run>=12058, run>=12837
+  pmt_cosmics_timing_data:   "v2r2"  # tables for run>=0 (null)
+                                     # Run 1: run>=8046
+                                     # Run 2: run>=9301, run>=9628, run>=9773
+                                     # Run 3: run>=11590
+}
+
+END_PROLOG
+# File:    calibration_database_GlobalTags.fcl
+# Purpose: Collection of tag info for the TPC calibration database
+
+BEGIN_PROLOG
+
+## Valid for Run A,1, and 2
+## - Files decoded with release <v09_66_02 should use v3r1 
+TPC_CalibrationTags_Oct2023: {
+
+  tpc_channelstatus_data: "v3r1"
+  tpc_elifetime_data: "v2r1"
+  tpc_dqdxcalibration_data: "v2r1"
+  tpc_yz_correction_data: "v2r1"
+
+}
+
+## Valid for Run A,1, and 2
+## - tpc_channelstatus_data updated to v3r2, where we reverted back "flange=WE20M AND board=1 or 5" to "Good" status.
+## - Files decoded with release >=v09_66_02 should use v3r2
+TPC_CalibrationTags_Feb2024: {
+
+  tpc_channelstatus_data: "v3r4"
+  tpc_elifetime_data: "v2r1"
+  tpc_dqdxcalibration_data: "v2r1"
+  tpc_yz_correction_data: "v2r1"
+
+}
+
+## TPC_CalibrationTags_Feb2024 but updating tpc_yz_correction_data to tpc_yz_correction_allplanes_data
+TPC_CalibrationTags_Jan2025: {
+
+  tpc_channelstatus_data: "v3r2"
+  tpc_elifetime_data: "v2r1"
+  tpc_dqdxcalibration_data: "v2r1"
+  tpc_yz_correction_allplanes_data: "v1r0"
+
+}
+
+END_PROLOG
+# File:    calibration_database_GlobalTags.fcl
+# Purpose: Collection of tag info for the TPC calibration database
+
+BEGIN_PROLOG
+
+## Valid for Run A,1, and 2
+CRT_CalibrationTags_Oct2023: {
+
+  crt_gain_reco_data: "v1r0"
+
+}
+
+END_PROLOG
+
+BEGIN_PROLOG
+
+ICARUS_Calibration_GlobalTags: {
+  @table::TPC_CalibrationTags_Jan2025
+  @table::PMT_CalibrationTags_Run3_Feb2025
+  @table::CRT_CalibrationTags_Oct2023
+}
+
+
+END_PROLOG
+
+BEGIN_PROLOG
+
+icarus_siov_channelstatus_service: @local::standard_siov_channelstatus_service
+
+icarus_siov_channelstatus_service.service_provider:                                        SIOVChannelStatusICARUSService
+icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.DBFolderName: "tpc_channelstatus_data"
+icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.DBTag:        @local::ICARUS_Calibration_GlobalTags.tpc_channelstatus_data
+icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.DBUrl:        "https://dbdata0vm.fnal.gov:9443/icarus_con_prod/app/"
+icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.UseSQLite:    true
+icarus_siov_channelstatus_service.ChannelStatusProvider.UseDB:                             true
+
+END_PROLOG
+
+
+BEGIN_PROLOG
+
+# ##############################################################################
+# ChannelStatusService: noisy and dead channels
+# ------------------------------------------------------------------------------
+#
+# This configuration declare the channels all good.
+#
+# Use as:
+#    
+#    services.ChannelStatusService: @local::icarus_channelstatusservice
+#    
+# In the below, "standard" means no DB and a perfect Detector
+# Change this to "icarus" to access the channel status DB
+icarus_channelstatusservice: @local::icarus_siov_channelstatus_service # from `database_standard.fcl` (`larevt`)
+
+
+# ##############################################################################
+# DetPedestalService: TPC wire pedestal access
+# ------------------------------------------------------------------------------
+# the default implementation with default  configuration has no database access,
+# and returns a fixed value no matter what.
+# We could override that value here.
+#
+#Use as:
+#    
+#    services.DetPedestalService: @local::icarus_detpedestalservice
+#
+icarus_detpedestalservice: {
+
+  @table::standard_siov_detpedestal_service # from `database_standard.fcl` (`larevt`)
+
+  # DefaultCollMean: 400
+  # DefaultIndMean: 2048
+  
+} # icarus_detpedestalservice
+
+
+# ##############################################################################
+# Configuration preset: enables all calibration services
+#
+icarus_calibration_services: {
+  
+  DetPedestalService:             @local::icarus_detpedestalservice
+  ChannelStatusService:           @local::icarus_channelstatusservice
+  # ElectronicsCalibService:        @local::icarus_electronicscalib_service
+
+} # icarus_calibration_services:
+
+
+# ##############################################################################
+
+END_PROLOG
+
+BEGIN_PROLOG
+
+
+FieldResponseTool:
+{
+    tool_type:                FieldResponse
+    Plane:                    0
+    ResponseType:             0
+    SignalType:               0
+    FieldResponseFileName:    "t600_response"
+    FieldResponseFileVersion: "v0.0"
+    FieldResponseHistName:    "t600_response"
+    FieldResponseAmplitude:   1.
+    TimeCorrectionFactor:     1000. 
+}
+
+ElectronicsResponseTool:
+{
+    tool_type:                ElectronicsResponse
+    Plane:                    0
+    FCperADCMicroS:           0.0321  # Scaling to match data, from electronics tests it was 0.027
+    ASICShapingTime:          1.3
+    ADCPerPCAtLowestASICGain: 5500.
+}
+
+ElectronicsResponseBesselApproxTool:
+{
+    tool_type:                ElectronicsResponseBesselApprox
+    Plane:                    0
+    FCperADCMicroS:           0.0321  # Scaling to match data, from electronics tests it was 0.027
+    ASICShapingTime:          1.3
+    ADCPerPCAtLowestASICGain: 5500.
+    TimeOffset:               0.0 # note that 1.625 will produce a plot that matches electronics paper
+                                  # unfortunately, that leads to a time offset in the response we'd rather not have
+}
+
+FilterTool:
+{
+    tool_type: Filter
+    Plane:                       0
+    #-----------------------------------------------------------------------------
+    #************* THIS BLOCK CONTAINS HISTORICAL CONFIGURATIONS *****************
+    # This is the original Wiener filter
+    #FilterFunction:               "(x>0.0)? (gaus(0)*exp(-0.5*pow(x/[3],[4]))): 0.0"
+    #FilterParametersVec:          [ 1.849030, 1.46, 1.33, 0.23, 4.89 ]
+    # This defines the gaussian filter
+    #FilterFunction:              "(x>0.0)*gaus"
+    #FilterParametersVec:         [1., 0., 0.1 ]  # Offset and sigma are MHz by the way the filter is constructed
+    #-----------------------------------------------------------------------------
+    # For MCC1.1 we use the following filter for all three planes
+    # The filter function is a mating of two gaussians to provide both low and high frequency filtering
+    # Note that as of release v08_00_00 the parameters are in units of MHz
+    FilterFunction:              "(x>0.0) ? ((1. - gaus(0)) * gaus(3)) : 0.0"
+    FilterParametersVec:         [1., 0., 4.0,   1., 0., 100.]
+    FilterWidthCorrectionFactor: 1.0
+}
+
+ResponseTool:
+{
+    tool_type: Response
+    Plane:               0
+    Correction3D:        1.
+    TimeScaleFactor:     1.
+    UseEmpiricalOffsets: true
+    FieldResponse:       @local::FieldResponseTool
+    ElectronicsResponse: @local::ElectronicsResponseBesselApproxTool
+    Filter:              @local::FilterTool
+}
+
+icarus_signalshapingservice:
+{
+    PlaneForNormalization: 2
+    PrintResponses:        "false"
+    DeconNorm:             1.
+    InitialFFTSize:        4096
+                           # Setting the default scaling as per Justin Mueller study (3/17/22)
+    NoiseFactVec:          [ [ 1.151, 1.151, 1.151, 1.151 ], [ 1.152, 1.152, 1.152, 1.152], [ 1.096, 1.096, 1.096, 1.096 ] ]
+    StoreHistograms:       true
+
+    ResponseTools:
+    {
+        ResponsePlane0: @local::ResponseTool
+        ResponsePlane1: @local::ResponseTool
+        ResponsePlane2: @local::ResponseTool
+    }
+}
+
+icarus_signalshapingservice.ResponseTools.ResponsePlane0.Plane:                       0
+icarus_signalshapingservice.ResponseTools.ResponsePlane0.FieldResponse.Plane:         0
+icarus_signalshapingservice.ResponseTools.ResponsePlane0.FieldResponse.SignalType:    0
+icarus_signalshapingservice.ResponseTools.ResponsePlane0.ElectronicsResponse.Plane:   0
+icarus_signalshapingservice.ResponseTools.ResponsePlane0.Filter.Plane:                0
+
+icarus_signalshapingservice.ResponseTools.ResponsePlane1.Plane:                       1
+icarus_signalshapingservice.ResponseTools.ResponsePlane1.FieldResponse.Plane:         1
+icarus_signalshapingservice.ResponseTools.ResponsePlane1.FieldResponse.ResponseType:  1
+icarus_signalshapingservice.ResponseTools.ResponsePlane1.FieldResponse.SignalType:    0
+icarus_signalshapingservice.ResponseTools.ResponsePlane1.ElectronicsResponse.Plane:   1
+icarus_signalshapingservice.ResponseTools.ResponsePlane1.Filter.Plane:                1
+
+icarus_signalshapingservice.ResponseTools.ResponsePlane2.Plane:                       2
+icarus_signalshapingservice.ResponseTools.ResponsePlane2.FieldResponse.Plane:         2
+icarus_signalshapingservice.ResponseTools.ResponsePlane2.FieldResponse.ResponseType:  2
+icarus_signalshapingservice.ResponseTools.ResponsePlane2.FieldResponse.SignalType:    1
+icarus_signalshapingservice.ResponseTools.ResponsePlane2.ElectronicsResponse.Plane:   2
+icarus_signalshapingservice.ResponseTools.ResponsePlane2.Filter.Plane:                2
+icarus_signalshapingservice.ResponseTools.ResponsePlane2.Filter.FilterFunction:       "(x>0.0) ? gaus(0) : 0.0"
+icarus_signalshapingservice.ResponseTools.ResponsePlane2.Filter.FilterParametersVec:  [ 1., 0.0, 100. ]
+
+END_PROLOG
+#
+# File:    photpropservices_icarus.fcl
+# Purpose: Configuration of services related to the optical detectors.
+#
+# Currently provides:
+# * `icarus_photonvisibilityservice`: default configuration of
+#     `PhotonVisibilityService` used in higher level standard scripts
+#     (defined at the bottom of this configuration file)
+# * `icarus_photonvisibilityservice_icarus_v2`: legacy configuration
+#     for use with geometry `icarus_v2`
+#     (e.g. `icarus_geometry_services_legacy_icarus_v2`)
+# * `icarus_photonvisibilityservice_direct`: configuration of
+#     `PhotonVisibilityService` using a photon visibility library and no mapping
+# * `icarus_photonvisibilityservice_mapped`: configuration of
+#     `PhotonVisibilityService` using a single cryostat photon visibility
+#     library and a mapping
+# * `icarus_photonvisibilityservice_mapped_oldPMTmap`: configuration of
+#     `PhotonVisibilityService` using a single cryostat photon visibility
+#     library and a library mapping, for use with the old PMT channel mapping
+# * `icarus_photonvisibilityservice_2018`: configuration of
+#     `PhotonVisibilityService` using the photon library tagged 20180801
+#     library and a library mapping, for use with the old PMT channel mapping
+#
+
+
+# Contains information required for:
+# Timing parameterisation for VUV photons (propagation time)
+
+BEGIN_PROLOG
+
+# VUV/DIRECT LIGHT: TIMING PARAMETERISATION
+# Parameters of the Landau + Exponential (<= 350 cm) and Landau (> 350 cm) models
+# Landau parameters
+Distances_landau_generic: [0, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425, 450, 475, 500, 525, 550]
+Norm_over_entries_generic: [ [4.64837, 4.64837, 2.86581, 1.4143, 0.974871, 0.71311, 0.55772, 0.461078, 0.411807, 0.364951, 0.325477, 0.297132, 0.297132, 0.297132, 0.297132, 0.297132,0.297132, 0.297132,
+		0.297132, 0.297132, 0.297132, 0.297132, 0.297132],
+		[3.43562, 3.43562, 1.61042, 0.981127, 0.64465, 0.476552, 0.369063, 0.310461, 0.264819, 0.231387, 0.215373, 0.199128, 0.189638, 0.170387, 0.159308, 0.151498,0.140134, 0.135217, 0.131114, 0.129511, 0.126329, 0.12452, 0.124595] ]
+Mpv_generic: [	[2.73373, 2.73373, 3.599, 5.80141, 7.57883, 9.56959, 11.6047, 13.6676, 15.6126, 17.5389, 19.492, 21.3254, 21.3254, 21.3254, 21.3254, 21.3254, 21.3254, 21.3254, 21.3254, 21.3254, 21.3254,
+		21.3254, 21.3254],
+		[2.19076, 2.19076, 4.0163, 5.86531, 8.09466, 10.4547, 12.9261, 15.2731, 17.7939, 20.6664, 22.99, 25.7017, 27.9139, 30.9469, 33.6378, 36.1413, 39.8435, 42.1625, 44.6396, 46.5133, 48.6331, 50.6754, 53.3949] ]
+Width_generic: [ [0.198303, 0.198303, 0.347397, 0.562874, 0.750881, 0.998318, 1.2622, 1.55553, 1.79799, 2.05579, 2.3295, 2.57611, 2.57611, 2.57611, 2.57611, 2.57611,2.57611, 2.57611, 2.57611, 2.57611,
+		2.57611, 2.57611, 2.57611],
+		[0.305766, 0.305766, 0.508544, 0.747765, 1.12059, 1.57047, 2.07501, 2.54661, 3.09789, 3.79078, 4.19731, 4.74438, 5.09894, 5.83702, 6.36225, 6.80253, 8.278, 8.717, 9.2568, 9.7239, 10.5865, 11.3262, 11.8423] ]
+# Exponential parameters
+Distances_exp_generic: [0, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 375]
+Slope_generic: [ [-0.181318, -0.181318, -0.148935, -0.126243, -0.10837, -0.0860558, -0.0759728, -0.0706126, -0.0672814, -0.0622897, -0.0577351, -0.0546709, -0.0546709, -0.0546709, -0.0546709, -0.0546709],
+			[-0.169274, -0.169274, -0.119906, -0.0983691, -0.0781793, -0.0659805, -0.0587059, -0.0545288, -0.0514041, -0.0489773, -0.047259, -0.0454668, -0.0439597, -0.0415122, -0.0396851, -0.0378005] ]
+Expo_over_Landau_norm_generic: [ [0.0149644, 0.0149644, 0.0337403, 0.0967895, 0.152669, 0.181732, 0.23025, 0.290033, 0.338948, 0.372986, 0.404828, 0.441243, 0.441243, 0.441243, 0.441243, 0.441243],
+							[0.0252807, 0.0252807, 0.0638727, 0.113343, 0.165669, 0.216794, 0.274868, 0.325299, 0.38959, 0.466117, 0.515046, 0.578897, 0.621872, 0.689713, 0.742833, 0.773619] ]
+
+
+# *************************************************************************************************
+#  VUV time model, generic for all experiments (at first order)
+# *************************************************************************************************
+
+common_vuv_timing_parameterization:
+{
+  # Timing parameterisaion:
+  #
+  # Parameters of the Landau + Exponential (<= 350 cm) and Landau (> 350 cm) models
+  # Landau parameters
+  Distances_landau: @local::Distances_landau_generic
+  Norm_over_entries: @local::Norm_over_entries_generic
+  Mpv: @local::Mpv_generic
+  Width: @local::Width_generic
+
+  # Exponential parameters
+  Distances_exp: @local::Distances_exp_generic
+  Slope: @local::Slope_generic
+
+  # Normalisations
+  Expo_over_Landau_norm:  @local::Expo_over_Landau_norm_generic
+
+  # Discretisation step size in cm
+  step_size: 1.
+  # Min and maximum distance in cm parameterisations are generated for (only generated when required to prevent long initial loading time)
+  max_d: 2500.
+  min_d: 25.
+  # VUV group velocity in cm/ns
+  vuv_vgroup_mean: 13.5
+  vuv_vgroup_max: 18.
+  # Distance in cm from "Landau + Expo" -> "Single Landau" model
+  inflexion_point_distance: 350.
+
+  # angular bin size in deg, must correspond to parameterisation set
+  angle_bin_timing_vuv: 45
+}
+
+
+END_PROLOG
+
+
+
+
+
+
+
+
+
+
+BEGIN_PROLOG
+
+standard_photonvisibilityservice:
+{
+
+  NX: 75
+  NY: 75
+  NZ: 400
+  UseCryoBoundary: true
+  Interpolate: false
+
+  DoNotLoadLibrary: false
+
+  LibraryBuildJob: false
+
+  #LibraryFile: "PhotonPropagation/LibraryData/lib8984855.root"
+  LibraryFile: "PhotonPropagation/LibraryData/uboone_photon_library_v4.root"
+
+ #These are not used when usecryoboundary=true
+  XMin: -120
+  XMax: 120
+  YMin: -120
+  YMax: 120
+  ZMin: 0
+  ZMax: 1200
+}
+
+microboone_photonvisibilityservice: @local::standard_photonvisibilityservice
+
+protodunedp_photonvisibilityservice_buildlib:
+{
+
+  NX: 29
+  NY: 24
+  NZ: 24
+  UseCryoBoundary: false
+
+  DoNotLoadLibrary: true
+
+  LibraryBuildJob: true
+
+  LibraryFile: "PhotonPropagation/LibraryData/Not_A_Library.root"
+
+ #These are not used when usecryoboundary=true
+  XMin: -420.5
+  XMax: 304.5
+  YMin: -300
+  YMax: 300
+  ZMin: 0
+  ZMax: 600
+}
+#Bea
+
+standard_photonvisibilityservice_buildlib:
+{
+
+  NX: 75
+  NY: 75
+  NZ: 400
+  UseCryoBoundary: true
+  Interpolate: false
+
+  DoNotLoadLibrary: true
+
+  LibraryBuildJob: true
+
+  LibraryFile: "PhotonPropagation/LibraryData/Not_A_Library.root"
+
+
+ #These are not used  when usecryoboundary=true
+  XMin: 100
+  XMax: 110
+  YMin: -100
+  YMax: 100
+  ZMin: 500
+  ZMax: 600
+
+}
+
+
+standard_photonvisibilityservice_par:
+{
+  NX: 125
+  NY: 1
+  NZ: 1
+  UseCryoBoundary: false
+  Interpolate: false
+  DUNE10ktParameterization: true
+  DoNotLoadLibrary: true
+
+  LibraryBuildJob: false
+
+  LibraryFile: "PhotonPropagation/LibraryData/Not_A_Library.root"
+  XMin: -627
+  XMax: -389
+  YMin: -1.
+  YMax: 1.
+  ZMin: -1.00
+  ZMax: 1.00
+
+}
+
+standard_library_vuv_prop_timing_photonvisibilityservice:
+{
+   # Start from the standard visibility service
+   @table::standard_photonvisibilityservice
+
+   # Flag to enable time parameterizations
+   IncludePropTime: true
+
+   # Generic VUV timing parameterization
+   @table::common_vuv_timing_parameterization
+
+}
+
+
+
+END_PROLOG
+
+
+#
+# File:    photon_propagation_timing_icarus.fcl
+# Purpose: parameters of the time of arrival to PMT of scintillation light
+# Date:    20201002
+# Author:  Patrick Green (data),
+#          Gianluca Petrillo (petrillo@slac.stanford.edu) (packaging)
+# 
+# The time of arrivals of scintillation photons to PMT is parametrized with
+# a Landau or (Landau plus Exponential) functional form, as function of the
+# displacement between the scintillation point and the PMT.
+# In particular, both the modulus of the displacement (distance) and the
+# incident angle on the PMT are relevant.
+# The parametrization currently covers only the hemispace the PMT face,
+# while light from behind (which must incur major scattering in order to hit
+# the sensitive surface of the hemispherical PMT) is not included.
+# 
+# ICARUS does not have reflective foils or wavelength shifters inside
+# the detector volume (apart from the coating on the PMT), so all the light is
+# at wavelength aroudn 128 nm (VUV): the visible/reflected components are not
+# present and not needed.
+# 
+# The content of this file includes:
+# 
+# * photon_propagation_timing_icarus: the parametrization of choice of ICARUS;
+#     defined as alias of another parametrization
+# * photon_propagation_timing_icarus_protodune: settings for ProtoDUNE,
+#     imported from opticalsimparameterisations_dune.fcl of dunetpc repository
+#     tag v09_05_00; these values were plugged in there by Patrick Green
+#     (SBND, DUNE) on September 23, 2020.
+# * photon_propagation_timing_icarus_v09_05_00: settings for SBND, modified
+#     to correctly extrapolate to ICARUS distances; these values were the
+#     default settings in LArSoft v09_05_00, and they have been recommended
+#     for ICARUS by Patrick Green and Diego Garcia Gamez (SBND), with the
+#     belief that ICARUS-derived parameetrs will not relevantly differ.
+#
+
+BEGIN_PROLOG
+
+################################################################################
+###  photon_propagation_timing_icarus_protodune: ProtoDUNE, Sept. 2020
+################################################################################
+
+###
+### VUV light: parameters of the Landau + Exponential (<= 400 cm) and Landau (> 400 cm) models;
+### 
+### The parameters are distance (30 distances. 0 to 725 cm in 30x 25 cm steps)
+### and incident angle (2 angle spans, 0--45 and 45--90 degrees)
+###
+
+#
+# angular bin size
+#
+angle_bin_timing_icarus_protodune: 45 # degrees
+
+#
+# Distance in cm from "Landau + Expo" -> "Single Landau" model
+#
+inflexion_point_distance_icarus_protodune: 400.0 # cm
+
+
+# ---------------------
+#   Landau parameters
+# ------------------------------------------------------------------------------------------------------
+Distances_landau_icarus_protodune: [ # cm
+            0,        25,        50,        75,       100,       125,       150,       175,
+          200,       225,       250,       275,       300,       325,       350,       375,
+          400,       425,       450,       475,       500,       525,       550,       575,
+          600,       625,       650,       675,       700,       725
+]
+
+# ------------------------------------------------------------------------------------------------------
+Norm_over_entries_icarus_protodune: [
+  [
+    # - - -  0 -- 45 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    27.41    , 27.41    , 2.57134  , 1.47775  , 0.960340 , 0.668723 , 0.487808 , 0.362789 , #   0 cm...
+    0.277659 , 0.224883 , 0.185199 , 0.159048 , 0.143393 , 0.134121 , 0.125978 , 0.115751 , # 200 cm...
+    0.0921523, 0.0907023, 0.0856498, 0.0814134, 0.0750844, 0.0750844, 0.0750844, 0.0750844, # 400 cm...
+    0.0750844, 0.0750844, 0.0750844, 0.0750844, 0.0750844, 0.0750844                        # 600 cm...
+  ],
+  [
+    # - - - 45 -- 90 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    3.79032  , 3.79032  , 1.25862  , 0.928939 , 0.566822 , 0.319336 , 0.331336 , 0.219171 , #   0 cm...
+    0.178579 , 0.135635 , 0.119011 , 0.109138 , 0.0991792, 0.091753 , 0.0787281, 0.0743768, # 200 cm...
+    0.0663083, 0.0648284, 0.0608437, 0.0572599, 0.0561134, 0.0543579, 0.0529609, 0.0519021, # 400 cm...
+    0.0510434, 0.0504866, 0.0503902, 0.0507405, 0.0503883, 0.0497511                        # 600 cm...
+  ]
+]
+
+# ------------------------------------------------------------------------------------------------------
+Mpv_icarus_protodune: [
+  [
+    # - - -  0 -- 45 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    1.77134  , 1.77134  , 3.85131  , 5.593    , 7.46645  , 9.44108  , 11.5899  , 13.8189  , #   0 cm...
+    16.2753  , 18.8619  , 21.6428  , 24.4828  , 27.189   , 29.6607  , 32.3706  , 35.2212  , # 200 cm...
+    41.4392  , 43.2475  , 45.939   , 48.5748  , 51.4841  , 51.4841  , 51.4841  , 51.4841  , # 400 cm...
+    51.4841  , 51.4841  , 51.4841  , 51.4841  , 51.4841  , 51.4841                          # 600 cm...
+  ],
+  [
+    # - - - 45 -- 90 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    1.91282  , 1.91282  , 4.31774  , 5.90297  , 8.90329  , 11.8104  , 12.9629  , 17.0555  , #   0 cm...
+    19.5031  , 24.7774  , 27.175   , 29.8128  , 33.5619  , 36.6553  , 43.0021  , 46.059   , # 200 cm...
+    52.6953  , 55.1056  , 59.9728  , 65.2979  , 67.9593  , 71.0675  , 74.7855  , 79.689   , # 400 cm...
+    85.3232  , 90.818   , 97.0409  , 103.2    , 111.306  , 117.6                            # 600 cm...
+  ]
+]
+
+# ------------------------------------------------------------------------------------------------------
+Width_icarus_protodune: [
+  [
+    # - - -  0 -- 45 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    0.10303  , 0.10303  , 0.313506 , 0.525492 , 0.716541 , 0.969894 , 1.29961  , 1.73657  , #   0 cm...
+    2.30482  , 2.94669  , 3.71951  , 4.53258  , 5.24435  , 5.79945  , 6.53951  , 7.34736  , # 200 cm...
+    12.0305  , 12.4263  , 13.4917  , 14.7245  , 16.6202  , 16.6202  , 16.6202  , 16.6202  , # 400 cm...
+    16.6202  , 16.6202  , 16.6202  , 16.6202  , 16.6202  , 16.6202                          # 600 cm...
+  ],
+  [
+    # - - - 45 -- 90 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    0        , 0.281535 , 0.633816 , 0.80694  , 1.46701  , 2.32209  , 2.20895  , 3.56751  , #   0 cm...
+    4.23966  , 6.11748  , 6.97923  , 7.82035  , 9.05225  , 10.1422  , 12.6053  , 13.6305  , # 200 cm...
+    17.7093  , 18.3244  , 19.9961  , 22.1072  , 23.4653  , 25.3052  , 27.5297  , 30.5683  , # 400 cm...
+    34.8304  , 39.7456  , 45.1447  , 51.3363  , 58.4681  , 63.0122                          # 600 cm...
+  ]
+]
+
+# ------------------------------------------------------------------------------------------------------
+
+# --------------------------
+#   Exponential parameters
+# ------------------------------------------------------------------------------------------------------
+Distances_exp_icarus_protodune: [
+             0,          25,         50,         75,        100,        125,        150,        175,
+           200,         225,        250,        275,        300,        325,        350,        375
+]
+
+Slope_icarus_protodune: [
+  [
+    # - - -  0 -- 45 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    -0.205783 , -0.205783  , -0.157344 , -0.124546 , -0.0949427, -0.0640574, -0.0509928, -0.0421876, # 0   cm...
+    -0.0360771, -0.0327956 , -0.02997  , -0.0280924, -0.0269181, -0.0259104, -0.0248679, -0.0233511  # 200 cm...
+  ],
+  [
+    # - - - 45 -- 90 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    -0.157151 , -0.157151  , -0.10447  , -0.0875509, -0.0605052, -0.0435416, -0.040128 , -0.0325951, # 0   cm...
+    -0.0292046, -0.0255942 , -0.0241776, -0.0226607, -0.0213594, -0.02037  , -0.0181767, -0.0172752  # 200 cm...
+  ]
+]
+
+# ------------------------------------------------------------------------------------------------------
+Expo_over_Landau_norm_icarus_protodune: [
+  [
+    # - - -  0 -- 45 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    0.00276789, 0.00276789, 0.0362807  , 0.081067  , 0.111523  , 0.106485  , 0.123852  , 0.144239  , # 0   cm...
+    0.168534  , 0.201111  , 0.234443   , 0.269284  , 0.300041  , 0.320541  , 0.342403  , 0.356125    # 200 cm...
+  ],
+  [
+    # - - - 45 -- 90 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    0.0242526 , 0.0242526 , 0.086063   , 0.101552  , 0.134787  , 0.171863  , 0.152519  , 0.203461  , # 0   cm...
+    0.224872  , 0.279135  , 0.304123   , 0.317034  , 0.341433  , 0.360053  , 0.382877  , 0.391287    # 200 cm...
+  ]
+]
+
+
+# ------------------------------------------------------------------------------------------------------
+
+photon_propagation_timing_icarus_protodune: {
+  
+  # angular bin size in degrees (must correspond to parameterisation set)
+  angle_bin_timing_vuv: @local::angle_bin_timing_icarus_protodune
+  
+  # Distance in cm from "Landau + Expo" -> "Single Landau" model
+  inflexion_point_distance: @local::inflexion_point_distance_icarus_protodune
+  
+  #
+  # Timing parameterisaion:
+  #
+  # Parameters of the Landau + Exponential (<= 400 cm) and Landau (> 400 cm) models
+  #
+  # Landau parameters
+  # 
+  Distances_landau:      @local::Distances_landau_icarus_protodune
+  Norm_over_entries:     @local::Norm_over_entries_icarus_protodune
+  Mpv:                   @local::Mpv_icarus_protodune
+  Width:                 @local::Width_icarus_protodune
+
+  # Exponential parameters
+  Distances_exp:         @local::Distances_exp_icarus_protodune
+  Slope:                 @local::Slope_icarus_protodune
+
+  # Normalizations
+  Expo_over_Landau_norm: @local::Expo_over_Landau_norm_icarus_protodune
+  
+  #
+  # other settings
+  #
+  
+  # Discretisation step size
+  step_size: 1.0 # cm
+  
+  # Min and maximum distance parameterizations are generated for
+  # (only generated when required to prevent long initial loading time)
+  min_d:   25.0 # cm
+  max_d: 2500.0 # cm
+  
+  # VUV group velocity
+  vuv_vgroup_mean: 13.5 # cm/ns
+  vuv_vgroup_max:  18.0 # cm/ns
+
+} # photon_propagation_timing_icarus_protodune
+
+
+################################################################################
+###  common_vuv_timing_parameterization_icarus: LArSoft, pre-v09_05_00
+################################################################################
+
+###
+### This parametrization is the copy of the "generic" one from
+### opticalsimparameterisations.fcl in LArSoft v09_05_00 (larsim).
+###
+### VUV light: parameters of the Landau + Exponential (<= 350 cm) and Landau (> 350 cm) models;
+### 
+### The parameters are distance (23 distances. 0 to 550 cm in 23x 25 cm steps)
+### and incident angle (2 angle spans, 0--45 and 45--90 degrees)
+###
+
+#
+# angular bin size
+#
+angle_bin_timing_icarus_v09_05_00: 45 # degrees
+
+#
+# Distance in cm from "Landau + Expo" -> "Single Landau" model
+#
+inflexion_point_distance_icarus_v09_05_00: 400.0 # cm
+
+
+# ---------------------
+#   Landau parameters
+# ------------------------------------------------------------------------------------------------------
+Distances_landau_icarus_v09_05_00: [ # cm
+            0,        25,        50,        75,       100,       125,       150,       175,
+          200,       225,       250,       275,       300,       325,       350,       375,
+          400,       425,       450,       475,       500,       525,       550
+]
+
+# ------------------------------------------------------------------------------------------------------
+Norm_over_entries_icarus_v09_05_00: [
+  [
+    # - - -  0 -- 45 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    4.64837 , 4.64837 , 2.86581 , 1.4143  , 0.974871, 0.71311 , 0.55772 , 0.461078, #   0 cm...
+    0.411807, 0.364951, 0.325477, 0.297132, 0.297132, 0.297132, 0.297132, 0.297132, # 200 cm...
+    0.297132, 0.297132, 0.297132, 0.297132, 0.297132, 0.297132, 0.297132            # 400 cm...
+  ],
+  [
+    # - - - 45 -- 90 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    3.43562 , 3.43562 , 1.61042 , 0.981127, 0.64465 , 0.476552, 0.369063, 0.310461, #   0 cm...
+    0.264819, 0.231387, 0.215373, 0.199128, 0.189638, 0.170387, 0.159308, 0.151498, # 200 cm...
+    0.140134, 0.135217, 0.131114, 0.129511, 0.126329, 0.12452 , 0.124595            # 400 cm...
+  ]
+]
+
+# ------------------------------------------------------------------------------------------------------
+Mpv_icarus_v09_05_00: [
+  [
+    # - - -  0 -- 45 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    2.73373 , 2.73373 , 3.599   , 5.80141 , 7.57883 , 9.56959 , 11.6047 , 13.6676 , #   0 cm...
+    15.6126 , 17.5389 , 19.492  , 21.3254 , 21.3254 , 21.3254 , 21.3254 , 21.3254 , # 200 cm...
+    21.3254 , 21.3254 , 21.3254 , 21.3254 , 21.3254 , 21.3254 , 21.3254             # 400 cm...
+  ],
+  [
+    # - - - 45 -- 90 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    2.19076 , 2.19076 , 4.0163  , 5.86531 , 8.09466 , 10.4547 , 12.9261 , 15.2731 , #   0 cm...
+    17.7939 , 20.6664 , 22.99   , 25.7017 , 27.9139 , 30.9469 , 33.6378 , 36.1413 , # 200 cm...
+    39.8435 , 42.1625 , 44.6396 , 46.5133 , 48.6331 , 50.6754 , 53.3949             # 400 cm...
+  ]
+]
+
+# ------------------------------------------------------------------------------------------------------
+Width_icarus_v09_05_00: [
+  [
+    # - - -  0 -- 45 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    0.198303, 0.198303, 0.347397, 0.562874, 0.750881, 0.998318, 1.2622  , 1.55553 , #   0 cm...
+    1.79799 , 2.05579 , 2.3295  , 2.57611 , 2.57611 , 2.57611 , 2.57611 , 2.57611 , # 200 cm...
+    2.57611 , 2.57611 , 2.57611 , 2.57611 , 2.57611 , 2.57611 , 2.57611
+  ],
+  [
+    # - - - 45 -- 90 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    0.305766, 0.305766, 0.508544, 0.747765, 1.12059 , 1.57047 , 2.07501 , 2.54661 , #   0 cm...
+    3.09789 , 3.79078 , 4.19731 , 4.74438 , 5.09894 , 5.83702 , 6.36225 , 6.80253 , # 200 cm...
+    8.278   , 8.717   , 9.2568  , 9.7239  , 10.5865 , 11.3262 , 11.8423             # 400 cm...
+  ]
+]
+
+# ------------------------------------------------------------------------------------------------------
+
+# --------------------------
+#   Exponential parameters
+# ------------------------------------------------------------------------------------------------------
+Distances_exp_icarus_v09_05_00: [ # cm
+            0,        25,        50,        75,       100,       125,       150,       175,
+          200,       225,       250,       275,       300,       325,       350,       375
+]
+
+# ------------------------------------------------------------------------------------------------------
+Slope_icarus_v09_05_00: [
+  [
+    # - - -  0 -- 45 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    -0.181318 , -0.181318 , -0.148935 , -0.126243 , -0.10837  , -0.0860558, -0.0759728, -0.0706126,
+    -0.0672814, -0.0622897, -0.0577351, -0.0546709, -0.0546709, -0.0546709, -0.0546709, -0.0546709
+  ],
+  [
+    # - - - 45 -- 90 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    -0.169274 , -0.169274 , -0.119906 , -0.0983691, -0.0781793, -0.0659805, -0.0587059, -0.0545288,
+    -0.0514041, -0.0489773, -0.047259 , -0.0454668, -0.0439597, -0.0415122, -0.0396851, -0.0378005
+  ]
+]
+
+# ------------------------------------------------------------------------------------------------------
+Expo_over_Landau_norm_icarus_v09_05_00: [
+  [
+    # - - -  0 -- 45 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    0.0149644 , 0.0149644 , 0.0337403 , 0.0967895 , 0.152669  , 0.181732  , 0.23025   , 0.290033  ,
+    0.338948  , 0.372986  , 0.404828  , 0.441243  , 0.441243  , 0.441243  , 0.441243  , 0.441243
+  ],
+  [
+    # - - - 45 -- 90 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    0.0252807 , 0.0252807 , 0.0638727 , 0.113343  , 0.165669  , 0.216794  , 0.274868  , 0.325299  ,
+    0.38959   , 0.466117  , 0.515046  , 0.578897  , 0.621872  , 0.689713  , 0.742833  , 0.773619
+  ]
+]
+
+
+# ------------------------------------------------------------------------------------------------------
+photon_propagation_timing_icarus_v09_05_00: {
+
+  # angular bin size in degrees (must correspond to parameterisation set)
+  angle_bin_timing_vuv: @local::angle_bin_timing_icarus_v09_05_00
+  
+  # Distance in cm from "Landau + Expo" -> "Single Landau" model
+  inflexion_point_distance: @local::inflexion_point_distance_icarus_v09_05_00
+  
+  #
+  # Timing parameterisaion:
+  #
+  # Parameters of the Landau + Exponential (<= 350 cm) and Landau (> 350 cm) models
+  #
+  # Landau parameters
+  # 
+  Distances_landau:      @local::Distances_landau_icarus_v09_05_00
+  Norm_over_entries:     @local::Norm_over_entries_icarus_v09_05_00
+  Mpv:                   @local::Mpv_icarus_v09_05_00
+  Width:                 @local::Width_icarus_v09_05_00
+
+  # Exponential parameters
+  Distances_exp:         @local::Distances_exp_icarus_v09_05_00
+  Slope:                 @local::Slope_icarus_v09_05_00
+
+  # Normalizations
+  Expo_over_Landau_norm: @local::Expo_over_Landau_norm_icarus_v09_05_00
+  
+  #
+  # other settings
+  #
+  
+  # Discretisation step size
+  step_size: 1.0 # cm
+  
+  # Min and maximum distance parameterizations are generated for
+  # (only generated when required to prevent long initial loading time)
+  min_d:   25.0 # cm
+  max_d: 2500.0 # cm
+  
+  # VUV group velocity
+  vuv_vgroup_mean: 13.5 # cm/ns
+  vuv_vgroup_max:  18.0 # cm/ns
+
+} # photon_propagation_timing_icarus_v09_05_00
+
+
+################################################################################
+###  photon_propagation_timing_icarus: default ICARUS settings
+################################################################################
+
+photon_propagation_timing_icarus: @local::photon_propagation_timing_icarus_v09_05_00
+
+################################################################################
+
+
+END_PROLOG
+
+
+BEGIN_PROLOG
+
+
+#################################################################################
+#
+# Geometry coordinates for different library files and geometries
+#
+# Each configuration includes the library file version (e.g. 20201209)
+# and the geometry name (e.g. `icarus_v3`)
+#
+icarus_photonlibrary_coordinates_20201209_icarusv2: {
+  LibraryFile:      "PhotonLibrary/PhotonLibrary-20201209.root"
+
+  # this stuff is also included in the metadata
+  XMin: -405.0  # cm
+  XMax:  -35.0  # cm
+  YMin: -215.0  # cm
+  YMax:  170.0  # cm
+  ZMin: -985.0  # cm
+  ZMax:  985.0  # cm
+  
+} # icarus_photonlibrary_coordinates_icarusv2
+
+
+icarus_photonlibrary_coordinates_20201209_icarusv3: {
+  LibraryFile:      "PhotonLibrary/PhotonLibrary-20201209.root"
+
+  # this stuff is also included in the metadata;
+  # modified for icarus_v3 geometry (metadata in icarus_data v09_26_01 and earlier encodes icarus_v2)
+  XMin: -395.0  # cm
+  XMax:  -25.0  # cm
+  YMin: -215.0  # cm
+  YMax:  170.0  # cm
+  ZMin: -985.0  # cm
+  ZMax:  985.0  # cm
+
+} # icarus_photonlibrary_coordinates_20201209_icarusv3
+
+
+################################################################################
+#
+# PhotonVisibilityService configuration
+#
+# Use as:
+#     
+#     services.PhotonVisibilityService: @local::icarus_photonvisibilityservice_direct
+#     
+#
+icarus_photonvisibilityservice_direct: {
+  
+  @table::photon_propagation_timing_icarus # from photon_propogation_timing_icarus.fcl
+  
+  LibraryFile:      "PhotonLibrary/PhotonLibrary-20201209.root"
+  UseCryoBoundary:  false
+  DoNotLoadLibrary: false
+  
+  # coordinates are hard-coded and delegated to:
+  @table::icarus_photonlibrary_coordinates_20201209_icarusv3
+  NX:     74
+  NY:     77
+  NZ:    394
+
+  IncludePropTime: true
+  
+} # icarus_photonvisibilityservice_direct
+
+
+###
+###  Configuration for first cryostat library and mapping to the other one
+###
+#
+# This is the configuration expected to work correctly with the current version
+# of the software.
+# 
+# This configuration is used for photon visibility library: 20200925.
+# The "mapped" in the name refers to the mapping from the first cryostat to
+# the second one.
+#
+# Use as:
+#     
+#     services.PhotonVisibilityService: @local::icarus_photonvisibilityservice_mapped
+#     
+icarus_photonvisibilityservice_mapped: {
+  @table::icarus_photonvisibilityservice_direct
+  
+  Mapping: {
+    tool_type: ICARUSPhotonMappingTransformations
+  } # Mapping
+
+} # icarus_photonvisibilityservice_mapped
+
+
+
+###############################################################################
+###
+### Legacy configurations
+###
+# ----------------------------------------------------------------------------
+#
+# This configuration should be used with samples processed with icarus_v2
+# geometry, that was the default for icaruscode versions 
+#
+
+icarus_photonvisibilityservice_icarus_v2: {
+  
+  @table::photon_propagation_timing_icarus # from photon_propogation_timing_icarus.fcl
+  
+  LibraryFile:      "PhotonLibrary/PhotonLibrary-20201209.root"
+  UseCryoBoundary:  false
+  DoNotLoadLibrary: false
+  
+  # coordinates are hard-coded and delegated to:
+  @table::icarus_photonlibrary_coordinates_20201209_icarusv2
+  NX:     74
+  NY:     77
+  NZ:    394
+
+  IncludePropTime: true
+  
+  Mapping: {
+    tool_type: ICARUSPhotonMappingTransformations
+  } # Mapping
+ 
+} # icarus_photonvisibilityservice_icarus_v2
+
+
+
+# ----------------------------------------------------------------------------
+#
+# This configuration should be used with the "old" PMT channel mapping.
+# PMT channel mapping reflects the optical detector sorting.
+# This sorting was changed when moving to the split wire geometry, so that the
+# new geometry included a new TPC and PMT channel mapping.
+# For the single wire geometry, this does not apply and the old configuration
+# is needed.
+# Use as:
+#     
+#     services.PhotonVisibilityService: @local::icarus_photonvisibilityservice_noPMTremapping
+#     
+# This configuration is almost self-contained (i.e. it would be self-contained
+# except that it relies on
+# `standard_library_vuv_prop_timing_photonvisibilityservice` which we are not
+# reproducing here).
+#
+icarus_photonvisibilityservice_noPMTremapping: {
+
+  @table::standard_library_vuv_prop_timing_photonvisibilityservice
+
+  LibraryFile:     "PhotonLibrary/PhotonLibrary-20180801.root"
+  UseCryoBoundary: false
+  
+  XMin: -395      # Was -391 in old geometry
+  XMax: -45       # Was -41  in old geometry
+  YMin: -215.2    # Was -210 in old geometry
+  YMax:  174.8    # Was -180 in old geometry
+  ZMin: -995
+  ZMax:  965
+  NX:     70
+  NY:     78
+  NZ:    392
+
+  IncludePropTime: true
+  
+  Mapping: {
+    tool_type: ICARUSPhotonMappingTransformations
+  }
+
+} # icarus_photonvisibilityservice_noPMTremapping
+
+
+
+# ----------------------------------------------------------------------------
+#
+# This is the configuration used by the "standard" ICARUS job configurations
+# until icaruscode v08_50_00.
+# It is part of `icarus_legacy_services` configuration, and it should not
+# be used by itself since it requires a specific geometry and channel mapping.
+# Use as:
+#     
+#     services: @local::icarus_legacy_services
+#     
+# This configuration is almost frozen (i.e. it would be frozen except that it
+# relies on `standard_library_vuv_prop_timing_photonvisibilityservice` which
+# we are not reproducing here).
+#
+icarus_legacy_photonvisibilityservice_v08_50_00: @local::icarus_photonvisibilityservice_noPMTremapping
+
+
+
+# ----------------------------------------------------------------------------
+#
+# This configuration fits a previous photon library (August 2018) which
+# was current until `icaruscode` `v09_00_01`.
+# 
+# The library was generated with the "old" PMT channel mapping, but now you
+# are going to run it with the new one, so a remapping is needed,
+# which is coded in this configuration.
+# For the single wire geometry, this does not apply and the legac...ier
+# configuration is needed.
+# Use as:
+#     
+#     services.PhotonVisibilityService: @local::icarus_photonvisibilityservice_2018
+#     
+# This configuration is almost self-contained (i.e. it would be self-contained
+# except that it relies on
+# `standard_library_vuv_prop_timing_photonvisibilityservice` which we are not
+# reproducing here).
+#
+icarus_photonvisibilityservice_2018: {
+  @table::standard_library_vuv_prop_timing_photonvisibilityservice # TODO copy the old configuration from LArSoft into ICARUS and refer it here
+
+  LibraryFile:     "PhotonLibrary/PhotonLibrary-20180801.root"
+  UseCryoBoundary: false
+  
+  XMin: -395      # Was -391 in old geometry
+  XMax: -45       # Was -41  in old geometry
+  YMin: -215.2    # Was -210 in old geometry
+  YMax:  174.8    # Was -180 in old geometry
+  ZMin: -995
+  ZMax:  965
+  NX:     70
+  NY:     78
+  NZ:    392
+
+  IncludePropTime: true
+  
+  Mapping: {
+    tool_type: ICARUSPhotonMappingTransformations
+    
+    # use this mapping only with photon visibility maps generated before
+    # v08_50_01 when using split wire geometry;
+    # it expresses that the values in the photon map for the library channel c
+    # it now should be associated to channel CryostatChannelRemap[c] instead
+    CryostatChannelRemap: [
+      
+      179,  89, 178,  88, 177,  87, 176,  86, 175,  85, 174,  84, 173,  83, 172,
+       82, 171,  81, 170,  80, 169,  79, 168,  78, 167,  77, 166,  76, 165,  75,
+      164,  74, 163,  73, 162,  72, 161,  71, 160,  70, 159,  69, 158,  68, 157,
+       67, 156,  66, 155,  65, 154,  64, 153,  63, 152,  62, 151,  61, 150,  60,
+      149,  59, 148,  58, 147,  57, 146,  56, 145,  55, 144,  54, 143,  53, 142,
+       52, 141,  51, 140,  50, 139,  49, 138,  48, 137,  47, 136,  46, 135,  45,
+      134,  44, 133,  43, 132,  42, 131,  41, 130,  40, 129,  39, 128,  38, 127,
+       37, 126,  36, 125,  35, 124,  34, 123,  33, 122,  32, 121,  31, 120,  30,
+      119,  29, 118,  28, 117,  27, 116,  26, 115,  25, 114,  24, 113,  23, 112,
+       22, 111,  21, 110,  20, 109,  19, 108,  18, 107,  17, 106,  16, 105,  15,
+      104,  14, 103,  13, 102,  12, 101,  11, 100,  10,  99,   9,  98,   8,  97,
+        7,  96,   6,  95,   5,  94,   4,  93,   3,  92,   2,  91,   1,  90,   0
+      
+    ]
+    
+  } # Mapping
+
+} # icarus_photonvisibilityservice_2018
+
+
+
+###############################################################################
+###
+### Default configuration
+###
+#
+# This is the configuration used by the "standard" ICARUS job configurations.
+# Use as:
+#     
+#     services.PhotonVisibilityService: @local::icarus_photonvisibilityservice
+#     
+#
+icarus_photonvisibilityservice: @local::icarus_photonvisibilityservice_mapped
+
+
+###############################################################################
+
+
+END_PROLOG
+
+BEGIN_PROLOG
+
+#
+# First define services w/o optical simulation
+#
+
+# Define icarus_gen_services ... (0)
+icarus_gen_services: {
+  
+  @table::icarus_common_services
+  
+}
+
+
+# this is mostly a helper
+icarus_simulation_basic_services: {
+  
+                                           @table::icarus_common_services
+
+    LArG4Parameters:                       @local::icarus_largeantparameters
+    LArVoxelCalculator:                    @local::icarus_larvoxelcalculator
+    SpaceChargeService:                    @local::icarus_spacecharge
+    
+} # icarus_simulation_basic_services
+
+
+# Define icarus_g4_dark_services ... (1)
+icarus_g4_dark_services: {
+    
+    @table::icarus_simulation_basic_services
+
+    MagneticField:                         @local::no_mag_larsoft
+    
+} # icarus_g4_dark_services
+
+
+# Define icarus_detsim_dark_services ... (2)
+icarus_detsim_dark_services: {
+  
+  # (it turns out they are the same ones needed for the inverse operation...)
+  @table::icarus_wirecalibration_services
+  
+} # icarus_detsim_dark_services
+
+
+# Define icarus_simulation_dark ... (all) = (0) + (1) + (2)
+icarus_simulation_dark_services: {
+    
+    @table::icarus_simulation_basic_services
+    
+    # SignalShapingServiceICARUS:      @local::icarus_signalshapingservice
+    # DetPedestalService:              @local::icarus_detpedestalservice
+    # ChannelStatusService:            @local::icarus_channelstatus_service
+    # ElectronicsCalibService:         @local::icarus_electronicscalib_service
+    
+} # icarus_simulation_dark_services
+
+
+#
+# Define optical simulation included ones
+#
+
+# Define icarus_g4_services ... (1*)
+icarus_g4_services: {
+  
+    @table::icarus_g4_dark_services
+    
+    PhotonVisibilityService: @local::icarus_photonvisibilityservice
+
+} # icarus_g4_services
+
+
+# Define icarus_detsim_services ... (2*)
+icarus_detsim_services: {
+    
+    @table::icarus_detsim_dark_services
+    
+    # PmtGainService:                 @local::icarus_pmtgain_service
+    
+} # icarus_detsim_services
+
+
+# Define icarus_simulation_services ... (all*) = (1*) + (2) + (2*)
+icarus_simulation_services: {
+    
+    @table::icarus_simulation_dark_services
+    
+    PhotonVisibilityService:         @local::icarus_photonvisibilityservice
+    # PmtGainService:                  @local::icarus_pmtgain_service
+
+} # icarus_simulation_services
+
+
+################################################################################
+
+END_PROLOG
+#
+# File:    geometry_icarus.fcl
+# Purpose: Configuration of LArSoft geometry and geometry service for ICARUS.
+#
+#
+# Suggested usage
+# ----------------
+#
+# Unless there are special needs, the geometry configuration should be included
+# via a configuration bundle.
+# The default one is called `icarus_geometry_services`.
+# To use it in a complete configuration:
+#
+#     services: {
+#       # ...
+#       @table::icarus_geometry_services  # from geometry_icarus.fcl
+#       # ...
+#     } # services
+#
+# To add it to a preexisting configuration, overwriting any existing geometry
+# configuration:
+#
+#     services: {
+#       @table::services
+#       @table::icarus_geometry_services  # from geometry_icarus.fcl
+#     } # services
+#
+#
+# Options
+# --------
+#
+# Currently the following configuration is provided:
+#
+# * `icarus_geometry_services`: current default configuration, the "standard"
+#      of the experiment with a concrete overburden
+# 
+# Since the documentation is often not updated, check the definitions below
+# to see which are the current defaults.
+#
+#
+# Configuration for unit tests
+# -----------------------------
+#
+# The "service" configuration `icarus_unit_test_geometry` includes a
+# configuration of ICARUS geometry suitable for tests that use the LArSoft unit
+# test service helpers. It should be loaded in place of `icarus_geometry` in the
+# `services.Geometry` configuration table.
+#
+#
+# Legacy options
+# ---------------
+# 
+# Some older configurations are still kept (but not officially supported).
+# See the "Legacy configurations" section below.
+#
+#
+# Notes
+# ------
+# 
+# A special policy in ICARUS is to have a copy of the channel mapping algorithm
+# configuration in the `Geometry` service configuration.
+# This is required by the off-art geometry loading utilities in ICARUS.
+# One day LArSoft will also support something like that and that will become
+# the only location of the channel mapping configuration.
+#
+#
+# Changes
+# --------
+#
+# 20200709 (petrillo@slac.stanford.edu)
+#   adopted split wire geometry fixed by
+#   Alessandro Menegolli (alessandro.menegolli@unipv.it)
+# 20220505 (petrillo@slac.stanford.edu)
+#   geometry default changed to include overburden
+# 20220523 (petrillo@slac.stanford.edu)
+#   new geometry (20220518) with CRT changes;
+#   no configuration for no-overburden detector;
+#   legacy (`icarus_v3`) configurations added;
+#   configurations renamed ("icarus_standard_geometry")
+# 20250206 (Kyle Knoepfel, petrillo@slac.stanford.edu, et al)
+#   updates for LArSoft v10
+#
+
+
+BEGIN_PROLOG
+
+################################################################################
+#
+# Basic definitions for ICARUS configurations; no serviceable parts here!
+#
+
+icarus_geometry_template: {
+  SurfaceY:        6.9e2    # in cm, vertical distance to the surface
+  Name:           "icarus_v4"
+  GDML:           "icarus_refactored_nounderscore_20230918.gdml"
+} # icarus_geometry_template
+
+
+
+################################################################################
+###
+###  Split first induction plane wires (9 m)
+###
+################################################################################
+### Complete geometry (including CRT) with two logical TPCs per drift volume and
+### 9 meter long wires on each half of the first induction planes.
+### This reflects the actual configuration of the ICARUS detector.
+###
+### Default for this configuration is defined below:
+### `icarus_split_induction_geometry_services`.
+###
+
+#
+# WireReadout
+#
+icarus_standard_wire_readout: {
+  service_provider: WireReadoutICARUS
+  SortingParameters: {
+    tool_type: WireReadoutSorterStandard
+  }
+  Mapper: {
+    
+    WirelessChannels: {
+      
+      FirstInductionPreChannels:        0
+      FirstInductionPostChannels:      96 # 32 ghost, then 64 virtual
+      
+      # C:x S:0 (east TPC)
+      SecondInductionEvenPreChannels:  96 # 32 ghost, then 64 wireless
+      SecondInductionEvenPostChannels: 64 # 64 wireless
+      CollectionEvenPreChannels:       64 # 64 wireless
+      CollectionEvenPostChannels:      96 # 64 wireless, then 32 ghost
+  
+      # C:x S:1 (west TPC)
+      SecondInductionOddPreChannels:   64 # 64 wireless
+      SecondInductionOddPostChannels:  96 # 64 wireless, then 32 ghost
+      CollectionOddPreChannels:        96 # 32 ghost, then 64 wireless
+      CollectionOddPostChannels:       64 # 64 wireless
+    
+    } # WirelessChannels
+    
+  } # Mapper
+  
+} # icarus_standard_wire_readout
+
+
+################################################################################
+###
+### "Standard" configuration (`icarus_standard_geometry_services`).
+### 
+### Includes an overburden and two logical TPC for each physical one
+### ("split wires" configuration).
+###
+### This is the most accurate description of ICARUS detector as of June 2022.
+###
+### Override a geometry configuration by:
+###
+###     services: {
+###       @table::services
+###       @table::icarus_standard_geometry_services
+###     }
+###
+###
+
+#
+# Geometry service configuration:
+#
+icarus_standard_geometry: {
+  @table::icarus_geometry_template
+
+  SortingParameters: {
+    tool_type: GeoObjectSorterPMTasTPC
+  }
+}
+
+#
+# AuxDetGeometry service configuration:
+#
+icarus_standard_auxdetgeometry: {
+  @table::icarus_geometry_template
+
+  SortingParameters: {
+    tool_type: AuxDetGeoObjectSorterICARUS
+  }
+} # icarus_standard_geometry
+
+#
+# geometry configuration bundle
+#
+icarus_standard_geometry_services: {
+
+  AuxDetGeometry: @local::icarus_standard_auxdetgeometry
+  Geometry:       @local::icarus_standard_geometry
+  WireReadout:    @local::icarus_standard_wire_readout
+  GeometryConfigurationWriter: {}
+
+} # icarus_standard_geometry_services
+
+
+################################################################################
+###
+### Default ICARUS geometry configuration
+###
+### Complete geometry (including CRT) with one TPC per drift volume and 18 meter
+### long wires on first induction plane.
+### Options are avaialble for the presence of overburden; the geometry global
+### default includes a choice for that option: see `icarus_geometry_services`.
+###
+################################################################################
+### Default ICARUS geometry configuration
+### (`icarus_geometry_services`)
+###
+### This configuration includes 3-m overburden and long first induction wires
+### (18 m) as of now.
+###
+### Override a geometry configuration by:
+###
+###     services: {
+###       @table::services
+###       @table::icarus_geometry_services
+###     }
+###
+###
+
+#
+# geometry configuration bundle
+#
+icarus_geometry_services: @local::icarus_standard_geometry_services
+
+#
+# Geometry service configuration:
+#
+icarus_geometry: @local::icarus_geometry_services.Geometry
+icarus_geo:      @local::icarus_geometry # backward compatibility
+
+icarus_wire_readout:  @local::icarus_geometry_services.WireReadout
+
+icarus_unit_test_geometry: @local::icarus_geometry
+
+
+################################################################################
+###  Legacy configurations
+################################################################################
+#
+# Legacy configurations are not officially supported, but are provided here
+# nevertheless. A legacy configuration bundle is called
+# `icarus_geometry_services[_<variant>]_legacy_<DetectorName>`, where
+# <DetectorName> is the geometry tag (e.g. `icarus_v2`), and variants may also
+# be available (e.g. "no_overburden").
+# 
+# Legacy configurations are hard-coded and should not depend from the content
+# above.
+#
+################################################################################
+### Base legacy configuration, only used for FHiCL stability; i.e., if changed,
+### all existing legacy configurations need to explicitly revert the change.
+###
+icarus_legacy_base_wire_readout: {
+  service_provider: IcarusWireReadout
+  SortingParameters: {
+    tool_type: WireReadoutSorterStandard
+  }
+  Mapper: {
+    tool_type: "ICARUSsplitInductionWireReadoutSetupTool"
+    WirelessChannels: {
+      
+      FirstInductionPreChannels:        0
+      FirstInductionPostChannels:      96 # 32 ghost, then 64 virtual
+      
+      # C:x S:0 (east TPC)
+      SecondInductionEvenPreChannels:  96 # 32 ghost, then 64 wireless
+      SecondInductionEvenPostChannels: 64 # 64 wireless
+      CollectionEvenPreChannels:       64 # 64 wireless
+      CollectionEvenPostChannels:      96 # 64 wireless, then 32 ghost
+  
+      # C:x S:1 (west TPC)
+      SecondInductionOddPreChannels:   64 # 64 wireless
+      SecondInductionOddPostChannels:  96 # 64 wireless, then 32 ghost
+      CollectionOddPreChannels:        96 # 32 ghost, then 64 wireless
+      CollectionOddPostChannels:       64 # 64 wireless
+    
+    } # WirelessChannels
+    
+  } # Mapper
+} # icarus_legacy_base_wire_readout
+
+icarus_legacy_base_geometry: {
+
+  SurfaceY:        6.9e2    # in cm, vertical distance to the surface
+  DisableWiresInG4: true
+
+  Name: @nil
+  GDML: @nil
+  ROOT: @nil
+
+  ChannelMapping: @local::icarus_legacy_base_wire_readout.Mapper
+  
+} # icarus_legacy_base_geometry
+
+icarus_legacy_base_geometry_services: {
+  Geometry:               @local::icarus_legacy_base_geometry
+  WireReadout:            @local::icarus_legacy_base_wire_readout
+  GeometryConfigurationWriter: {}
+} # icarus_legacy_base_geometry_services
+
+
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### icarus_geometry_services_legacy_icarus_v3:
+###   geometry tagged as `icarus_v3` for samples produced with v09_52_00
+###   and earlier
+### 
+### Also versions with explicit overburden specification.
+###
+icarus_geometry_services_no_overburden_legacy_icarus_v3: @local::icarus_legacy_base_geometry_services
+icarus_geometry_services_no_overburden_legacy_icarus_v3.Geometry.Name: icarus_v3
+icarus_geometry_services_no_overburden_legacy_icarus_v3.Geometry.GDML: "icarus_complete_20210527_no_overburden.gdml"
+icarus_geometry_services_no_overburden_legacy_icarus_v3.Geometry.ROOT: "icarus_complete_20210527_no_overburden.gdml"
+
+icarus_geometry_services_overburden_legacy_icarus_v3: @local::icarus_legacy_base_geometry_services
+icarus_geometry_services_overburden_legacy_icarus_v3.Geometry.Name: icarus_v3
+icarus_geometry_services_overburden_legacy_icarus_v3.Geometry.GDML: "icarus_complete_20210527_overburden.gdml"
+icarus_geometry_services_overburden_legacy_icarus_v3.Geometry.ROOT: "icarus_complete_20210527_overburden.gdml"
+
+icarus_geometry_services_legacy_icarus_v3:
+  @local::icarus_geometry_services_no_overburden_legacy_icarus_v3
+
+
+###
+### icarus_geometry_services_legacy_icarus_v2:
+###   geometry tagged as `icarus_v2` for samples produced with v09_24_02_02
+###   and earlier
+### 
+### Also versions with explicit overburden specification.
+###
+icarus_geometry_services_no_overburden_legacy_icarus_v2: @local::icarus_legacy_base_geometry_services
+icarus_geometry_services_no_overburden_legacy_icarus_v2.Geometry.Name: icarus_v2
+icarus_geometry_services_no_overburden_legacy_icarus_v2.Geometry.GDML: "icarus_complete_20210311_no_overburden_rotUV.gdml"
+icarus_geometry_services_no_overburden_legacy_icarus_v2.Geometry.ROOT: "icarus_complete_20210311_no_overburden_rotUV.gdml"
+
+icarus_geometry_services_overburden_legacy_icarus_v2: @local::icarus_legacy_base_geometry_services
+icarus_geometry_services_overburden_legacy_icarus_v2.Geometry.Name: icarus_v2
+icarus_geometry_services_overburden_legacy_icarus_v2.Geometry.GDML: "icarus_complete_20210311_rotUV.gdml"
+icarus_geometry_services_overburden_legacy_icarus_v2.Geometry.ROOT: "icarus_complete_20210311_rotUV.gdml"
+
+icarus_geometry_services_legacy_icarus_v2:
+  @local::icarus_geometry_services_no_overburden_legacy_icarus_v2
+
+
+###
+### icarus_geometry_services_legacy_icarus_splitwires:
+###   geometry tagged as `icarus_splitwires` for samples produced with v09_17_02
+###   and earlier
+### 
+### Also versions with explicit overburden specification.
+###
+icarus_geometry_services_no_overburden_legacy_icarus_splitwires: @local::icarus_legacy_base_geometry_services
+icarus_geometry_services_no_overburden_legacy_icarus_splitwires.Geometry.Name: icarus_splitwires
+icarus_geometry_services_no_overburden_legacy_icarus_splitwires.Geometry.GDML: "icarus_complete_20201107_no_overburden.gdml"
+icarus_geometry_services_no_overburden_legacy_icarus_splitwires.Geometry.ROOT: "icarus_complete_20201107_no_overburden.gdml"
+
+icarus_geometry_services_overburden_legacy_icarus_splitwires: @local::icarus_legacy_base_geometry_services
+icarus_geometry_services_overburden_legacy_icarus_splitwires.Geometry.Name: icarus_splitwires
+icarus_geometry_services_overburden_legacy_icarus_splitwires.Geometry.GDML: "icarus_complete_20201107.gdml"
+icarus_geometry_services_overburden_legacy_icarus_splitwires.Geometry.ROOT: "icarus_complete_20201107.gdml"
+
+icarus_geometry_services_legacy_icarus_splitwires:
+  @local::icarus_geometry_services_no_overburden_legacy_icarus_splitwires
+
+
+################################################################################
+###
+### These are old names for the configuration presets.
+###
+icarus_split_induction_overburden_geometry: @local::icarus_standard_geometry
+icarus_split_induction_wire_readout: @local::icarus_standard_wire_readout
+icarus_split_induction_overburden_geometry_services: @local::icarus_standard_geometry_services
+
+################################################################################
+
+
+END_PROLOG
+
+BEGIN_PROLOG
+
+
+#
+# Physics List
+#
+icarus_physics_list_fastoptical:
+{
+  PhysicsListName: "QGSP_BERT_HP"
+  DumpList: true
+  enableNeutronLimit: false
+  NeutronTimeLimit: 0.0
+  NeutronKinELimit: 0.0
+  enableStepLimit: true
+  enableOptical: false
+  enableCerenkov: false
+  CerenkovStackPhotons: false
+  CerenkovMaxNumPhotons: 100
+  CerenkovMaxBetaChange: 10.0
+  enableScintillation: false
+  ScintillationStackPhotons: false
+  ScintillationByParticleType: false
+  ScintillationTrackInfo: false
+  ScintillationTrackSecondariesFirst: false
+  enableAbsorption: false
+  enableRayleigh: false
+  enableMieHG: false
+  enableBoundary: false
+  enableWLS: false
+  BoundaryInvokeSD: false
+  Verbosity: 1
+  WLSProfile: delta
+}
+
+
+#
+# Particle List Action
+#
+icarus_particle_list_action:
+{
+  service_type: "ParticleListActionService"
+  EnergyCut: 1e-2                          # Kinetic Energy cut, note Geant4 assumes this is in MeV.
+                                           # So: 1e-2 MeV = 10 KeV: we are applying a 10 keV cut.
+  keepEMShowerDaughters: false             # If false, does not store electromagnetic shower daughter
+                                           # particles in the MCParticles data product.
+  storeTrajectories: true
+  KeepDroppedParticlesInVolumes: ["volTPCActive"] 
+  keepGenTrajectories: ["generator"]       # list of generator labels for which we want to store
+                                           # trajectory points.
+  keepOnlyPrimaryFullTrajectories: false   # (defaults to false in larg4) If set to true, only
+                                           # the particles with MCTruth process == "primary" and
+                                           # their descendants will have the full set of trajetory
+                                           # points stored. Particles descending from primaries with
+                                           # MCTruth process != "primary" will not have a full set
+                                           # of trajectory points stored -- only their start and
+                                           # end points. This filter only applies to the generator
+                                           # labels listed in the keepGenTrajectories. E.g, for the
+                                           # beam generator, no "primaryBackground" particles or their
+                                           # descendants would have a full set of traj. points. if
+                                           # this is set to true.
+  SparsifyTrajectories: true               # call SparsifyTrajectory() method on MCParticles with full trajectories
+                                           # being stored. This helps reduce memory usage in the root output stage
+                                           # if there are many trajectory points.
+  SparsifyMargin: 0.015      # required when SparsifyTrajectories is set to true
+  KeepTransportation: true   # When sparsifying: forces steps with the 'Transportation' process to be saved
+                             # Can be useful to keep the first step in the active volume
+  KeepSecondToLast: true     # Sparsifying could cut out the penultimate step point, which holds the correct info
+                             # of the end of the track (the final step is defined to have 0 kinetic energy)
+                             # This forces that true penultimate point to be saved, thus preserving the info
+}
+
+#
+# The LArG4 Detector
+#
+icarus_larg4detector:
+{
+  category      : "world"
+  gdmlFileName_ : @local::icarus_standard_geometry.GDML
+#  volumeNames   : ["volTPCActive" # list of volumes for which the stepLimit should be set
+#                 #, "volCryostat"
+#                 #, "volTPCPlaneY"
+#                 #, "volTPCPlaneU"
+#                 #, "volTPCPlaneV"
+#                 #, "volTPC0"
+#                  ]
+#  stepLimits    : [0.3]#, 0.3, 0.3, 0.3, 0.3, 0.3] # corresponding stepLimits in mm for the volumes in the volumeNames list
+}
+
+#
+# The LArG4 Services
+#
+icarus_larg4_services:
+{
+  DetectorHolder:    {}
+  ActionHolder:      {}
+  PhysicsListHolder: {}
+
+  MCTruthEventAction: {service_type: "MCTruthEventActionService"}
+  ParticleListAction: @local::icarus_particle_list_action
+  PhysicsList:        @local::icarus_physics_list_fastoptical
+  LArG4Detector:      @local::icarus_larg4detector
+}
+
+END_PROLOG
+#
+# File:    rootoutput_icarus.fcl
+# Purpose: standard _art_ ROOT output file naming
+# Author:  Gianluca Petrillo (petrillo@slac.stanford.edu)
+# Date:    December 4, 2019
+#
+# This file provides a base configuration for the ROOT output module which
+# includes a standard name based on the input file.
+#
+# Provided configuration:
+# 
+# * `icarus_rootoutput`: configuration for `RootOutput` module
+# * `icarus_rootoutput_one_output_per_input`: variant of `icarus_rootoutput`
+#      producing one output file per input file
+# * `icarus_rootoutput_fromempty`: (BROKEN) configuration for `EmptyEvent` module
+#
+# See below for usage examples.
+#
+
+BEGIN_PROLOG
+
+################################################################################
+###  RootOutput: icarus_rootoutput
+################################################################################
+###
+### Standard configuration for `RootOutput` module.
+### Use it in the configuration of jobs using an input ROOT file (e.g. with
+### `RootInput` module, but not with jobs using `EmptyEvent`).
+###
+### Example of usage:
+###     
+###     outputs: {
+###       rootoutput: @local::icarus_rootoutput
+###     }
+###     
+### will cause the job to create a _art_ ROOT file named after the input file,
+### with the process name and file closing time added.
+### The file has minimal standard ROOT compression (level 1).
+### Fast cloning is left default.
+###
+###
+icarus_rootoutput: {
+  module_type:       RootOutput
+  fileName:         "%ifb_%tc-%p.root"
+  compressionLevel:  1
+  dataTier:         "simulated" # still parroting something I don't understand
+  saveMemoryObjectThreshold: 0
+} # icarus_rootoutput
+
+
+###
+### Variant: produce one output file for each input file, instead of merging
+### all the output in a single file.
+###
+icarus_rootoutput_one_output_per_input: {
+  @table::icarus_rootoutput
+  
+  # set one output file per input file
+  fileProperties: {
+      maxInputFiles: 1
+  }
+  
+  # when fileProperies are specified, RootOutput enforces the presence of a "%#"
+  # in the output file name to ensure no output files end up with the same name;
+  # our output file names include the input file name, so we don't face that
+  # issue and we can disable that check and get away without "%#".
+  checkFileName: false
+  
+} # icarus_rootoutput_one_output_per_input
+
+
+
+################################################################################
+###  RootOutput: icarus_rootoutput_fromempty
+################################################################################
+###
+### Standard configuration for `RootOutput` module for jobs without an input
+### ROOT file (e.g. jobs using `EmptyEvent`).
+###
+### Example of usage:
+###     
+###     outputs: {
+###       rootoutput: @local::icarus_rootoutput_fromempty
+###     }
+###     
+### will cause the job to create a _art_ ROOT file following the same settings
+### as for `rootoutput_icarus`, except that the name of the output file is
+### the name of the configuration file, with the process name and file closing
+### time added.
+### 
+### WARNING
+### WARNING This configuration is not functional, waiting for the necessary
+### WARNING feature to be implemented in _art_
+### WARNING (request #22357: https://cdcvs.fnal.gov/redmine/issues/22357)
+### WARNING
+### 
+icarus_rootoutput_fromempty: {
+  @table::icarus_rootoutput
+  fileName:                 "%c_%tc-%p.root"
+} # icarus_rootoutput_fromempty
+
+
+
+################################################################################
+
+END_PROLOG
+
+// scinitllationtime_tool.fcl
+// Oct. 10 2019 Wei Mu
+BEGIN_PROLOG
+
+ScintTimeLAr:
+{
+    tool_type: ScintTimeLAr
+    LogLevel:         1
+    FastRisingTime:   0.0            // rising time of fast scintillation
+    FastDecayTime:    6.0            // decay time of fast scintillation
+    SlowRisingTime:   0.0            // rising time of slow scintillation
+    SlowDecayTime:    1600.0         // decay time of slow scintillation
+}
+
+END_PROLOG
+
+BEGIN_PROLOG
+
+icarus_ionandscint:
+{
+    module_type: "IonAndScint"
+    Instances:   "LArG4DetectorServicevolTPCActive;LArG4DetectorServicevolTPCPlaneU;LArG4DetectorServicevolTPCPlaneV;LArG4DetectorServicevolTPCPlaneY" # separated by semicolon
+    ISCalcAlg:   "Correlated"
+    SavePriorSCE: true
+}
+
+END_PROLOG
+# Standard configuration for the SimDriftElectrons module
+#
+# Use the SimEnergyDeposits from IonAndScint withouth
+# the space-charge offsets are applied. These offsets
+# are then applied in the SimDriftElectrons itself.
+# Note that the "priorSCE" SimEnergyDeposits, while they
+# don't include space-charge offsets, they still
+# include space-charge e-field corrections (I know...)
+
+BEGIN_PROLOG
+
+icarus_simdrift:
+{
+    module_type:     SimDriftElectrons
+    SimulationLabel: "ionization:priorSCE"
+}
+
+END_PROLOG
+// scinitllationtime_tool.fcl
+// Oct. 10 2019 Wei Mu
+BEGIN_PROLOG
+
+ScintTimeLAr:
+{
+    tool_type: ScintTimeLAr
+    LogLevel:         1
+    FastRisingTime:   0.0            // rising time of fast scintillation
+    FastDecayTime:    6.0            // decay time of fast scintillation
+    SlowRisingTime:   0.0            // rising time of slow scintillation
+    SlowDecayTime:    1600.0         // decay time of slow scintillation
+}
+
+END_PROLOG
+
+BEGIN_PROLOG
+
+standard_pdfastsim_pvs:
+{
+  module_type:            "PDFastSimPVS"
+  SimulationLabel:        "IonAndScint"
+  DoSlowComponent:        true
+  ScintTimeTool:          @local::ScintTimeLAr
+}
+
+
+END_PROLOG
+#
+# File:    photon_propagation_timing_icarus.fcl
+# Purpose: parameters of the time of arrival to PMT of scintillation light
+# Date:    20201002
+# Author:  Patrick Green (data),
+#          Gianluca Petrillo (petrillo@slac.stanford.edu) (packaging)
+# 
+# The time of arrivals of scintillation photons to PMT is parametrized with
+# a Landau or (Landau plus Exponential) functional form, as function of the
+# displacement between the scintillation point and the PMT.
+# In particular, both the modulus of the displacement (distance) and the
+# incident angle on the PMT are relevant.
+# The parametrization currently covers only the hemispace the PMT face,
+# while light from behind (which must incur major scattering in order to hit
+# the sensitive surface of the hemispherical PMT) is not included.
+# 
+# ICARUS does not have reflective foils or wavelength shifters inside
+# the detector volume (apart from the coating on the PMT), so all the light is
+# at wavelength aroudn 128 nm (VUV): the visible/reflected components are not
+# present and not needed.
+# 
+# The content of this file includes:
+# 
+# * photon_propagation_timing_icarus: the parametrization of choice of ICARUS;
+#     defined as alias of another parametrization
+# * photon_propagation_timing_icarus_protodune: settings for ProtoDUNE,
+#     imported from opticalsimparameterisations_dune.fcl of dunetpc repository
+#     tag v09_05_00; these values were plugged in there by Patrick Green
+#     (SBND, DUNE) on September 23, 2020.
+# * photon_propagation_timing_icarus_v09_05_00: settings for SBND, modified
+#     to correctly extrapolate to ICARUS distances; these values were the
+#     default settings in LArSoft v09_05_00, and they have been recommended
+#     for ICARUS by Patrick Green and Diego Garcia Gamez (SBND), with the
+#     belief that ICARUS-derived parameetrs will not relevantly differ.
+#
+
+BEGIN_PROLOG
+
+################################################################################
+###  photon_propagation_timing_icarus_protodune: ProtoDUNE, Sept. 2020
+################################################################################
+
+###
+### VUV light: parameters of the Landau + Exponential (<= 400 cm) and Landau (> 400 cm) models;
+### 
+### The parameters are distance (30 distances. 0 to 725 cm in 30x 25 cm steps)
+### and incident angle (2 angle spans, 0--45 and 45--90 degrees)
+###
+
+#
+# angular bin size
+#
+angle_bin_timing_icarus_protodune: 45 # degrees
+
+#
+# Distance in cm from "Landau + Expo" -> "Single Landau" model
+#
+inflexion_point_distance_icarus_protodune: 400.0 # cm
+
+
+# ---------------------
+#   Landau parameters
+# ------------------------------------------------------------------------------------------------------
+Distances_landau_icarus_protodune: [ # cm
+            0,        25,        50,        75,       100,       125,       150,       175,
+          200,       225,       250,       275,       300,       325,       350,       375,
+          400,       425,       450,       475,       500,       525,       550,       575,
+          600,       625,       650,       675,       700,       725
+]
+
+# ------------------------------------------------------------------------------------------------------
+Norm_over_entries_icarus_protodune: [
+  [
+    # - - -  0 -- 45 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    27.41    , 27.41    , 2.57134  , 1.47775  , 0.960340 , 0.668723 , 0.487808 , 0.362789 , #   0 cm...
+    0.277659 , 0.224883 , 0.185199 , 0.159048 , 0.143393 , 0.134121 , 0.125978 , 0.115751 , # 200 cm...
+    0.0921523, 0.0907023, 0.0856498, 0.0814134, 0.0750844, 0.0750844, 0.0750844, 0.0750844, # 400 cm...
+    0.0750844, 0.0750844, 0.0750844, 0.0750844, 0.0750844, 0.0750844                        # 600 cm...
+  ],
+  [
+    # - - - 45 -- 90 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    3.79032  , 3.79032  , 1.25862  , 0.928939 , 0.566822 , 0.319336 , 0.331336 , 0.219171 , #   0 cm...
+    0.178579 , 0.135635 , 0.119011 , 0.109138 , 0.0991792, 0.091753 , 0.0787281, 0.0743768, # 200 cm...
+    0.0663083, 0.0648284, 0.0608437, 0.0572599, 0.0561134, 0.0543579, 0.0529609, 0.0519021, # 400 cm...
+    0.0510434, 0.0504866, 0.0503902, 0.0507405, 0.0503883, 0.0497511                        # 600 cm...
+  ]
+]
+
+# ------------------------------------------------------------------------------------------------------
+Mpv_icarus_protodune: [
+  [
+    # - - -  0 -- 45 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    1.77134  , 1.77134  , 3.85131  , 5.593    , 7.46645  , 9.44108  , 11.5899  , 13.8189  , #   0 cm...
+    16.2753  , 18.8619  , 21.6428  , 24.4828  , 27.189   , 29.6607  , 32.3706  , 35.2212  , # 200 cm...
+    41.4392  , 43.2475  , 45.939   , 48.5748  , 51.4841  , 51.4841  , 51.4841  , 51.4841  , # 400 cm...
+    51.4841  , 51.4841  , 51.4841  , 51.4841  , 51.4841  , 51.4841                          # 600 cm...
+  ],
+  [
+    # - - - 45 -- 90 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    1.91282  , 1.91282  , 4.31774  , 5.90297  , 8.90329  , 11.8104  , 12.9629  , 17.0555  , #   0 cm...
+    19.5031  , 24.7774  , 27.175   , 29.8128  , 33.5619  , 36.6553  , 43.0021  , 46.059   , # 200 cm...
+    52.6953  , 55.1056  , 59.9728  , 65.2979  , 67.9593  , 71.0675  , 74.7855  , 79.689   , # 400 cm...
+    85.3232  , 90.818   , 97.0409  , 103.2    , 111.306  , 117.6                            # 600 cm...
+  ]
+]
+
+# ------------------------------------------------------------------------------------------------------
+Width_icarus_protodune: [
+  [
+    # - - -  0 -- 45 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    0.10303  , 0.10303  , 0.313506 , 0.525492 , 0.716541 , 0.969894 , 1.29961  , 1.73657  , #   0 cm...
+    2.30482  , 2.94669  , 3.71951  , 4.53258  , 5.24435  , 5.79945  , 6.53951  , 7.34736  , # 200 cm...
+    12.0305  , 12.4263  , 13.4917  , 14.7245  , 16.6202  , 16.6202  , 16.6202  , 16.6202  , # 400 cm...
+    16.6202  , 16.6202  , 16.6202  , 16.6202  , 16.6202  , 16.6202                          # 600 cm...
+  ],
+  [
+    # - - - 45 -- 90 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    0        , 0.281535 , 0.633816 , 0.80694  , 1.46701  , 2.32209  , 2.20895  , 3.56751  , #   0 cm...
+    4.23966  , 6.11748  , 6.97923  , 7.82035  , 9.05225  , 10.1422  , 12.6053  , 13.6305  , # 200 cm...
+    17.7093  , 18.3244  , 19.9961  , 22.1072  , 23.4653  , 25.3052  , 27.5297  , 30.5683  , # 400 cm...
+    34.8304  , 39.7456  , 45.1447  , 51.3363  , 58.4681  , 63.0122                          # 600 cm...
+  ]
+]
+
+# ------------------------------------------------------------------------------------------------------
+
+# --------------------------
+#   Exponential parameters
+# ------------------------------------------------------------------------------------------------------
+Distances_exp_icarus_protodune: [
+             0,          25,         50,         75,        100,        125,        150,        175,
+           200,         225,        250,        275,        300,        325,        350,        375
+]
+
+Slope_icarus_protodune: [
+  [
+    # - - -  0 -- 45 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    -0.205783 , -0.205783  , -0.157344 , -0.124546 , -0.0949427, -0.0640574, -0.0509928, -0.0421876, # 0   cm...
+    -0.0360771, -0.0327956 , -0.02997  , -0.0280924, -0.0269181, -0.0259104, -0.0248679, -0.0233511  # 200 cm...
+  ],
+  [
+    # - - - 45 -- 90 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    -0.157151 , -0.157151  , -0.10447  , -0.0875509, -0.0605052, -0.0435416, -0.040128 , -0.0325951, # 0   cm...
+    -0.0292046, -0.0255942 , -0.0241776, -0.0226607, -0.0213594, -0.02037  , -0.0181767, -0.0172752  # 200 cm...
+  ]
+]
+
+# ------------------------------------------------------------------------------------------------------
+Expo_over_Landau_norm_icarus_protodune: [
+  [
+    # - - -  0 -- 45 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    0.00276789, 0.00276789, 0.0362807  , 0.081067  , 0.111523  , 0.106485  , 0.123852  , 0.144239  , # 0   cm...
+    0.168534  , 0.201111  , 0.234443   , 0.269284  , 0.300041  , 0.320541  , 0.342403  , 0.356125    # 200 cm...
+  ],
+  [
+    # - - - 45 -- 90 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    0.0242526 , 0.0242526 , 0.086063   , 0.101552  , 0.134787  , 0.171863  , 0.152519  , 0.203461  , # 0   cm...
+    0.224872  , 0.279135  , 0.304123   , 0.317034  , 0.341433  , 0.360053  , 0.382877  , 0.391287    # 200 cm...
+  ]
+]
+
+
+# ------------------------------------------------------------------------------------------------------
+
+photon_propagation_timing_icarus_protodune: {
+  
+  # angular bin size in degrees (must correspond to parameterisation set)
+  angle_bin_timing_vuv: @local::angle_bin_timing_icarus_protodune
+  
+  # Distance in cm from "Landau + Expo" -> "Single Landau" model
+  inflexion_point_distance: @local::inflexion_point_distance_icarus_protodune
+  
+  #
+  # Timing parameterisaion:
+  #
+  # Parameters of the Landau + Exponential (<= 400 cm) and Landau (> 400 cm) models
+  #
+  # Landau parameters
+  # 
+  Distances_landau:      @local::Distances_landau_icarus_protodune
+  Norm_over_entries:     @local::Norm_over_entries_icarus_protodune
+  Mpv:                   @local::Mpv_icarus_protodune
+  Width:                 @local::Width_icarus_protodune
+
+  # Exponential parameters
+  Distances_exp:         @local::Distances_exp_icarus_protodune
+  Slope:                 @local::Slope_icarus_protodune
+
+  # Normalizations
+  Expo_over_Landau_norm: @local::Expo_over_Landau_norm_icarus_protodune
+  
+  #
+  # other settings
+  #
+  
+  # Discretisation step size
+  step_size: 1.0 # cm
+  
+  # Min and maximum distance parameterizations are generated for
+  # (only generated when required to prevent long initial loading time)
+  min_d:   25.0 # cm
+  max_d: 2500.0 # cm
+  
+  # VUV group velocity
+  vuv_vgroup_mean: 13.5 # cm/ns
+  vuv_vgroup_max:  18.0 # cm/ns
+
+} # photon_propagation_timing_icarus_protodune
+
+
+################################################################################
+###  common_vuv_timing_parameterization_icarus: LArSoft, pre-v09_05_00
+################################################################################
+
+###
+### This parametrization is the copy of the "generic" one from
+### opticalsimparameterisations.fcl in LArSoft v09_05_00 (larsim).
+###
+### VUV light: parameters of the Landau + Exponential (<= 350 cm) and Landau (> 350 cm) models;
+### 
+### The parameters are distance (23 distances. 0 to 550 cm in 23x 25 cm steps)
+### and incident angle (2 angle spans, 0--45 and 45--90 degrees)
+###
+
+#
+# angular bin size
+#
+angle_bin_timing_icarus_v09_05_00: 45 # degrees
+
+#
+# Distance in cm from "Landau + Expo" -> "Single Landau" model
+#
+inflexion_point_distance_icarus_v09_05_00: 400.0 # cm
+
+
+# ---------------------
+#   Landau parameters
+# ------------------------------------------------------------------------------------------------------
+Distances_landau_icarus_v09_05_00: [ # cm
+            0,        25,        50,        75,       100,       125,       150,       175,
+          200,       225,       250,       275,       300,       325,       350,       375,
+          400,       425,       450,       475,       500,       525,       550
+]
+
+# ------------------------------------------------------------------------------------------------------
+Norm_over_entries_icarus_v09_05_00: [
+  [
+    # - - -  0 -- 45 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    4.64837 , 4.64837 , 2.86581 , 1.4143  , 0.974871, 0.71311 , 0.55772 , 0.461078, #   0 cm...
+    0.411807, 0.364951, 0.325477, 0.297132, 0.297132, 0.297132, 0.297132, 0.297132, # 200 cm...
+    0.297132, 0.297132, 0.297132, 0.297132, 0.297132, 0.297132, 0.297132            # 400 cm...
+  ],
+  [
+    # - - - 45 -- 90 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    3.43562 , 3.43562 , 1.61042 , 0.981127, 0.64465 , 0.476552, 0.369063, 0.310461, #   0 cm...
+    0.264819, 0.231387, 0.215373, 0.199128, 0.189638, 0.170387, 0.159308, 0.151498, # 200 cm...
+    0.140134, 0.135217, 0.131114, 0.129511, 0.126329, 0.12452 , 0.124595            # 400 cm...
+  ]
+]
+
+# ------------------------------------------------------------------------------------------------------
+Mpv_icarus_v09_05_00: [
+  [
+    # - - -  0 -- 45 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    2.73373 , 2.73373 , 3.599   , 5.80141 , 7.57883 , 9.56959 , 11.6047 , 13.6676 , #   0 cm...
+    15.6126 , 17.5389 , 19.492  , 21.3254 , 21.3254 , 21.3254 , 21.3254 , 21.3254 , # 200 cm...
+    21.3254 , 21.3254 , 21.3254 , 21.3254 , 21.3254 , 21.3254 , 21.3254             # 400 cm...
+  ],
+  [
+    # - - - 45 -- 90 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    2.19076 , 2.19076 , 4.0163  , 5.86531 , 8.09466 , 10.4547 , 12.9261 , 15.2731 , #   0 cm...
+    17.7939 , 20.6664 , 22.99   , 25.7017 , 27.9139 , 30.9469 , 33.6378 , 36.1413 , # 200 cm...
+    39.8435 , 42.1625 , 44.6396 , 46.5133 , 48.6331 , 50.6754 , 53.3949             # 400 cm...
+  ]
+]
+
+# ------------------------------------------------------------------------------------------------------
+Width_icarus_v09_05_00: [
+  [
+    # - - -  0 -- 45 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    0.198303, 0.198303, 0.347397, 0.562874, 0.750881, 0.998318, 1.2622  , 1.55553 , #   0 cm...
+    1.79799 , 2.05579 , 2.3295  , 2.57611 , 2.57611 , 2.57611 , 2.57611 , 2.57611 , # 200 cm...
+    2.57611 , 2.57611 , 2.57611 , 2.57611 , 2.57611 , 2.57611 , 2.57611
+  ],
+  [
+    # - - - 45 -- 90 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    0.305766, 0.305766, 0.508544, 0.747765, 1.12059 , 1.57047 , 2.07501 , 2.54661 , #   0 cm...
+    3.09789 , 3.79078 , 4.19731 , 4.74438 , 5.09894 , 5.83702 , 6.36225 , 6.80253 , # 200 cm...
+    8.278   , 8.717   , 9.2568  , 9.7239  , 10.5865 , 11.3262 , 11.8423             # 400 cm...
+  ]
+]
+
+# ------------------------------------------------------------------------------------------------------
+
+# --------------------------
+#   Exponential parameters
+# ------------------------------------------------------------------------------------------------------
+Distances_exp_icarus_v09_05_00: [ # cm
+            0,        25,        50,        75,       100,       125,       150,       175,
+          200,       225,       250,       275,       300,       325,       350,       375
+]
+
+# ------------------------------------------------------------------------------------------------------
+Slope_icarus_v09_05_00: [
+  [
+    # - - -  0 -- 45 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    -0.181318 , -0.181318 , -0.148935 , -0.126243 , -0.10837  , -0.0860558, -0.0759728, -0.0706126,
+    -0.0672814, -0.0622897, -0.0577351, -0.0546709, -0.0546709, -0.0546709, -0.0546709, -0.0546709
+  ],
+  [
+    # - - - 45 -- 90 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    -0.169274 , -0.169274 , -0.119906 , -0.0983691, -0.0781793, -0.0659805, -0.0587059, -0.0545288,
+    -0.0514041, -0.0489773, -0.047259 , -0.0454668, -0.0439597, -0.0415122, -0.0396851, -0.0378005
+  ]
+]
+
+# ------------------------------------------------------------------------------------------------------
+Expo_over_Landau_norm_icarus_v09_05_00: [
+  [
+    # - - -  0 -- 45 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    0.0149644 , 0.0149644 , 0.0337403 , 0.0967895 , 0.152669  , 0.181732  , 0.23025   , 0.290033  ,
+    0.338948  , 0.372986  , 0.404828  , 0.441243  , 0.441243  , 0.441243  , 0.441243  , 0.441243
+  ],
+  [
+    # - - - 45 -- 90 degrees - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    0.0252807 , 0.0252807 , 0.0638727 , 0.113343  , 0.165669  , 0.216794  , 0.274868  , 0.325299  ,
+    0.38959   , 0.466117  , 0.515046  , 0.578897  , 0.621872  , 0.689713  , 0.742833  , 0.773619
+  ]
+]
+
+
+# ------------------------------------------------------------------------------------------------------
+photon_propagation_timing_icarus_v09_05_00: {
+
+  # angular bin size in degrees (must correspond to parameterisation set)
+  angle_bin_timing_vuv: @local::angle_bin_timing_icarus_v09_05_00
+  
+  # Distance in cm from "Landau + Expo" -> "Single Landau" model
+  inflexion_point_distance: @local::inflexion_point_distance_icarus_v09_05_00
+  
+  #
+  # Timing parameterisaion:
+  #
+  # Parameters of the Landau + Exponential (<= 350 cm) and Landau (> 350 cm) models
+  #
+  # Landau parameters
+  # 
+  Distances_landau:      @local::Distances_landau_icarus_v09_05_00
+  Norm_over_entries:     @local::Norm_over_entries_icarus_v09_05_00
+  Mpv:                   @local::Mpv_icarus_v09_05_00
+  Width:                 @local::Width_icarus_v09_05_00
+
+  # Exponential parameters
+  Distances_exp:         @local::Distances_exp_icarus_v09_05_00
+  Slope:                 @local::Slope_icarus_v09_05_00
+
+  # Normalizations
+  Expo_over_Landau_norm: @local::Expo_over_Landau_norm_icarus_v09_05_00
+  
+  #
+  # other settings
+  #
+  
+  # Discretisation step size
+  step_size: 1.0 # cm
+  
+  # Min and maximum distance parameterizations are generated for
+  # (only generated when required to prevent long initial loading time)
+  min_d:   25.0 # cm
+  max_d: 2500.0 # cm
+  
+  # VUV group velocity
+  vuv_vgroup_mean: 13.5 # cm/ns
+  vuv_vgroup_max:  18.0 # cm/ns
+
+} # photon_propagation_timing_icarus_v09_05_00
+
+
+################################################################################
+###  photon_propagation_timing_icarus: default ICARUS settings
+################################################################################
+
+photon_propagation_timing_icarus: @local::photon_propagation_timing_icarus_v09_05_00
+
+################################################################################
+
+
+END_PROLOG
+
+BEGIN_PROLOG
+
+#from SBND
+# VISIBLE/REFLECTED LIGHT: TIMING PARAMETERISATION
+  Distances_refl_ICARUS: [30, 50, 70, 90, 110, 130, 150, 170, 190, 195]
+  Distances_radial_refl_ICARUS: [10, 60.46, 135.42, 186.13, 234.32, 284.3]
+  Cut_off_ICARUS: [
+		[	[108.879, 117.713, 126.561, 135.013, 138.019, 147.266, 148.173, 151.039, 156.576, 157.368],
+			[107.123, 117.204, 126.197, 132.051, 138.645, 143.567, 148.71, 150.631, 152.873, 153.062],
+			[101.158, 110.499, 118.97, 125.651, 131.928, 137.559, 140.803, 144.461, 148.055, 147.67],
+			[95.743, 105.422, 113.131, 120.794, 126.101, 131.75, 136.817, 140.403, 144.638, 144.621],
+			[90.199, 99.504, 107.253, 114.39, 120.331, 125.562, 130.335, 134.945, 137.119, 137.499],
+			[80.6139, 89.4706, 96.1147, 105.681, 111.707, 116.878, 118.331, 129.243, 130.337, 132.494]
+		],
+		[	[110.859, 119.899, 127.787, 132.744, 140.344, 146.117, 149.407, 153.365, 156.509, 155.408],
+			[109.29, 118.677, 126.58, 132.996, 138.773, 144.69, 148.72, 151.492, 153.446, 153.059],
+			[102.812, 111.585, 120.02, 126.483, 132.528, 137.919, 142.511, 145.935, 147.783, 147.661],
+			[97.498, 105.994, 114.085, 120.801, 126.817, 132.482, 136.423, 139.902, 143.529, 144.307],
+			[91.4671, 100.444, 108.344, 115.064, 121.27, 127.39, 132.363, 135.465, 138.877, 140.423],
+			[84.7913, 94.6445, 102.154, 109.808, 114.435, 119.918, 125.283, 129.101, 133.017, 134.976]
+		],
+		[	[113.473, 122.253, 129.973, 135.681, 142.03, 147.891, 152.069, 153.661, 157.246, 157.143],
+			[111.526, 120.351, 128.326, 134.993, 141.243, 145.18, 149.429, 152.99, 154.259, 155.184],
+			[106.443, 114.964, 122.85, 129.208, 135.683, 140.31, 143.793, 148.454, 150.894, 150.622],
+			[101.014, 109.385, 116.918, 123.392, 129.73, 134.869, 139.516, 142.497, 146.382, 145.781],
+			[95.7601, 104.313, 111.902, 118.858, 124.205, 130.367, 134.146, 137.843, 140.85, 140.721],
+			[88.227, 96.8771, 104.217, 110.683, 116.074, 122.027, 128.004, 131.05, 136.799, 134.261]
+		],
+		[	[117.545, 125.174, 132.845, 139.015, 144.447, 149.025, 152.787, 153.969, 158.573, 158.526],
+			[115.274, 123.511, 130.751, 136.751, 142.789, 147.191, 151.494, 154.343, 155.427, 156.897],
+			[111.345, 119.575, 126.844, 132.808, 139.206, 143.527, 147.367, 150.525, 152.621, 153.49],
+			[106.945, 114.98, 122.664, 128.581, 134.635, 139.054, 142.915, 146.447, 148.629, 149.38],
+			[101.952, 110.16, 117.166, 123.437, 129.051, 133.848, 138.325, 141.032, 144.34, 143.797],
+			[95.7831, 103.094, 110.602, 116.772, 122.035, 128.367, 129.32, 134.99, 137.224, 138.517]
+		],
+		[	[122.059, 129.706, 136.634, 142.41, 147.122, 151.765, 156.203, 158.534, 159.641, 159.687],
+			[121.198, 129.397, 136.316, 141.944, 146.887, 151.695, 154.492, 157.212, 158.883, 158.78],
+			[118.617, 126.902, 133.136, 139.301, 144.749, 149.136, 152.547, 155.325, 156.44, 157.326],
+			[114.93, 122.657, 129.171, 135.25, 140.923, 145.447, 148.867, 151.778, 154.523, 154.22],
+			[110.447, 118.776, 125.102, 130.857, 136.014, 140.27, 144.789, 147.129, 149.476, 149.93],
+			[104.124, 112.665, 118.815, 124.201, 129.634, 134.767, 137.868, 140.187, 144.66, 143.859]
+		],
+		[	[126.237, 133.998, 140.403, 146.168, 150.601, 155.466, 156.39, 157.403, 162.758, 161.648],
+			[128.138, 136.133, 142.206, 147.985, 153.284, 156.167, 160.598, 162.771, 164.584, 163.997],
+			[128.168, 135.637, 142.499, 148.122, 152.425, 156.461, 159.679, 162.192, 163.726, 164.242],
+			[124.94, 132.548, 138.967, 145.065, 149.917, 153.83, 156.655, 159.069, 160.642, 161.262],
+			[120.791, 129.263, 135.849, 140.397, 146.083, 149.077, 153.02, 155.276, 157.498, 158.006],
+			[115.162, 123.234, 129.656, 134.745, 139.527, 142.669, 148.269, 150.398, 152.025, 151.664]
+		],
+		[	[126.237, 133.998, 140.403, 146.168, 150.601, 155.466, 156.39, 157.403, 162.758, 161.648],
+			[128.138, 136.133, 142.206, 147.985, 153.284, 156.167, 160.598, 162.771, 164.584, 163.997],
+			[133.806, 141.375, 147.856, 152.848, 158.234, 160.793, 164.829, 164.129, 169.376, 168.286],
+			[132.637, 140.57, 147.406, 151.75, 156.099, 160.353, 162.947, 165.174, 166.656, 166.734],
+			[130.847, 138.784, 145.106, 150.963, 155.084, 158.991, 161.935, 164.596, 166.148, 166.383],
+			[127.26, 134.345, 141.726, 146.923, 151.455, 154.986, 157.498, 160.633, 162.228, 163.082]
+		],
+		[	[126.237, 133.998, 140.403, 146.168, 150.601, 155.466, 156.39, 157.403, 162.758, 161.648],
+			[128.138, 136.133, 142.206, 147.985, 153.284, 156.167, 160.598, 162.771, 164.584, 163.997],
+			[133.806, 141.375, 147.856, 152.848, 158.234, 160.793, 164.829, 164.129, 169.376, 168.286],
+			[132.637, 140.57, 147.406, 151.75, 156.099, 160.353, 162.947, 165.174, 166.656, 166.734],
+			[130.847, 138.784, 145.106, 150.963, 155.084, 158.991, 161.935, 164.596, 166.148, 166.383],
+			[127.26, 134.345, 141.726, 146.923, 151.455, 154.986, 157.498, 160.633, 162.228, 163.082]
+		],
+		[	[126.237, 133.998, 140.403, 146.168, 150.601, 155.466, 156.39, 157.403, 162.758, 161.648],
+			[128.138, 136.133, 142.206, 147.985, 153.284, 156.167, 160.598, 162.771, 164.584, 163.997],
+			[133.806, 141.375, 147.856, 152.848, 158.234, 160.793, 164.829, 164.129, 169.376, 168.286],
+			[132.637, 140.57, 147.406, 151.75, 156.099, 160.353, 162.947, 165.174, 166.656, 166.734],
+			[130.847, 138.784, 145.106, 150.963, 155.084, 158.991, 161.935, 164.596, 166.148, 166.383],
+			[127.26, 134.345, 141.726, 146.923, 151.455, 154.986, 157.498, 160.633, 162.228, 163.082]
+		] ]
+
+  Tau_ICARUS: [
+		[	[3.37773, 5.67524, 4.23857, 4.04827, 3.50598, 3.09153, 2.82991, 2.74153, 2.50424, 2.51098],
+			[3.42384, 5.76302, 4.24915, 3.99481, 3.47452, 2.92546, 2.74473, 2.57978, 2.43933, 2.41633],
+			[3.3234, 5.65588, 3.72343, 3.50578, 2.97039, 2.46387, 2.34442, 2.20104, 2.08184, 2.07292],
+			[3.09768, 4.77873, 3.25213, 3.11725, 2.58829, 2.11184, 2.03799, 1.87696, 1.86368, 1.82172],
+			[2.83897, 4.59257, 2.99183, 2.89601, 2.44985, 1.81676, 1.69844, 1.67326, 1.64045, 1.62682],
+			[2.24195, 3.62967, 2.38022, 2.21063, 1.77588, 1.69214, 0.975968, 1.11193, 1.29554, 1.27876]
+		],
+		[	[3.41297, 5.95886, 4.39599, 4.1988, 3.58909, 3.11005, 2.91525, 2.74339, 2.64943, 2.52263],
+			[3.45504, 5.95178, 4.34456, 4.17342, 3.48337, 3.054, 2.8128, 2.60983, 2.51229, 2.48704],
+			[3.35757, 5.83494, 3.81424, 3.6331, 3.01154, 2.50273, 2.39638, 2.18084, 2.15704, 2.08133],
+			[3.23112, 5.22438, 3.43076, 3.30744, 2.69743, 2.16353, 2.09492, 1.94232, 1.853, 1.88973],
+			[2.87672, 4.81873, 3.14107, 3.0108, 2.49182, 1.85505, 1.81588, 1.70546, 1.66224, 1.64217],
+			[2.41847, 4.23497, 2.48155, 2.50752, 2.00871, 1.50138, 1.33433, 1.29673, 1.36109, 1.36027]
+		],
+		[	[3.51225, 6.19679, 4.72908, 4.49082, 3.66667, 3.30587, 3.03423, 2.77513, 2.67516, 2.61675],
+			[3.51704, 6.07228, 4.64436, 4.41025, 3.59614, 3.19848, 2.93285, 2.67327, 2.5368, 2.5385],
+			[3.50964, 5.51796, 4.20475, 4.01172, 3.14469, 2.75958, 2.58262, 2.3296, 2.24272, 2.19922],
+			[3.23421, 4.89865, 3.74765, 3.52677, 2.76721, 2.38141, 2.28118, 2.04523, 2.00265, 1.91851],
+			[2.93819, 4.61545, 3.48217, 3.27706, 2.57221, 2.11197, 2.04526, 1.84741, 1.77289, 1.7419],
+			[2.38026, 4.14456, 2.72722, 2.60646, 2.01861, 1.53543, 1.48663, 1.37924, 1.32047, 1.29723]
+		],
+		[	[6.4584, 6.81789, 5.23841, 4.71468, 3.93022, 3.62204, 3.08621, 2.84607, 2.77384, 2.66418],
+			[5.69945, 6.50649, 5.11628, 4.59747, 3.77208, 3.47841, 2.99785, 2.71059, 2.61914, 2.61192],
+			[5.11601, 5.81431, 4.73139, 4.24668, 3.42459, 3.12305, 2.75533, 2.48413, 2.38089, 2.37636],
+			[4.64392, 5.11341, 4.2487, 3.82068, 3.11183, 2.78096, 2.4599, 2.23122, 2.17768, 2.12872],
+			[3.76892, 4.63917, 3.92189, 3.50733, 2.76486, 2.45824, 2.20454, 1.97289, 1.89508, 1.90504],
+			[2.60969, 3.81077, 3.22217, 2.87626, 2.26577, 1.89226, 1.70091, 1.5454, 1.52499, 1.49217]
+		],
+		[	[7.98137, 11.8903, 5.89993, 5.44383, 4.21656, 3.75399, 3.22818, 2.91275, 2.77715, 2.73681],
+			[8.17119, 11.7947, 6.0833, 5.54124, 4.17976, 3.79177, 3.21898, 2.9156, 2.77822, 2.70759],
+			[7.24128, 10.3503, 5.51381, 4.98346, 3.92027, 3.63101, 3.07344, 2.76202, 2.64124, 2.59486],
+			[6.35025, 7.74736, 4.83283, 4.42004, 3.53543, 3.27141, 2.78187, 2.49664, 2.41864, 2.37423],
+			[5.18985, 6.44826, 4.4504, 4.04286, 3.19083, 2.95287, 2.49538, 2.23093, 2.16525, 2.15358],
+			[4.1528, 4.93534, 3.73414, 3.47409, 2.65761, 2.41434, 2.04314, 1.82511, 1.80785, 1.76681]
+		],
+		[	[5.82314, 10.5088, 8.39185, 6.94545, 3.98804, 3.75549, 3.28186, 2.9109, 2.70377, 2.67178],
+			[6.74817, 13.4954, 10.5046, 9.16714, 4.77805, 4.27457, 3.56114, 3.24013, 2.9388, 2.90071],
+			[7.28422, 13.0955, 10.8966, 8.45688, 5.5568, 4.70011, 3.64741, 3.25593, 3.0012, 2.95399],
+			[6.87267, 12.2464, 8.56654, 6.47212, 4.66347, 4.11222, 3.38328, 3.02702, 2.85428, 2.78282],
+			[6.51522, 10.7341, 6.25556, 5.10716, 3.96247, 3.61264, 3.08214, 2.78129, 2.6048, 2.59514],
+			[6.22582, 7.23888, 4.82071, 4.272, 3.45411, 3.0887, 2.60353, 2.35789, 2.31151, 2.28667]
+		],
+		[	[5.82314, 10.5088, 8.39185, 6.94545, 3.98804, 3.75549, 3.28186, 2.9109, 2.70377, 2.67178],
+			[6.74817, 13.4954, 10.5046, 9.16714, 4.77805, 4.27457, 3.56114, 3.24013, 2.9388, 2.90071],
+			[13.7947, 13.4404, 11.7965, 11.3239, 8.28857, 5.80406, 3.91979, 3.45336, 3.21981, 3.15334],
+			[12.2469, 13.1488, 11.6768, 11.05, 7.62147, 5.77695, 4.07048, 3.44591, 3.21365, 3.1508],
+			[10.9941, 13.1968, 10.7938, 9.98867, 6.47435, 5.12157, 3.85559, 3.39796, 3.15723, 3.10781],
+			[7.55675, 11.9677, 8.81276, 7.06091, 4.85345, 4.24957, 3.45344, 3.12578, 2.86344, 2.84666]
+		],
+		[	[5.82314, 10.5088, 8.39185, 6.94545, 3.98804, 3.75549, 3.28186, 2.9109, 2.70377, 2.67178],
+			[6.74817, 13.4954, 10.5046, 9.16714, 4.77805, 4.27457, 3.56114, 3.24013, 2.9388, 2.90071],
+			[13.7947, 13.4404, 11.7965, 11.3239, 8.28857, 5.80406, 3.91979, 3.45336, 3.21981, 3.15334],
+			[12.2469, 13.1488, 11.6768, 11.05, 7.62147, 5.77695, 4.07048, 3.44591, 3.21365, 3.1508],
+			[10.9941, 13.1968, 10.7938, 9.98867, 6.47435, 5.12157, 3.85559, 3.39796, 3.15723, 3.10781],
+			[7.55675, 11.9677, 8.81276, 7.06091, 4.85345, 4.24957, 3.45344, 3.12578, 2.86344, 2.84666]
+		],
+		[	[5.82314, 10.5088, 8.39185, 6.94545, 3.98804, 3.75549, 3.28186, 2.9109, 2.70377, 2.67178],
+			[6.74817, 13.4954, 10.5046, 9.16714, 4.77805, 4.27457, 3.56114, 3.24013, 2.9388, 2.90071],
+			[13.7947, 13.4404, 11.7965, 11.3239, 8.28857, 5.80406, 3.91979, 3.45336, 3.21981, 3.15334],
+			[12.2469, 13.1488, 11.6768, 11.05, 7.62147, 5.77695, 4.07048, 3.44591, 3.21365, 3.1508],
+			[10.9941, 13.1968, 10.7938, 9.98867, 6.47435, 5.12157, 3.85559, 3.39796, 3.15723, 3.10781],
+			[7.55675, 11.9677, 8.81276, 7.06091, 4.85345, 4.24957, 3.45344, 3.12578, 2.86344, 2.84666]
+		] ]
+
+icarus_vis_timing_parameterization:
+{
+  # Timing parameterisation:
+  #
+  # Smearing parameters
+  Distances_refl: @local::Distances_refl_ICARUS
+  Distances_radial_refl: @local::Distances_radial_refl_ICARUS
+  Cut_off: @local::Cut_off_ICARUS
+  Tau: @local::Tau_ICARUS
+
+  # vis velocity in cm/ns
+  vis_vmean: 23.99
+
+  # angular bin size in deg, must correspond to parameterisation set
+  angle_bin_timing_vis: 10
+}
+
+# standard configuration
+icarus_pdfastsim_pvs:                     @local::standard_pdfastsim_pvs
+
+icarus_pdfastsim_pvs.SimulationLabel:     "ionization"
+icarus_pdfastsim_pvs.IncludePropTime: true
+icarus_pdfastsim_pvs.ScintTimeTool.SlowDecayTime: 1300.0
+
+# propagation times
+icarus_pdfastsim_pvs.VUVTiming: 			@local::photon_propagation_timing_icarus
+icarus_pdfastsim_pvs.VISTiming: 			@local::icarus_vis_timing_parameterization
+
+
+END_PROLOG
+BEGIN_PROLOG
+
+icarus_genericCRT:
+{
+  module_type: "GenericCRT"
+  LArG4Label: "largeant"
+  EnergyUnitsScale: "GeV"
+}
+
+END_PROLOG
+BEGIN_PROLOG
+
+sbn_largeant_info_reducer: {
+	module_type: "G4InfoReducer"
+	SimEnergyDepositLabel: "largeant:TPCActive"
+	VoxelSizeX: 0.3
+	VoxelSizeY: 0.3
+	VoxelSizeZ: 0.3
+	useOrigTrackID: true
+}
+
+END_PROLOG
+BEGIN_PROLOG
+
+simplemerge : {
+  module_type: "SimpleMerge"
+  InputSourcesLabels: ["largeant", "largeant:droppedMCParticles"]
+  ResetMotherIDs : [10000000,20000000]  
+  #ResetMotherIDs: [ 0 ]
+}
+
+END_PROLOG
+
+process_name: G4
+
+services: {
+       @table::icarus_g4_services
+       @table::icarus_larg4_services
+}
+
+source:
+{
+  module_type: RootInput
+}
+
+
+physics:
+{
+
+  producers:
+  {
+    rns: { module_type: "RandomNumberSaver" }
+
+    # A dummy module that forces the G4 physics list to be loaded
+    loader: { module_type: "PhysListLoader" }
+
+    # The geant4 step
+    largeant: @local::standard_larg4
+
+    # Creation of ionization electrons and scintillation photons (keep ionization name for compatibility)
+    ionization: @local::icarus_ionandscint
+
+    # Light propogation
+    pdfastsim: @local::icarus_pdfastsim_pvs
+
+    # Electron propogation
+    simdrift: @local::icarus_simdrift
+
+    # needs to run right after largeant
+    sedlite:    @local::sbn_largeant_info_reducer 
+
+
+    # Generic CRT
+    genericcrt: @local::icarus_genericCRT
+
+    # simplemerge for ML
+    simplemerge: @local::simplemerge
+
+  }
+
+  # All producers and filters modules for this path, order matters
+  simulate: [ rns
+            , loader
+            , largeant
+            , ionization
+            , pdfastsim
+            , simdrift
+            , sedlite
+            , genericcrt
+	    , simplemerge
+          ]
+
+  # The output stream, there could be more than one if using filters
+  stream1: [ rootoutput ]
+
+  # Contains the paths that modify the art::event
+  trigger_paths: [ simulate ]
+
+  # Contains the paths that do not modify the art::Event
+  end_paths: [ stream1 ]
+}
+
+# Store MCParticleLite in G4 to store dropped particles from KeepEMShowerDaughters: false
+physics.producers.largeant.StoreDroppedMCParticles: false
+#services.ParticleListAction.KeepDroppedParticlesInVolumes: ["volDetEnclosure"] 
+
+# ------------------------------------------------------------------------------
+# Setup hack for 2D
+services.SpaceChargeService.is2DdriftSimHack: true
+
+#info reducer
+physics.producers.sedlite.SimEnergyDepositLabel: "largeant:LArG4DetectorServicevolTPCActive"
+physics.producers.sedlite.useOrigTrackID: true #needed since origTrackID not filled for sedlite in SBND
+
+# avoid huge log files
+services.message.destinations.LogErrorFile.categories.SimDriftElectrons: { limit: 0 }
+services.message.destinations.LogStandardOut.categories.SimDriftElectrons: { limit: 0 }
+
+outputs.rootoutput: @local::icarus_rootoutput
+
+services.ParticleListAction.keepGenTrajectories: ["cosmgen","generator"]
+services.ParticleListAction.EnergyCut: 5e-1
+# services.ParticleListAction.KeepParticlesInVolumes: [ "volCryostat" ] #not supported yet
+services.ParticleListAction.SparsifyTrajectories: false
+
+#
+# settings to enable space charge simulation and corrections
+#
+
+services.SpaceChargeService.EnableSimSpatialSCE: true
+services.SpaceChargeService.EnableSimEfieldSCE: true
+services.SpaceChargeService.is2DdriftSimHack: true
+
+services.SpaceChargeService.RepresentationType: "Voxelized_TH3"
+
+services.SpaceChargeService.InputFilename: 'SCEoffsets/SCEoffsets_ICARUS_E500_voxelTH3.root'
+#services.SpaceChargeService.InputFilename: 'SCEoffsets/SCEoffsets_ICARUS_E500_voxelTH3_2DSigSimHack.root'
+#services.SpaceChargeService.InputFilename: 'users/rlazur/SCEoffsets/SCEoffsets_ICARUS_E500_voxelTH3.root' #if icarus_data not up to date
+
+physics.simulate: [ rns
+  , loader
+  , largeant
+  ]
+
+process_name: G4Step1
