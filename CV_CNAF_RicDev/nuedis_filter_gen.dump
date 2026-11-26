@@ -1,0 +1,136 @@
+# Produced from 'fhicl-dump' using:
+#   Input  : fcl/cv/nuedis_filter_gen.fcl
+#   Policy : cet::filepath_maker
+#   Path   : "FHICL_FILE_PATH"
+
+outputs: {
+   rootoutput: {
+      SelectEvents: [
+         "filter"
+      ]
+      compressionLevel: 1
+      dataTier: "simulated"
+      fileName: "%ifb-%p.root"
+      module_type: "RootOutput"
+      saveMemoryObjectThreshold: 0
+   }
+}
+physics: {
+   end_paths: [
+      "stream"
+   ]
+   filter: [
+      "eventActive"
+   ]
+   filters: {
+      eventActive: {
+         inActive: true
+         module_type: "FilterNeutrinosActiveVolume"
+      }
+   }
+   stream: [
+      "rootoutput"
+   ]
+   trigger_paths: [
+      "filter"
+   ]
+}
+process_name: "GenGenieFilter"
+services: {
+   AuxDetGeometry: {
+      GDML: "icarus_refactored_nounderscore_20230918.gdml"
+      Name: "icarus_v4"
+      SortingParameters: {
+         tool_type: "AuxDetGeoObjectSorterICARUS"
+      }
+      SurfaceY: 690
+   }
+   DuplicateEventTracker: {}
+   FileCatalogMetadata: {
+      fileType: "mc"
+      group: "icarus"
+      runType: "physics"
+   }
+   Geometry: {
+      GDML: "icarus_refactored_nounderscore_20230918.gdml"
+      Name: "icarus_v4"
+      SortingParameters: {
+         tool_type: "GeoObjectSorterPMTasTPC"
+      }
+      SurfaceY: 690
+   }
+   GeometryConfigurationWriter: {}
+   MemoryTracker: {
+      dbOutput: {
+         filename: "MemoryReport.db"
+         overwrite: true
+      }
+   }
+   TimeTracker: {
+      dbOutput: {
+         filename: "TimingReport.db"
+         overwrite: true
+      }
+      printSummary: true
+   }
+   WireReadout: {
+      Mapper: {
+         WirelessChannels: {
+            CollectionEvenPostChannels: 96
+            CollectionEvenPreChannels: 64
+            CollectionOddPostChannels: 64
+            CollectionOddPreChannels: 96
+            FirstInductionPostChannels: 96
+            FirstInductionPreChannels: 0
+            SecondInductionEvenPostChannels: 64
+            SecondInductionEvenPreChannels: 96
+            SecondInductionOddPostChannels: 96
+            SecondInductionOddPreChannels: 64
+         }
+      }
+      SortingParameters: {
+         tool_type: "WireReadoutSorterStandard"
+      }
+      service_provider: "WireReadoutICARUS"
+   }
+   message: {
+      destinations: {
+         LogErrorFile: {
+            append: false
+            categories: {
+               default: {}
+}
+            filename: "errors.log"
+            threshold: "WARNING"
+            type: "file"
+}
+         LogSeeds: {
+            append: false
+            categories: {
+               NuRandomService: {
+                  limit: -1
+               }
+               default: {
+                  limit: 0
+               }
+            }
+            filename: "randomseeds.log"
+            threshold: "INFO"
+            type: "file"
+         }
+         LogStandardOut: {
+            categories: {
+               NuRandomService: {
+                  limit: 0
+               }
+               default: {}
+}
+            threshold: "INFO"
+            type: "cout"
+}
+}
+}
+   scheduler: {
+      defaultExceptions: false
+   }
+}
