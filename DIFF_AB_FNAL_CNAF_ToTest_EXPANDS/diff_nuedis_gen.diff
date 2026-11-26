@@ -1,6 +1,103 @@
 --- CV_FNAL_10_31_00_01_EXPANDED//nuedis_gen.expand	2026-11-26 10:27:06.792413264 +0100
 +++ CV_CNAF_RicDev_EXPANDED//nuedis_gen.expand	2026-11-26 10:15:19.822127137 +0100
-@@ -231,12 +231,9 @@
+@@ -134,206 +134,203 @@
+ #
+ # File:    services_icarus_simulation.fcl
+ # Purpose: Configuration presets for simulation jobs in ICARUS.
+ #
+ #
+ # This file defines a set of service configurations for ICARUS simulation.
+ # Simulation consists of 3 steps:
+ #
+ #  (0) event generator ... making a particle to inject into G4
+ #  (1) Geant4 ............ G4 particle tracking simulation in the detector
+ #  (2) readout ........... Readout electronics simulation (make waveforms)
+ #
+ # Fhicl configurations for each simulation steps above are:
+ # 
+ #  (0) icarus_gen_services
+ #  (1) icarus_g4_dark_services
+ #  (2) icarus_detsim_dark_services
+ #
+ #  (all) icarus_simulation_dark_services ... include all services in (0), (1), and (2).
+ #
+ # Above configurations do not include scintillation light or optical detector
+ # readout simulation. If you wish to include those, use followings:
+ #
+ #  (1*) icarus_g4_services
+ #  (2*) icarus_detsim_services
+ #
+ #  (all*) icarus_simulation_services, icarus_legacy_services_v08_50_00
+ #
+ # 
+ # Avaialble presets:
+ # * `icarus_gen_service` (internally used): basic services plus magnetic field
+ # * `icarus_g4_dark_services`: G4 simulation services without optical system
+ # * `icarus_detsim_dark_services`: digitization services without optical system
+ #
+ 
+ BEGIN_PROLOG
+ 
+ #for now the parameter sets for the different experiments are all the same
+ 
+ standard_largeantparameters:
+ {
+  OpticalSimVerbosity:      0       #verbosity of optical simulation, soon to be depricated
+  ParticleKineticEnergyCut: 0.01e-3  #in GeV
+  StoreTrajectories:        true
+  VisualizationEnergyCut:   10.e-3  #depricated, in GeV
+  VisualizeNeutrals:        false   #depricated
+  UseCustomPhysics:         false   #Whether to use a custom list of physics processes or the default
+  ModifyProtonCut:          false   #Whether to modify the default proton cut
+  NewProtonCut:             0.0     #new ProtonCut value, ModifyProtonCut must be set to set new value
+  KeepEMShowerDaughters:    false   #save secondary, tertiary, etc particles in EM showers
+  LongitudinalDiffusion:    6.2e-9  #in cm^2/ns
+  TransverseDiffusion:      16.3e-9 #in cm^2/ns
+  ElectronClusterSize:      600.0   #number of ionization electrons to drift in a unit
+  MinNumberOfElCluster:     0	   #minimum number of electron clusters
+  EnabledPhysics:           [ "Em", "SynchrotronAndGN", "Ion", "Hadron",
+                              "Decay", "HadronElastic", "Stopping", "NeutronTrackingCut" ]
+  CosmogenicK0Bias:         0 # 0 is off. N is the number of secondaries to produce.
+  CosmogenicXSMNBiasOn:     0 # 0 is off. 1 works. 2 still in development.
+  CosmogenicXSMNBiasFactor: 1 # Not more than 5-ish cuz of numerical instabilities.
+  DisableWireplanes:        false #if set true, charge drift simulation does not run - used for optical sim jobs OR just when you don't wanna drift the e's.
+  SkipWireSignalInTPCs:     []    # put here TPC id's which should not receive ionization electrons - used to simulate TPC geom volumes which are actually dead LAr volumes in protoDUNE
+  UseModBoxRecomb:          true  # use Modified Box recombination instead of Birks
+  UseEllipsModBoxRecomb:    false # use Ellipsoid Modified Box recomination instead of Birks
+  UseModLarqlRecomb:        false # use LArQL recombination corrections (dependence on EF)
+ 
+  #* Recombination factor coefficients come from Nucl.Instrum.Meth.A523:275-286,2004
+  #* * @f$ dE/dx @f$ is given by the voxel energy deposition, but have to convert it to MeV/cm from GeV/voxel width
+  #* * electric field: @f$ E @f$ in kV/cm
+  #* * @f$ R = A/(1 + (dE/dx)*k/E) @f$
+  #* * @f$ A = 0.800 \pm 0.003 @f$
+  #* * @f$ k = 0.0486 @f$ needs to be scaled with Electric field
+  RecombA: 0.800      #< _A_ constant.
+  Recombk: 0.0486     #< _k_ constant, in g/(MeV cm&sup2;)*kV/cm.
+ 
+  #* Recombination factor coefficients come from Nucl.Instrum.Meth.A523:275-286,2004
+  #* * @f$ dE/dx @f$ is given by the voxel energy deposition, but have to convert it to MeV/cm from GeV/voxel width
+  #* * electric field: @f$ E @f$ in kV/cm
+  #* * `kModBoxB` needs to be scaled with the electric field.
+  ModBoxA: 0.930
+  ModBoxB: 0.212
+ 
+  #* Recombination factor coefficients come from Gray Putnam: https://arxiv.org/abs/2407.12969
+  #* * @f$ dE/dx @f$ is given by the voxel energy deposition, but have to convert it to MeV/cm from GeV/voxel width
+  #* * electric field: @f$ E @f$ in kV/cm
+  #* * `EllipsModBoxB` needs to be scaled with the electric field.
+  EllipsModBoxA: 0.904 # +/- 0.008
+  EllipsModBoxB: 0.204 # +/- 0.008
+  EllipsModBoxR: 1.25  # +/- 0.02
+ 
+  #* Recombination factor coefficients for LArQL
+  #* https://doi.org/10.1088/1748-0221/17/07/C07009
+  #* * @f$ dE/dx @f$ is given by the energy deposition in MeV/cm
+  #* * electric field: @f$ E @f$ in kV/cm
+  LarqlChi0A: 0.00338427
+  LarqlChi0B: -6.57037
+  LarqlChi0C: 1.88418
+  LarqlChi0D: 0.000129379
   LarqlAlpha: 0.0372
   LarqlBeta: 0.0124
  
@@ -14,7 +111,201 @@
  
    #* ion+excitation work function in eV
    #* https://doi.org/10.1016/0168-9002(90)90011-T
-@@ -1752,67 +1749,6 @@
+  Wph: 19.5
+ 
+  # The following parameters specify details of wireplanes or similar
+  # areas with optically parameterized transmissions (Ben J 2013)
+ 
+  #  volume names to be associated with an optical wireplane model
+  OpticalParamVolumes:      ["volTPCPlaneVert_PV"]
+ 
+  #  specification of which model to use for each volume
+  OpticalParamModels:       ["OverlaidWireplanes"]
+ 
+  # orientation of each wireplane set
+  #  0 = Xdrift, 1 = Ydrift, 2 = Zdrift
+  OpticalParamOrientations: [0]
+ 
+  # This a set of floats which is specific to the particular model used.
+  # For overlaid wireplanes, should be a vector of vectors of
+  #                                 [plane angle, pitch/mm, wire diameter/mm]
+  #
+  # This format is chosen to allow for future extensions to the model
+  #  for, eg, DUNE wireplane development.
+  #
+  OpticalParamParameters:   [ [ [60,  3, 0.15],
+  	 		       [-60, 3, 0.15],
+                                [0,   3, 0.15] ] ]
+  UseLitePhotons: false
+ }
+ 
+ jp250L_largeantparameters:     @local::standard_largeantparameters
+ bo_largeantparameters:         @local::standard_largeantparameters
+ argoneut_largeantparameters:   @local::standard_largeantparameters
+ # The following line is already in simulationservices_microboone.fcl
+ # and so it should not also be included here, for clarity's sake.
+ #microboone_largeantparameters: @local::standard_largeantparameters
+ dune35t_largeantparameters:    @local::standard_largeantparameters
+ dunefd_largeantparameters:   @local::standard_largeantparameters
+ 
+ standard_larvoxelcalculator:
+ {
+  VoxelSizeX:     0.03    #in cm
+  VoxelSizeY:     0.03    #in cm
+  VoxelSizeZ:     0.03    #in cm
+  VoxelSizeT:     5000.0  #in ns
+  VoxelOffsetX:   0.0     #in cm
+  VoxelOffsetY:   0.0     #in cm
+  VoxelOffsetZ:   0.0     #in cm
+  VoxelOffsetT:   -2500.0 #in ns
+  VoxelEnergyCut: 1.e-6   #in GeV
+ }
+ 
+ bo_larvoxelcalculator:         @local::standard_larvoxelcalculator
+ jp250L_larvoxelcalculator:     @local::standard_larvoxelcalculator
+ argoneut_larvoxelcalculator:   @local::standard_larvoxelcalculator
+ # The following line is already in simulationservices_microboone.fcl
+ # and so it should not also be included here, for clarity's sake.
+ #microboone_larvoxelcalculator: @local::standard_larvoxelcalculator
+ dune35t_larvoxelcalculator:    @local::standard_larvoxelcalculator
+ dunefd_larvoxelcalculator:     @local::standard_larvoxelcalculator
+ 
+ END_PROLOG
+ BEGIN_PROLOG
+ 
+ PIProv: {
+   G4ModuleLabel: "largeant"
+   EveIdCalculator: "EmEveIdCalculator"
+ }
+ standard_particleinventoryservice: {
+   ParticleInventory: @local::PIProv
+ }
+ 
+ jp250L_particleinventoryservice:     @local::standard_particleinventoryservice
+ bo_particleinventoryservice:         @local::standard_particleinventoryservice
+ argoneut_particleinventoryservice:   @local::standard_particleinventoryservice
+ microboone_particleinventoryservice: @local::standard_particleinventoryservice
+ #dune35t_particleinventoryservice:    @local::standard_particleinventoryservice
+ #dunefd_particleinventoryservice:     @local::standard_particleinventoryservice
+ 
+ END_PROLOG
+ 
+ 
+ 
+ BEGIN_PROLOG
+ 
+ providerBKConf:{
+  G4ModuleLabel:            "largeant" # module that produced the sim::Particle objects
+  SimChannelModuleLabel:    "largeant" # module that produced the sim::SimChannel objects, if not provided defaults to using the G4ModuleLabel
+  MinimumHitEnergyFraction: 0.1        # minimum fraction of energy a G4 trackID contributes to a hit to be 
+                                       # counted in hit based efficiency and purity calculations
+ }
+ 
+ standard_backtrackerservice:
+ 
+ {
+  BackTracker: @local::providerBKConf
+ }
+ 
+ jp250L_backtrackerservice:     @local::standard_backtrackerservice
+@@ -1655,261 +1652,200 @@
+ END_PROLOG
+ 
+ BEGIN_PROLOG
+ 
+ icarus_detproperties: {
+   @table::standard_detproperties
+ 
+   ElectronsToADC:            1.208041e-3     # in ADC/e; 6241.5 electrons = 1fC
+   Temperature:               87.5
+   Electronlifetime:          3000            # As agreed 3/17/22 to match measured value in East croystat
+   # Active volume E-field calculated based on SBN-doc-23259 (H. Carranza and Z. Williams) using Vp = 75150 (from M. Mooney)
+   Efield:                    [0.4938,0.733,0.933 ] #kV/cm to first,second,third wire planes
+ 
+   # Set this true to use the non-default "ICARUS+MicroBooNE" calcultaion for drift velocity
+   UseIcarusMicrobooneDriftModel: true
+ 
+   SternheimerA:              0.1956           # Ar Sternheimer parameter a.
+   SternheimerK:              3.0000           # Ar Sternheimer parameter k.
+   SternheimerX0:             0.2000           # Ar Sternheimer parameter x0.
+   SternheimerX1:             3.0000           # Ar Sternheimer parameter x0.
+   SternheimerCbar:           5.2146           # Ar Sternheimer parameter Cbar.
+ 
+   DriftVelFudgeFactor: 0.99733
+ 
+   NumberTimeSamples:         4096
+   TimeOffsetU:               0.
+   TimeOffsetV:               0.
+   TimeOffsetY:               0.
+   TimeOffsetZ:               0.
+   ReadOutWindowSize:         4096
+   InheritNumberTimeSamples:  true
+ 
+   SimpleBoundaryProcess:     false # relevant only when using full Optical simulation
+ 
+   IncludeInterPlanePitchInXTickOffsets: false # removed by deconvolution
+ 
+ } // icarus_detproperties
+ 
+ END_PROLOG
+ #
+ # File:    detectorclocks_icarus.fcl
+ # Purpose: Configuration of DetectorClocks service for ICARUS.
+ #
+ # Available configurations:
+ #
+ # * `icarus_detectorclocks`: standard ICARUS configuration
+ # * `icarus_detectorclocks+data_notiming`: readout all at the same time
+ #
+ #
+ 
+ 
+ BEGIN_PROLOG
+ 
+ 
+ #
+ # Standard ICARUS configuration
+ #
+ # Use as:
+ #     
+ #     services.DetectorClocksService: @local::icarus_detectorclocks
+ #     
+ #
+ icarus_detectorclocks: {
+     service_provider: "DetectorClocksServiceStandard"
+ 
+     TrigModuleName:    "daqTrigger"
+     InheritClockConfig: true
+     G4RefTime:        -1.5e3  # G4 time [us] where electronics clock counting start
+     TriggerOffsetTPC: -0.340e3 # Time offset for TPC readout start time w.r.t. trigger [us]
+     FramePeriod:       1638.4  # Frame period [us]; 4096 * 400 ns
+     ClockSpeedTPC:     2.5     # TPC clock speed in MHz;
+     ClockSpeedOptical: 500     # Optical clock speed in MHz
+     ClockSpeedTrigger: 16      # Trigger clock speed in MHz
+     ClockSpeedExternal:31.25   # External clock speed in MHz
+     DefaultTrigTime:   1.5e3  # Default trigger time in electronics clock [us]
+     DefaultBeamTime:   1.5e3  # Default beam gate time in electronics clock [us]
+     
+ } # icarus_detectorclocks
+ 
+ 
+ # ##############################################################################
+ #
+ # Data read out all at the same time
+ #
+ # Use as:
+ #     
+ #     services.DetectorClocksService: @local::icarus_detectorclocks_data_notiming
+ #     
+ #
+ icarus_detectorclocks_data_notiming: {
+     @table::icarus_detectorclocks
+ 
+     InheritClockConfig: false
+     G4RefTime:              0.0   # G4 time [us] where electronics clock counting start
+     TriggerOffsetTPC:       0.0   # Time offset for TPC readout start time w.r.t. trigger [us]
+     DefaultTrigTime:        0.0   # Default trigger time in electronics clock [us]
+     DefaultBeamTime:        0.0   # Default beam gate time in electronics clock [us]
      
  } # icarus_detectorclocks_data_notiming
  
@@ -82,7 +373,201 @@
  #
  #
  #
-@@ -2155,28 +2091,6 @@
+ 
+ END_PROLOG
+ 
+ 
+ BEGIN_PROLOG
+ 
+ 
+ ################################################################################
+ ###  icarus_basic_services
+ ###
+ #
+ # Standard ICARUS configuration of basic services, including message service,
+ # art services, geometry and properties, but not calibration services.
+ #
+ icarus_basic_services:
+ {
+     message:                             @local::icarus_message_services_interactive # from `messages_icarus.fcl`
+ 
+                                          @table::icarus_geometry_services
+ 
+     DetectorPropertiesService:           @local::icarus_detproperties  # from `detectorproperties_icarus.fcl`
+     LArPropertiesService:                @local::icarus_properties     # from `larproperties_icarus.fcl`
+     DetectorClocksService:               @local::icarus_detectorclocks # from `detectorclocks_icarus.fcl`
+ 
+ } # icarus_basic_services
+ 
+ 
+ END_PROLOG
+ 
+ 
+ BEGIN_PROLOG
+ 
+ 
+ FieldResponseTool:
+ {
+     tool_type:                FieldResponse
+     Plane:                    0
+     ResponseType:             0
+     SignalType:               0
+     FieldResponseFileName:    "t600_response"
+     FieldResponseFileVersion: "v0.0"
+     FieldResponseHistName:    "t600_response"
+     FieldResponseAmplitude:   1.
+     TimeCorrectionFactor:     1000. 
+ }
+ 
+ ElectronicsResponseTool:
+ {
+     tool_type:                ElectronicsResponse
+     Plane:                    0
+     FCperADCMicroS:           0.0321  # Scaling to match data, from electronics tests it was 0.027
+     ASICShapingTime:          1.3
+     ADCPerPCAtLowestASICGain: 5500.
+ }
+ 
+ ElectronicsResponseBesselApproxTool:
+ {
+     tool_type:                ElectronicsResponseBesselApprox
+     Plane:                    0
+     FCperADCMicroS:           0.0321  # Scaling to match data, from electronics tests it was 0.027
+     ASICShapingTime:          1.3
+     ADCPerPCAtLowestASICGain: 5500.
+     TimeOffset:               0.0 # note that 1.625 will produce a plot that matches electronics paper
+                                   # unfortunately, that leads to a time offset in the response we'd rather not have
+ }
+ 
+ FilterTool:
+ {
+     tool_type: Filter
+     Plane:                       0
+     #-----------------------------------------------------------------------------
+     #************* THIS BLOCK CONTAINS HISTORICAL CONFIGURATIONS *****************
+     # This is the original Wiener filter
+     #FilterFunction:               "(x>0.0)? (gaus(0)*exp(-0.5*pow(x/[3],[4]))): 0.0"
+     #FilterParametersVec:          [ 1.849030, 1.46, 1.33, 0.23, 4.89 ]
+     # This defines the gaussian filter
+     #FilterFunction:              "(x>0.0)*gaus"
+     #FilterParametersVec:         [1., 0., 0.1 ]  # Offset and sigma are MHz by the way the filter is constructed
+     #-----------------------------------------------------------------------------
+     # For MCC1.1 we use the following filter for all three planes
+     # The filter function is a mating of two gaussians to provide both low and high frequency filtering
+     # Note that as of release v08_00_00 the parameters are in units of MHz
+     FilterFunction:              "(x>0.0) ? ((1. - gaus(0)) * gaus(3)) : 0.0"
+     FilterParametersVec:         [1., 0., 4.0,   1., 0., 100.]
+     FilterWidthCorrectionFactor: 1.0
+ }
+ 
+ ResponseTool:
+ {
+     tool_type: Response
+     Plane:               0
+     Correction3D:        1.
+     TimeScaleFactor:     1.
+     UseEmpiricalOffsets: true
+     FieldResponse:       @local::FieldResponseTool
+     ElectronicsResponse: @local::ElectronicsResponseBesselApproxTool
+     Filter:              @local::FilterTool
+@@ -2058,304 +1994,259 @@
+ 
+ 
+ 
+ standard_siov_channelstatus_provider:
+ {
+   AlgName:       "SIOVChannelStatusProvider"
+   DatabaseRetrievalAlg: @local::standard_databaseretrievalalg
+   
+   UseDB: false
+   UseFile: false
+ }
+ 
+ standard_siov_channelstatus_service:
+ {
+   service_provider: SIOVChannelStatusService
+   ChannelStatusProvider: @local::standard_siov_channelstatus_provider 
+ }
+ 
+ END_PROLOG
+ # File:    calibration_database_PMT_TagSets_icarus.fcl
+ # Author:  M. Vicenzi (mvicenzi@bnl.gov), J. Kim (jae.sung.kim.3426@gmail.com)
+ # Date:    February 20, 2025
+ # Purpose: Tags definitions for the PMT timing calibration databases
+ 
+ BEGIN_PROLOG
+ 
+ # These are the standard tags for analyses on Run 1 data
+ # These tagged versions of the databases only contain tables relevant for Run 1
+ PMT_CalibrationTags_Run1: {
+   pmt_cables_delays_data:    "v1r0"  # tables for run>=0 (null) and run>=8046
+   pmt_laser_timing_data:     "v1r0"  # tables for run>=0 (null) and run>=8046
+   pmt_cosmics_timing_data:   "v1r0"  # tables for run>=0 (null) and run>=8046 
+ }
+ 
+ # These are the standard tags for analyses on Run 1 and Run 2 data (as of August 2023)
+ # These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+ # Notes: 
+ #  - No cosmics corrections are available for Run 2
+ #  - Laser and cable corrections do not cover the entire Run 2 period
+ PMT_CalibrationTags_Run2_August2023: {
+   pmt_cables_delays_data:    "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9773
+   pmt_laser_timing_data:     "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9773
+   pmt_cosmics_timing_data:   "v1r0"  # tables for run>=0 (null) and run>=8046 
+ }
+ 
+ # These are the standard tags for analyses on Run 1 and Run 2 data (as of September 2023)
+ # These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+ # Notes: 
+ #  - No cosmics corrections are available for Run 2
+ PMT_CalibrationTags_Run2_Sept2023: {
+   pmt_cables_delays_data:    "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+   pmt_laser_timing_data:     "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+   pmt_cosmics_timing_data:   "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9301 (null) 
+ }
+ 
+ # These are the standard tags for analyses on Run 1 and Run 2 data (as of December 2023)
+ # These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+ # Notes: 
+ #  - Updated cable delays with new phase offsets
+ #  - Full laser and cosmics corrections for all Run 2.
+ PMT_CalibrationTags_Run2_Dec2023: {
+   pmt_cables_delays_data:    "v2r3"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773 and run>=10369
+   pmt_laser_timing_data:     "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+   pmt_cosmics_timing_data:   "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773 
+ }
+ 
+ # These are the standard tags for analyses on Run 1, Run 2 and pre-Run 3 data (as of December 2023)
+ # These tagged versions of the databases contain tables relevant for Run 1, Run 2 and pre-Run 3.
+ # Notes: 
+ #   - New cable delays (mapping changes, upgrades to laser distribution)
+ #   - New laser table for the beginning of Run 3 (new signal cables)
+ PMT_CalibrationTags_Run3_Dec2023: {
+   pmt_cables_delays_data:    "v2r4"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773, run>=10369 and run>=10865
+   pmt_laser_timing_data:     "v2r2"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773 and run>=10908
+   pmt_cosmics_timing_data:   "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773 
+ }
+ 
+ # These are the standard tags for analyses on Run 1, Run 2, Run 3 and pre-Run 4 data (as of Feb 2025)
+ # These tagged versions of the databases contain tables relevant for Run 1, Run 2, Run 3 and pre-Run 4.
+ # Notes: 
+ #   - New cable delays for Run 4 (after summer 2024 laser and PPS changes)
+ #   - New laser tables up to final Run 4 gain equalization
+ #   - New cosmics corrections for Run 3, updates to Run 1,2 tables (more statistics)
+ PMT_CalibrationTags_Run3_Feb2025: {
+   pmt_cables_delays_data:    "v2r5"  # tables for run>=0 (null)
+                                      # Run 1: run>=8046
+                                      # Run 2: run>=9301, run>=9628, run>=9773
+                                      # Run 3: run>=10369, run>=10441, run>=10865
+                                      # Run 4: run>=12040, run>=12455, run>=12777
+   pmt_laser_timing_data:     "v2r3"  # tables for run>=0 (null)
+                                      # Run 1: run>=8046
+                                      # Run 2: run>=9301, run>=9628, run>=9773
+                                      # Run 3: run>=10908, run>=11590
+                                      # Run 4: run>=12058, run>=12837
+   pmt_cosmics_timing_data:   "v2r2"  # tables for run>=0 (null)
+                                      # Run 1: run>=8046
+                                      # Run 2: run>=9301, run>=9628, run>=9773
                                       # Run 3: run>=11590
  }
  
@@ -111,7 +596,22 @@
  END_PROLOG
  # File:    calibration_database_GlobalTags.fcl
  # Purpose: Collection of tag info for the TPC calibration database
-@@ -2199,7 +2113,7 @@
+ 
+ BEGIN_PROLOG
+ 
+ ## Valid for Run A,1, and 2
+ ## - Files decoded with release <v09_66_02 should use v3r1 
+ TPC_CalibrationTags_Oct2023: {
+ 
+   tpc_channelstatus_data: "v3r1"
+   tpc_elifetime_data: "v2r1"
+   tpc_dqdxcalibration_data: "v2r1"
+   tpc_yz_correction_data: "v2r1"
+ 
+ }
+ 
+ ## Valid for Run A,1, and 2
+ ## - tpc_channelstatus_data updated to v3r2, where we reverted back "flange=WE20M AND board=1 or 5" to "Good" status.
  ## - Files decoded with release >=v09_66_02 should use v3r2
  TPC_CalibrationTags_Feb2024: {
  
@@ -120,7 +620,7 @@
    tpc_elifetime_data: "v2r1"
    tpc_dqdxcalibration_data: "v2r1"
    tpc_yz_correction_data: "v2r1"
-@@ -2207,38 +2121,15 @@
+ 
  }
  
  ## TPC_CalibrationTags_Feb2024 but updating tpc_yz_correction_data to tpc_yz_correction_allplanes_data
@@ -160,7 +660,18 @@
  END_PROLOG
  # File:    calibration_database_GlobalTags.fcl
  # Purpose: Collection of tag info for the TPC calibration database
-@@ -2257,8 +2148,8 @@
+ 
+ BEGIN_PROLOG
+ 
+ ## Valid for Run A,1, and 2
+ CRT_CalibrationTags_Oct2023: {
+ 
+   crt_gain_reco_data: "v1r0"
+ 
+ }
+ 
+ END_PROLOG
+ 
  BEGIN_PROLOG
  
  ICARUS_Calibration_GlobalTags: {
@@ -171,7 +682,201 @@
    @table::CRT_CalibrationTags_Oct2023
  }
  
-@@ -2673,28 +2564,6 @@
+ 
+ END_PROLOG
+ 
+ BEGIN_PROLOG
+ 
+ icarus_siov_channelstatus_service: @local::standard_siov_channelstatus_service
+ 
+ icarus_siov_channelstatus_service.service_provider:                                        SIOVChannelStatusICARUSService
+ icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.DBFolderName: "tpc_channelstatus_data"
+ icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.DBTag:        @local::ICARUS_Calibration_GlobalTags.tpc_channelstatus_data
+ icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.DBUrl:        "https://dbdata0vm.fnal.gov:9443/icarus_con_prod/app/"
+ icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.UseSQLite:    true
+ icarus_siov_channelstatus_service.ChannelStatusProvider.UseDB:                             true
+ 
+ END_PROLOG
+ 
+ 
+ BEGIN_PROLOG
+ 
+ # ##############################################################################
+ # ChannelStatusService: noisy and dead channels
+ # ------------------------------------------------------------------------------
+ #
+ # This configuration declare the channels all good.
+ #
+ # Use as:
+ #    
+ #    services.ChannelStatusService: @local::icarus_channelstatusservice
+ #    
+ # In the below, "standard" means no DB and a perfect Detector
+ # Change this to "icarus" to access the channel status DB
+ icarus_channelstatusservice: @local::icarus_siov_channelstatus_service # from `database_standard.fcl` (`larevt`)
+ 
+ 
+ # ##############################################################################
+ # DetPedestalService: TPC wire pedestal access
+ # ------------------------------------------------------------------------------
+ # the default implementation with default  configuration has no database access,
+ # and returns a fixed value no matter what.
+ # We could override that value here.
+ #
+ #Use as:
+ #    
+ #    services.DetPedestalService: @local::icarus_detpedestalservice
+ #
+ icarus_detpedestalservice: {
+ 
+   @table::standard_siov_detpedestal_service # from `database_standard.fcl` (`larevt`)
+ 
+   # DefaultCollMean: 400
+   # DefaultIndMean: 2048
+   
+ } # icarus_detpedestalservice
+ 
+ 
+ # ##############################################################################
+ # Configuration preset: enables all calibration services
+ #
+ icarus_calibration_services: {
+   
+   DetPedestalService:             @local::icarus_detpedestalservice
+   ChannelStatusService:           @local::icarus_channelstatusservice
+   # ElectronicsCalibService:        @local::icarus_electronicscalib_service
+ 
+ } # icarus_calibration_services:
+ 
+ 
+ # ##############################################################################
+ 
+ END_PROLOG
+ 
+ #
+ # File:    sam_icarus.fcl
+ # Purpose: Configuration for SAM database (metadata)
+ # Version: 1.1
+ #
+ # Changes:
+ # 20160721 (petrillo@fnal.gov) [v1.1]
+ #   added "extra" configuration
+ #
+ #
+ 
+ BEGIN_PROLOG
+ 
+ # Standard configurations for art's built-in FileCatalogMetadata service.
+ # Metadata fields are standard, but values are still icarus-specific.
+ art_file_catalog:
+ {
+   # Note sam application name is taken from "process_name" fcl parameter in main job file.
+   #applicationFamily:   "art"
+   #applicationVersion:  "v08_37_00"
+   group:               "icarus"
+   fileType:            "unknown"
+   runType:             "physics"
+ }
+ 
+ 
+@@ -2576,304 +2467,259 @@
+ 
+ 
+ 
+ standard_siov_channelstatus_provider:
+ {
+   AlgName:       "SIOVChannelStatusProvider"
+   DatabaseRetrievalAlg: @local::standard_databaseretrievalalg
+   
+   UseDB: false
+   UseFile: false
+ }
+ 
+ standard_siov_channelstatus_service:
+ {
+   service_provider: SIOVChannelStatusService
+   ChannelStatusProvider: @local::standard_siov_channelstatus_provider 
+ }
+ 
+ END_PROLOG
+ # File:    calibration_database_PMT_TagSets_icarus.fcl
+ # Author:  M. Vicenzi (mvicenzi@bnl.gov), J. Kim (jae.sung.kim.3426@gmail.com)
+ # Date:    February 20, 2025
+ # Purpose: Tags definitions for the PMT timing calibration databases
+ 
+ BEGIN_PROLOG
+ 
+ # These are the standard tags for analyses on Run 1 data
+ # These tagged versions of the databases only contain tables relevant for Run 1
+ PMT_CalibrationTags_Run1: {
+   pmt_cables_delays_data:    "v1r0"  # tables for run>=0 (null) and run>=8046
+   pmt_laser_timing_data:     "v1r0"  # tables for run>=0 (null) and run>=8046
+   pmt_cosmics_timing_data:   "v1r0"  # tables for run>=0 (null) and run>=8046 
+ }
+ 
+ # These are the standard tags for analyses on Run 1 and Run 2 data (as of August 2023)
+ # These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+ # Notes: 
+ #  - No cosmics corrections are available for Run 2
+ #  - Laser and cable corrections do not cover the entire Run 2 period
+ PMT_CalibrationTags_Run2_August2023: {
+   pmt_cables_delays_data:    "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9773
+   pmt_laser_timing_data:     "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9773
+   pmt_cosmics_timing_data:   "v1r0"  # tables for run>=0 (null) and run>=8046 
+ }
+ 
+ # These are the standard tags for analyses on Run 1 and Run 2 data (as of September 2023)
+ # These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+ # Notes: 
+ #  - No cosmics corrections are available for Run 2
+ PMT_CalibrationTags_Run2_Sept2023: {
+   pmt_cables_delays_data:    "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+   pmt_laser_timing_data:     "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+   pmt_cosmics_timing_data:   "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9301 (null) 
+ }
+ 
+ # These are the standard tags for analyses on Run 1 and Run 2 data (as of December 2023)
+ # These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+ # Notes: 
+ #  - Updated cable delays with new phase offsets
+ #  - Full laser and cosmics corrections for all Run 2.
+ PMT_CalibrationTags_Run2_Dec2023: {
+   pmt_cables_delays_data:    "v2r3"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773 and run>=10369
+   pmt_laser_timing_data:     "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+   pmt_cosmics_timing_data:   "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773 
+ }
+ 
+ # These are the standard tags for analyses on Run 1, Run 2 and pre-Run 3 data (as of December 2023)
+ # These tagged versions of the databases contain tables relevant for Run 1, Run 2 and pre-Run 3.
+ # Notes: 
+ #   - New cable delays (mapping changes, upgrades to laser distribution)
+ #   - New laser table for the beginning of Run 3 (new signal cables)
+ PMT_CalibrationTags_Run3_Dec2023: {
+   pmt_cables_delays_data:    "v2r4"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773, run>=10369 and run>=10865
+   pmt_laser_timing_data:     "v2r2"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773 and run>=10908
+   pmt_cosmics_timing_data:   "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773 
+ }
+ 
+ # These are the standard tags for analyses on Run 1, Run 2, Run 3 and pre-Run 4 data (as of Feb 2025)
+ # These tagged versions of the databases contain tables relevant for Run 1, Run 2, Run 3 and pre-Run 4.
+ # Notes: 
+ #   - New cable delays for Run 4 (after summer 2024 laser and PPS changes)
+ #   - New laser tables up to final Run 4 gain equalization
+ #   - New cosmics corrections for Run 3, updates to Run 1,2 tables (more statistics)
+ PMT_CalibrationTags_Run3_Feb2025: {
+   pmt_cables_delays_data:    "v2r5"  # tables for run>=0 (null)
+                                      # Run 1: run>=8046
+                                      # Run 2: run>=9301, run>=9628, run>=9773
+                                      # Run 3: run>=10369, run>=10441, run>=10865
+                                      # Run 4: run>=12040, run>=12455, run>=12777
+   pmt_laser_timing_data:     "v2r3"  # tables for run>=0 (null)
+                                      # Run 1: run>=8046
+                                      # Run 2: run>=9301, run>=9628, run>=9773
+                                      # Run 3: run>=10908, run>=11590
+                                      # Run 4: run>=12058, run>=12837
+   pmt_cosmics_timing_data:   "v2r2"  # tables for run>=0 (null)
+                                      # Run 1: run>=8046
+                                      # Run 2: run>=9301, run>=9628, run>=9773
                                       # Run 3: run>=11590
  }
  
@@ -200,7 +905,22 @@
  END_PROLOG
  # File:    calibration_database_GlobalTags.fcl
  # Purpose: Collection of tag info for the TPC calibration database
-@@ -2717,7 +2586,7 @@
+ 
+ BEGIN_PROLOG
+ 
+ ## Valid for Run A,1, and 2
+ ## - Files decoded with release <v09_66_02 should use v3r1 
+ TPC_CalibrationTags_Oct2023: {
+ 
+   tpc_channelstatus_data: "v3r1"
+   tpc_elifetime_data: "v2r1"
+   tpc_dqdxcalibration_data: "v2r1"
+   tpc_yz_correction_data: "v2r1"
+ 
+ }
+ 
+ ## Valid for Run A,1, and 2
+ ## - tpc_channelstatus_data updated to v3r2, where we reverted back "flange=WE20M AND board=1 or 5" to "Good" status.
  ## - Files decoded with release >=v09_66_02 should use v3r2
  TPC_CalibrationTags_Feb2024: {
  
@@ -209,7 +929,7 @@
    tpc_elifetime_data: "v2r1"
    tpc_dqdxcalibration_data: "v2r1"
    tpc_yz_correction_data: "v2r1"
-@@ -2725,38 +2594,15 @@
+ 
  }
  
  ## TPC_CalibrationTags_Feb2024 but updating tpc_yz_correction_data to tpc_yz_correction_allplanes_data
@@ -249,7 +969,18 @@
  END_PROLOG
  # File:    calibration_database_GlobalTags.fcl
  # Purpose: Collection of tag info for the TPC calibration database
-@@ -2775,8 +2621,8 @@
+ 
+ BEGIN_PROLOG
+ 
+ ## Valid for Run A,1, and 2
+ CRT_CalibrationTags_Oct2023: {
+ 
+   crt_gain_reco_data: "v1r0"
+ 
+ }
+ 
+ END_PROLOG
+ 
  BEGIN_PROLOG
  
  ICARUS_Calibration_GlobalTags: {
@@ -260,7 +991,201 @@
    @table::CRT_CalibrationTags_Oct2023
  }
  
-@@ -3845,420 +3691,6 @@
+ 
+ END_PROLOG
+ 
+ BEGIN_PROLOG
+ 
+ icarus_siov_channelstatus_service: @local::standard_siov_channelstatus_service
+ 
+ icarus_siov_channelstatus_service.service_provider:                                        SIOVChannelStatusICARUSService
+ icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.DBFolderName: "tpc_channelstatus_data"
+ icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.DBTag:        @local::ICARUS_Calibration_GlobalTags.tpc_channelstatus_data
+ icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.DBUrl:        "https://dbdata0vm.fnal.gov:9443/icarus_con_prod/app/"
+ icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.UseSQLite:    true
+ icarus_siov_channelstatus_service.ChannelStatusProvider.UseDB:                             true
+ 
+ END_PROLOG
+ 
+ 
+ BEGIN_PROLOG
+ 
+ # ##############################################################################
+ # ChannelStatusService: noisy and dead channels
+ # ------------------------------------------------------------------------------
+ #
+ # This configuration declare the channels all good.
+ #
+ # Use as:
+ #    
+ #    services.ChannelStatusService: @local::icarus_channelstatusservice
+ #    
+ # In the below, "standard" means no DB and a perfect Detector
+ # Change this to "icarus" to access the channel status DB
+ icarus_channelstatusservice: @local::icarus_siov_channelstatus_service # from `database_standard.fcl` (`larevt`)
+ 
+ 
+ # ##############################################################################
+ # DetPedestalService: TPC wire pedestal access
+ # ------------------------------------------------------------------------------
+ # the default implementation with default  configuration has no database access,
+ # and returns a fixed value no matter what.
+ # We could override that value here.
+ #
+ #Use as:
+ #    
+ #    services.DetPedestalService: @local::icarus_detpedestalservice
+ #
+ icarus_detpedestalservice: {
+ 
+   @table::standard_siov_detpedestal_service # from `database_standard.fcl` (`larevt`)
+ 
+   # DefaultCollMean: 400
+   # DefaultIndMean: 2048
+   
+ } # icarus_detpedestalservice
+ 
+ 
+ # ##############################################################################
+ # Configuration preset: enables all calibration services
+ #
+ icarus_calibration_services: {
+   
+   DetPedestalService:             @local::icarus_detpedestalservice
+   ChannelStatusService:           @local::icarus_channelstatusservice
+   # ElectronicsCalibService:        @local::icarus_electronicscalib_service
+ 
+ } # icarus_calibration_services:
+ 
+ 
+ # ##############################################################################
+ 
+ END_PROLOG
+ 
+ BEGIN_PROLOG
+ 
+ 
+ FieldResponseTool:
+ {
+     tool_type:                FieldResponse
+     Plane:                    0
+     ResponseType:             0
+     SignalType:               0
+     FieldResponseFileName:    "t600_response"
+     FieldResponseFileVersion: "v0.0"
+     FieldResponseHistName:    "t600_response"
+     FieldResponseAmplitude:   1.
+     TimeCorrectionFactor:     1000. 
+ }
+ 
+ ElectronicsResponseTool:
+ {
+     tool_type:                ElectronicsResponse
+     Plane:                    0
+     FCperADCMicroS:           0.0321  # Scaling to match data, from electronics tests it was 0.027
+     ASICShapingTime:          1.3
+     ADCPerPCAtLowestASICGain: 5500.
+ }
+ 
+ ElectronicsResponseBesselApproxTool:
+@@ -3748,2883 +3594,1869 @@
+ # until icaruscode v08_50_00.
+ # It is part of `icarus_legacy_services` configuration, and it should not
+ # be used by itself since it requires a specific geometry and channel mapping.
+ # Use as:
+ #     
+ #     services: @local::icarus_legacy_services
+ #     
+ # This configuration is almost frozen (i.e. it would be frozen except that it
+ # relies on `standard_library_vuv_prop_timing_photonvisibilityservice` which
+ # we are not reproducing here).
+ #
+ icarus_legacy_photonvisibilityservice_v08_50_00: @local::icarus_photonvisibilityservice_noPMTremapping
+ 
+ 
+ 
+ # ----------------------------------------------------------------------------
+ #
+ # This configuration fits a previous photon library (August 2018) which
+ # was current until `icaruscode` `v09_00_01`.
+ # 
+ # The library was generated with the "old" PMT channel mapping, but now you
+ # are going to run it with the new one, so a remapping is needed,
+ # which is coded in this configuration.
+ # For the single wire geometry, this does not apply and the legac...ier
+ # configuration is needed.
+ # Use as:
+ #     
+ #     services.PhotonVisibilityService: @local::icarus_photonvisibilityservice_2018
+ #     
+ # This configuration is almost self-contained (i.e. it would be self-contained
+ # except that it relies on
+ # `standard_library_vuv_prop_timing_photonvisibilityservice` which we are not
+ # reproducing here).
+ #
+ icarus_photonvisibilityservice_2018: {
+   @table::standard_library_vuv_prop_timing_photonvisibilityservice # TODO copy the old configuration from LArSoft into ICARUS and refer it here
+ 
+   LibraryFile:     "PhotonLibrary/PhotonLibrary-20180801.root"
+   UseCryoBoundary: false
+   
+   XMin: -395      # Was -391 in old geometry
+   XMax: -45       # Was -41  in old geometry
+   YMin: -215.2    # Was -210 in old geometry
+   YMax:  174.8    # Was -180 in old geometry
+   ZMin: -995
+   ZMax:  965
+   NX:     70
+   NY:     78
+   NZ:    392
+ 
+   IncludePropTime: true
+   
+   Mapping: {
+     tool_type: ICARUSPhotonMappingTransformations
+     
+     # use this mapping only with photon visibility maps generated before
+     # v08_50_01 when using split wire geometry;
+     # it expresses that the values in the photon map for the library channel c
+     # it now should be associated to channel CryostatChannelRemap[c] instead
+     CryostatChannelRemap: [
+       
+       179,  89, 178,  88, 177,  87, 176,  86, 175,  85, 174,  84, 173,  83, 172,
+        82, 171,  81, 170,  80, 169,  79, 168,  78, 167,  77, 166,  76, 165,  75,
+       164,  74, 163,  73, 162,  72, 161,  71, 160,  70, 159,  69, 158,  68, 157,
+        67, 156,  66, 155,  65, 154,  64, 153,  63, 152,  62, 151,  61, 150,  60,
+       149,  59, 148,  58, 147,  57, 146,  56, 145,  55, 144,  54, 143,  53, 142,
+        52, 141,  51, 140,  50, 139,  49, 138,  48, 137,  47, 136,  46, 135,  45,
+       134,  44, 133,  43, 132,  42, 131,  41, 130,  40, 129,  39, 128,  38, 127,
+        37, 126,  36, 125,  35, 124,  34, 123,  33, 122,  32, 121,  31, 120,  30,
+       119,  29, 118,  28, 117,  27, 116,  26, 115,  25, 114,  24, 113,  23, 112,
+        22, 111,  21, 110,  20, 109,  19, 108,  18, 107,  17, 106,  16, 105,  15,
+       104,  14, 103,  13, 102,  12, 101,  11, 100,  10,  99,   9,  98,   8,  97,
+         7,  96,   6,  95,   5,  94,   4,  93,   3,  92,   2,  91,   1,  90,   0
+       
+     ]
+     
+   } # Mapping
+ 
+ } # icarus_photonvisibilityservice_2018
+ 
+ 
+ 
+ ###############################################################################
+ ###
+ ### Default configuration
+ ###
+ #
+ # This is the configuration used by the "standard" ICARUS job configurations.
+ # Use as:
+ #     
+ #     services.PhotonVisibilityService: @local::icarus_photonvisibilityservice
+ #     
+ #
+ icarus_photonvisibilityservice: @local::icarus_photonvisibilityservice_mapped
+ 
+ 
+ ###############################################################################
  
  
  END_PROLOG
@@ -681,7 +1606,12 @@
  
  BEGIN_PROLOG
  
-@@ -4271,8 +3703,6 @@
+ #
+ # First define services w/o optical simulation
+ #
+ 
+ # Define icarus_gen_services ... (0)
+ icarus_gen_services: {
    
    @table::icarus_common_services
    
@@ -690,7 +1620,7 @@
  }
  
  
-@@ -4280,8 +3710,7 @@
+ # this is mostly a helper
  icarus_simulation_basic_services: {
    
                                             @table::icarus_common_services
@@ -700,7 +1630,23 @@
      LArG4Parameters:                       @local::icarus_largeantparameters
      LArVoxelCalculator:                    @local::icarus_larvoxelcalculator
      SpaceChargeService:                    @local::icarus_spacecharge
-@@ -4305,8 +3734,6 @@
+     
+ } # icarus_simulation_basic_services
+ 
+ 
+ # Define icarus_g4_dark_services ... (1)
+ icarus_g4_dark_services: {
+     
+     @table::icarus_simulation_basic_services
+ 
+     MagneticField:                         @local::no_mag_larsoft
+     
+ } # icarus_g4_dark_services
+ 
+ 
+ # Define icarus_detsim_dark_services ... (2)
+ icarus_detsim_dark_services: {
+   
    # (it turns out they are the same ones needed for the inverse operation...)
    @table::icarus_wirecalibration_services
    
@@ -709,7 +1655,32 @@
  } # icarus_detsim_dark_services
  
  
-@@ -4339,12 +3766,11 @@
+ # Define icarus_simulation_dark ... (all) = (0) + (1) + (2)
+ icarus_simulation_dark_services: {
+     
+     @table::icarus_simulation_basic_services
+     
+     # SignalShapingServiceICARUS:      @local::icarus_signalshapingservice
+     # DetPedestalService:              @local::icarus_detpedestalservice
+     # ChannelStatusService:            @local::icarus_channelstatus_service
+     # ElectronicsCalibService:         @local::icarus_electronicscalib_service
+     
+ } # icarus_simulation_dark_services
+ 
+ 
+ #
+ # Define optical simulation included ones
+ #
+ 
+ # Define icarus_g4_services ... (1*)
+ icarus_g4_services: {
+   
+     @table::icarus_g4_dark_services
+     
+     PhotonVisibilityService: @local::icarus_photonvisibilityservice
+ 
+ } # icarus_g4_services
+ 
  
  # Define icarus_detsim_services ... (2*)
  icarus_detsim_services: {
@@ -726,7 +1697,51 @@
  } # icarus_detsim_services
  
  
-@@ -4396,48 +3822,177 @@
+ # Define icarus_simulation_services ... (all*) = (1*) + (2) + (2*)
+ icarus_simulation_services: {
+     
+     @table::icarus_simulation_dark_services
+     
+     PhotonVisibilityService:         @local::icarus_photonvisibilityservice
+     # PmtGainService:                  @local::icarus_pmtgain_service
+ 
+ } # icarus_simulation_services
+ 
+ 
+ ################################################################################
+ 
+ END_PROLOG
+ #
+ # File:    genie_icarus_numioffaxis.fcl
+ # Purpose: Presets for simulation of interaction of neutrinos from NuMI
+ #          (`GENIEGen` module).
+ # Version: 1.2
+ #
+ # The configurations are good to go. E.g.:
+ #     
+ #     physics.producers.generator: @local::icarus_genie_NuMI
+ #     
+ #
+ #
+ # Provided configurations
+ # ------------------------
+ #
+ # * `icarus_genie_simple_NuMI`:
+ #     simple flux configuration for NuMI beam, with uniform beam time structure
+ # * `icarus_genie_simple_NuMI`:
+ #     simple flux configuration for NuMI beam, with NuMI time structure
+ # 
+ # 
+ #
+ # Changes
+ # --------
+ # 20180910
+ #   original version by Minerba Betancourt/Tracy Usher
+ # 20190819 (petrillo@slac.stanford.edu) [v1.1]
+ #   added configurations for beam time structure;
+ #   `icarus_genienumi_simple` renamed into `icarus_genie_simple_NuMI_base`
+ # 20190829 (petrillo@slac.stanford.edu) [v1.2]
+ #   updated NuMI POT to 6+6 batches configuration
  #
  
  #
@@ -935,7 +1950,7 @@
  # 
  # This documentation reflects the configuration string of
  # `evgb::EvtTimeFNALBeam` class in `nugen` `v1_00_01` (`nutools` `v3_02_00`).
-@@ -4445,8 +4000,7 @@
+ # It is parsed by `evgb::EvtTimeFNALBeam::Config()` (the first word,
  # representing the name of the algorithm, is stripped by the caller,
  # `evgb::GENIEHelper`).
  # The configuration string is, well, a single string, sequence of
@@ -945,7 +1960,20 @@
  # Parameters are parsed in sequence and the latter overrides the previous.
  # Parameters may appear in any order, except for the algorithm name which must
  # be the first.
-@@ -4467,8 +4021,7 @@
+ # 
+ # * `evgb::EvtTimeFNALBeam`: the algorithm name; `evgb::EvtTimeFNALBeam`
+ #     describes a beam spill structured in a contiguous sequence of "batches",
+ #     each one with a substructure of "buckets". Some batches can be "disabled",
+ #     and some of the buckets at the end of each batch may be empty.
+ #     Each bucket has a Gaussian time distribution. See the content of
+ #     `nugen/EventGeneratorBase/GENIE/EvtTime*.h` for other possible algorithms.
+ # * `intentsity <INT 1> <INT 2> ...  <INT M>` describes the relative intensity
+ #     of the batches in the spill, and at the same time it defines the number
+ #     _M_ of batches in the spill. A standard setting is to have all the batches
+ #     (6 for NuMI, just 1 for BnB) set to `1.0`; `GENIEHelper` will take care of
+ #     normalizing the numbers to a sum of 1.
+ # * `sigma` or `FWHM` [ns]: the RMS or full width at half maximum peak of the
+ #     time structure of a single bucket. The time distribution is always
  #     Gaussian (if specified as FWHM, it is converted to RMS for a Gaussian
  #     distribution).
  # * `dtbucket` [ns]: the time between the peak of two consecutive buckets.
@@ -955,7 +1983,9 @@
  # * `nperbatch`, `nfilled`: the number of buckets in each spill, and the number
  #     of those which have actual protons in them. The default values include
  #     84 buckets, of which 81 are filled and the remaining 3, always at the end
-@@ -4478,282 +4031,122 @@
+ #     of the spill ("notch") are empty.
+ # * `global` [ns]: offset of the start of the spill (i.e. the time of the peak
+ #     of the first bucket of the first batch) with respect to the start
  #     of the generator time scale (see `detinfo::DetectorClocks`).
  # * `Booster`, `NuMI`: presets including all the above in hard-coded fashion;
  #     avoid using these to have better control and awareness of the settings.
@@ -1314,7 +2344,19 @@
  #
  # Configurations are provided to drive GENIEGen/GENIEHelper to produce a
  # neutrino interactions with time distribution reflecting the beam time
-@@ -4773,71 +4166,21 @@
+ # structure.
+ # `evgb::GENIEHelper` determines the timing of each generated event via an
+ # algorithm configured via `SpillTimeConfig`. One of the available algorithms
+ # is specific to FNAL beams and it is implemented in `nugen` package as
+ # `evgb::EvtTimeFNALBeam` class, with inline documentation worth a reading
+ # (`nugen/EventGeneratorBase/GENIE/EvtTimeFNALBeam.h`).
+ # 
+ # The configuration is a string with the name of the algorithm first, and then
+ # the configuration parameters.
+ # 
+ # Configurations are provided for BnB and NuMI at some known times.
+ # 
+ # Example of usage
  # -----------------
  # 
  # Assuming there is a configuration `generator` for `GENIEGen`, FHiCL
@@ -1391,7 +2433,7 @@
  # 
  # This documentation reflects the configuration string of
  # `evgb::EvtTimeFNALBeam` class in `nugen` `v1_00_01` (`nutools` `v3_02_00`).
-@@ -4845,8 +4188,7 @@
+ # It is parsed by `evgb::EvtTimeFNALBeam::Config()` (the first word,
  # representing the name of the algorithm, is stripped by the caller,
  # `evgb::GENIEHelper`).
  # The configuration string is, well, a single string, sequence of
@@ -1401,7 +2443,20 @@
  # Parameters are parsed in sequence and the latter overrides the previous.
  # Parameters may appear in any order, except for the algorithm name which must
  # be the first.
-@@ -4867,8 +4209,7 @@
+ # 
+ # * `evgb::EvtTimeFNALBeam`: the algorithm name; `evgb::EvtTimeFNALBeam`
+ #     describes a beam spill structured in a contiguous sequence of "batches",
+ #     each one with a substructure of "buckets". Some batches can be "disabled",
+ #     and some of the buckets at the end of each batch may be empty.
+ #     Each bucket has a Gaussian time distribution. See the content of
+ #     `nugen/EventGeneratorBase/GENIE/EvtTime*.h` for other possible algorithms.
+ # * `intentsity <INT 1> <INT 2> ...  <INT M>` describes the relative intensity
+ #     of the batches in the spill, and at the same time it defines the number
+ #     _M_ of batches in the spill. A standard setting is to have all the batches
+ #     (6 for NuMI, just 1 for BnB) set to `1.0`; `GENIEHelper` will take care of
+ #     normalizing the numbers to a sum of 1.
+ # * `sigma` or `FWHM` [ns]: the RMS or full width at half maximum peak of the
+ #     time structure of a single bucket. The time distribution is always
  #     Gaussian (if specified as FWHM, it is converted to RMS for a Gaussian
  #     distribution).
  # * `dtbucket` [ns]: the time between the peak of two consecutive buckets.
@@ -1411,7 +2466,9 @@
  # * `nperbatch`, `nfilled`: the number of buckets in each spill, and the number
  #     of those which have actual protons in them. The default values include
  #     84 buckets, of which 81 are filled and the remaining 3, always at the end
-@@ -4878,277 +4219,14 @@
+ #     of the spill ("notch") are empty.
+ # * `global` [ns]: offset of the start of the spill (i.e. the time of the peak
+ #     of the first bucket of the first batch) with respect to the start
  #     of the generator time scale (see `detinfo::DetectorClocks`).
  # * `Booster`, `NuMI`: presets including all the above in hard-coded fashion;
  #     avoid using these to have better control and awareness of the settings.
@@ -1695,7 +2752,11 @@
  BEGIN_PROLOG
  
  ################################################################################
-@@ -5160,9 +4238,8 @@
+ ### Booster Neutrino Beam (BnB)
+ ################################################################################
+ #
+ # this configuration is taken from the default settings of
+ # `evgb::EvtTimeFNALBeam` on `nugen` `v1_00_01` for BnB.
  # According to the comments in the code, "2.0 - 2.5 ns width for Booster is
  # reasonable", and "it is expected that the Booster width >> NuMI width due to
  # higher electric fields / deeper buckets".
@@ -1706,7 +2767,8 @@
  intensity  1.0
  sigma      2.00
  dtbucket   18.8313277969
-@@ -5171,12 +4248,6 @@
+ nperbatch  84
+ nfilled    81
  global     0.0
  "
  
@@ -1719,7 +2781,9 @@
  
  ################################################################################
  ### NuMI
-@@ -5186,9 +4257,8 @@
+ ################################################################################
+ #
+ # this configuration is taken from the default settings of
  # `evgb::EvtTimeFNALBeam` on `nugen` `v1_00_01` for NuMI.
  # According to the comments in the code, "0.75 ns sigma for NuMI comes from
  # MINOS Time-of-Flight paper though it could be currently ~ 1ns".
@@ -1730,7 +2794,8 @@
  intensity  1.0 1.0 1.0 1.0 1.0 1.0
  sigma      0.75
  dtbucket   18.8313277969
-@@ -5197,13 +4267,6 @@
+ nperbatch  84
+ nfilled    81
  global     0.0
  "
  
@@ -1744,7 +2809,19 @@
  ################################################################################
  
  END_PROLOG
-@@ -5223,7 +4286,7 @@
+ 
+ 
+ BEGIN_PROLOG
+ 
+ 
+ ################################################################################
+ ###  
+ ###  NuMI configuration.
+ ###  
+ ################################################################################
+ 
+ ###
+ ### icarus_genie_NuMI_base
  ###
  icarus_genie_NuMI_base: {
    
@@ -1753,7 +2830,10 @@
    
    #
    # flux
-@@ -5234,18 +4297,10 @@
+   #
+   FluxType:             "dk2nu"
+   BeamName:             "numi"
+   DetectorLocation:     "icarus-numi"
    FluxSearchPaths:      "/cvmfs/sbn.osgstorage.org/pnfs/fnal.gov/usr/sbn/persistent/stash/physics/beam/GENIE/NuMI/standard/v03_02/"
    FluxFiles:            ["g4numi*.root"]
    
@@ -1775,7 +2855,11 @@
  } # icarus_genie_NuMI_base
  
  
-@@ -5257,12 +4312,15 @@
+ # legacy alias
+ icarus_genienumi_simple: @local::icarus_genie_NuMI_base
+ 
+ 
+ ###
  ### icarus_genie_NuMI
  ###
  #
@@ -1792,7 +2876,111 @@
  } # icarus_genie_NuMI
  
  # Rock config
-@@ -5374,8 +4432,6 @@
+ icarus_genie_NuMI_rock: @local::icarus_genie_NuMI
+ icarus_genie_NuMI_rock.DetectorLocation: "icarus-numi-rock"
+ 
+ # RHC Config
+ icarus_genie_NuMI_RHC: @local::icarus_genie_NuMI
+ icarus_genie_NuMI_RHC.FluxSearchPaths: "/cvmfs/sbn.osgstorage.org/pnfs/fnal.gov/usr/sbn/persistent/stash/physics/beam/GENIE/NuMI/standard/v03_02_RHC/"
+ 
+ ################################################################################
+ 
+ END_PROLOG
+ #
+ # File:    beamgates_icarus.fcl
+ # Purpose: Module configurations to ensure the presence of `sim::BeamGateInfo`.
+ # Author:  Gianluca Petrillo (petrillo@slac.stanford.edu)
+ # Date:    November 22, 2022
+ # Version: 1.0
+ #
+ # This is a collection of simple module configurations to help simulation
+ # workflows (generation stage) to ensure the presence of a beam gate information
+ # data product with a standard name.
+ # 
+ # Three main scenarios may be present:
+ # 1. the generator module(s) does generate the proper beam gate data product,
+ #    but with a non-standard name;
+ # 2. the generator module does generate a beam gate data product, but it needs;
+ #    adjustment;
+ # 3. no generator module generates a beam data data product.
+ # 
+ # The workflow should rely on a standard beam gate data product name which is
+ # not a standard generator name, to support the case (3) where one of those
+ # generators is run with the standard generator name.
+ # 
+ # Thus, I propose here also a standard beam gate definition name, "beamgate",
+ # which modules looking for a beam gate data product can confidently refer to:
+ #     
+ #     BeamGateTag: @local::icarus_standardbeamgate_tag
+ #     
+ # For the rest, this configuration file supports two of the cases above:
+ # 
+ # 1. `icarus_standardbeamgate_copy` can "rename" the data product; the label of
+ #    the generator module creating the original beam gate can be overridden in
+ #    the `BeamGateTag` parameter, and its default value is the standard
+ #    "generator" (for example ICARUS GENIE configurations usually use that one).
+ #    Example:
+ #        
+ #      physics.producers: {
+ #        
+ #        beamgate: @local::icarus_standardbeamgate_copy
+ #        
+ #        # ...
+ #        
+ #      }
+ # 
+ # 2. This case should use `FixBeamGateInfo`, but no preset is provided because
+ #    no specific use case is known.
+ # 
+ # 3. The workflow must decide which beam gate to use. Options prepackaged here
+ #    are:
+ #    
+ #    * BNB:
+ #          
+ #          physics.producers: {
+ #            
+ #            beamgate: @local::icarus_standardbeamgate_BNB
+ #            
+ #            # ...
+ #          }
+ #          
+ #    * NuMI:
+ #          
+ #          physics.producers: {
+ #            
+ #            beamgate: @local::icarus_standardbeamgate_NuMI
+ #            
+ #            # ...
+ #          }
+ #          
+ #    
+ #    In doubt, it is suggested that the longer one (i.e. NuMI) is used, because
+ #    usually downstream to take into account the effect of a reduced beam gate 
+ #    is easier than with an too narrow one.
+ # 
+ # 
+ # Changes:
+ # 20221122 (petrillo@slac.stanford.edu) [v1.0]
+ #   original version
+ # 
+ #
+ 
+ #
+ # File:    trigger_icarus.fcl
+ # Purpose: Parameters of ICARUS trigger related algorithm.
+ # Author:  Gianluca Petrillo (petrillo@slac.stanford.edu)
+ # Date:    April 2, 2019
+ #
+ # Settings and parameters are provided for algorithms related to triggering.
+ # 
+ # Current offer includes:
+ # 
+ # * trigger gate builder tool configurations: tools to create discriminated
+ #     waveforms out of full PMT waveforms
+ # 
+ # Changes:
+ # 20210727 (petrillo@slac.stanford.edu)
+ #   updated the selection of thresholds
  # 20221104 (petrillo@slac.stanford.edu)
  #   overhaul of the configuration to just host settings and parameters;
  #   module configurations are now in `trigger_emulation_icarus.fcl`
@@ -1801,7 +2989,10 @@
  # 
  #
  
-@@ -5386,9 +4442,7 @@
+ #
+ # File:    pmtsimulation_icarus.fcl
+ # Purpose: Presets for configuration of ICARUS PMT channel digitization.
+ # 
  # Configurations offered:
  # 
  # * `PMTsimulationAlg` algorithm:
@@ -1812,7 +3003,7 @@
  #       used in production and by the general user
  #     * `icarus_pmtsimulationalg_202202`: a general use configuration,
  #       including dark and electronics noise; `noise` and `nonoise` variants
-@@ -5396,10 +4450,6 @@
+ #       (the latter with dark and electronics noise disabled)
  #     * `icarus_pmtsimulationalg_2018`: legacy configuration (until June 2022),
  #       including dark and electronics noise; `noise` and `nonoise` variants
  #       (the latter with dark and electronics noise disabled)
@@ -1823,7 +3014,22 @@
  # 
  # Usage:
  # 
-@@ -5422,13 +4472,7 @@
+ # * `PMTsimulationAlg` algorithm configuration needs to be included verbatim
+ #     into the configuration of `SimPMTIcarus` module
+ #    
+ #
+ # Changes:
+ # 20181024 (petrillo@slac.stanford.edu)
+ #   detached from `opdetsim_pmt_icarus.fcl`
+ # 20200212 (petrillo@slac.stanford.edu)
+ #   reconnected quantum efficiency to the value in `opticalproperties_icarus.fcl`
+ # 20210206 (petrillo@slac.stanford.edu)
+ #   added explicit noise configuration, and made standard an alias of it
+ # 20210212 (petrillo@slac.stanford.edu)
+ #   updated baseline to reflect the one in data
+ # 20210615 (petrillo@slac.stanford.edu)
+ #   updated PMT readout enable window to 2 ms
+ # 20220706 (petrillo@slac.stanford.edu)
  #   introduced configuration for SPR 202202
  # 20240125 (petrillo@slac.stanford.edu)
  #   introduced experimental setting PMT gain to 7.5 x 10^6 (and q.e. elsewhere)
@@ -1838,7 +3044,122 @@
  
  #
  # File:    opticalproperties_icarus.fcl
-@@ -5551,7 +4595,7 @@
+ # Purpose: Collection of optical properties.
+ #
+ # Available configurations:
+ #
+ # * `icarus_opticalproperties`: standard LAr properties for LArProperties service
+ #
+ 
+ 
+ BEGIN_PROLOG
+ 
+ # ------------------------------------------------------------------------------
+ # Configuration used until January 2024 for standard processing
+ #
+ icarus_opticalproperties_2022: {
+     
+     ScintYield:     24000  # 24000 ph/MeV assume 500 mV/cm
+     ScintPreScale:  0.121  # see JINST 13 (2018) 12, P12020
+                            # MUST match between g4 and detsim
+     # ScintPreScale:  0.0093   # DocDB 4914, @MToups
+ 
+     ScintYieldRatio:         0.23
+     MuonScintYield:          24000
+     MuonScintYieldRatio:     0.23
+     ScintByParticleType:     true
+     PionScintYield:          24000
+     PionScintYieldRatio:     0.23
+     ElectronScintYield:      20000
+     ElectronScintYieldRatio: 0.27
+     KaonScintYield:          24000
+     KaonScintYieldRatio:     0.23
+     ProtonScintYield:        19200
+     ProtonScintYieldRatio:   0.29
+     AlphaScintYield:         16800
+     AlphaScintYieldRatio:    0.56
+     
+     EnableCerenkovLight: false # Cerenkov light OFF by default
+     
+ 
+     # reflectivities stolen from SBND (sbndcode v09_00_00)
+     # note that this is ignored when using FastOptical simulation, and needs
+     # services.DetectorPropertiesService.SimpleBoundaryProcess: false
+     # when using Optical (check) Redmine issue #25016 is resolved
+     ReflectiveSurfaceEnergies:     [ 1.77, 2.0675, 2.481, 2.819, 2.953, 3.1807, 3.54, 4.135, 4.962, 5.39, 7., 15. ]
+     ReflectiveSurfaceNames:        [ # in ICARUS geometry (20201107):
+       "STEEL_STAINLESS_Fe7Cr2Ni",    # wires, race track, cathode, structure
+       "copper",                      # unused
+       "G10",                         # unused
+       "vm2000",                      # unused
+       "ALUMINUM_Al",                 # CRT...
+       "ALUMINUM_PMT",                # PMT passive
+       "ALUMINUM_CRYO"                # cryostat shell
+     ]
+     ReflectiveSurfaceReflectances: [
+       [ 0.66,  0.64,  0.62,  0.60,  0.59,  0.57,  0.53,  0.47,  0.39,  0.36,  0.27, 0.25 ], # STEEL_STAINLESS_Fe7Cr2Ni
+       [ 0.902, 0.841, 0.464, 0.379, 0.345, 0.299, 0.287, 0.264, 0.337, 0.3,   0.0,  0.0  ], # copper
+       [ 0.393, 0.405, 0.404, 0.352, 0.323, 0.243, 0.127, 0.065, 0.068, 0.068, 0.0,  0.0  ], # "G10"
+       [ 0.93,  0.93,  0.93,  0.93,  0.93,  0.93,  0.1,   0.1,   0.7,   0.3,   0.0,  0.0  ], # "vm2000"
+       [ 0.9,   0.9,   0.9,   0.9,   0.9,   0.9,   0.9,   0.47,  0.39,  0.36,  0.27, 0.25 ], # "ALUMINUM_Al"
+       [ 0.9,   0.9,   0.9,   0.9,   0.9,   0.9,   0.9,   0.47,  0.39,  0.36,  0.27, 0.25 ], # "ALUMINUM_PMT"
+       [ 0.9,   0.9,   0.9,   0.9,   0.9,   0.9,   0.9,   0.47,  0.39,  0.36,  0.27, 0.25 ]  # "ALUMINUM_CRYO"
+     ]
+ 
+ 
+ } # icarus_opticalproperties_2022
+ 
+ 
+ # ------------------------------------------------------------------------------
+ # The following is based on SBN DocDB 34640, showing an empirical choice
+ # to reconciliate the mean value of MC hit amplitude with data
+ #
+ icarus_opticalproperties_202401patch: {
+     @table::icarus_opticalproperties_2022
+     
+     ScintPreScale:  0.073  # test value, empiric; see SBN DocDB 34640
+                            # MUST match between g4 and detsim
+     
+ } # icarus_opticalproperties_202401patch
+ 
+ 
+ # ##############################################################################
+ # Standard optical properties for LArProperties
+ #
+ # Use as:
+ #    
+ #     service.LArPropertiesService: {
+ #         ...
+ #         @table::icarus_opticalproperties
+ #         ...
+ #     }
+ #
+ #
+ icarus_opticalproperties: @local::icarus_opticalproperties_202401patch
+ 
+ END_PROLOG
+ 
+ 
+ BEGIN_PROLOG
+ 
+ ################################################################################
+ ###  Configurations for `PMTsimulationAlg`
+ ################################################################################
+ 
+ ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ ### Detector and readout parameters
+ ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ 
+ icarus_settings_opdet_2022: {
+   
+   nominalPMTgain: 9.7e6  # PMT multiplication gain factor
+   
+   # the actual readout window size for each "trigger" on the readout electronics
+   readoutWindowSize:         5000   # ticks (2 ns each --> 10 us)
+ 
+   # fraction of readout window size that should come before the "trigger" in the
+   # readout electronics
+   readoutPreTrigFraction:   0.3   # fraction (3+7 us)
    
    NoiseRMS:                 3.0   # in ADC#; "temporary" value, see SBN DocDB 19187
    
@@ -1847,7 +3168,18 @@
    
  } # icarus_settings_opdet_2022
  
-@@ -5570,41 +4614,9 @@
+ 
+ # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ # the following is based on `icarus_settings_opdet_2022` rescaling it to gain
+ # 7.5x10^6; this is an empirical choice attempting to reconciliate the mean
+ # value of MC hit amplitude with data; see e.g. SBN DocDB 34640
+ icarus_settings_opdet_202401patch: {
+   
+   @table::icarus_settings_opdet_2022
+   
+   nominalPMTgain: 7.5e6  # PMT multiplication gain factor
+   
+ } # icarus_settings_opdet_202401patch
  
  
  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1890,7 +3222,56 @@
  
  
  ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-@@ -5661,15 +4673,14 @@
+ ### Single photoelectron response configurations
+ ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ #
+ # single photoelectron response with a Gaussian rise and a fall shape.
+ # 
+ # Parameters are as used since forever to at least v08_46_00.
+ # 
+ icarus_photoelectronresponse_gaussian: {
+   
+   # run `lar --print-description AsymGaussPulseFunctionTool` for configuration
+   tool_type: AsymGaussPulseFunctionTool
+   
+   TransitTime:               "55.1 ns"
+   RaiseTime:                 "3.8 ns"
+   FallTime:                  "13.7 ns"
+   MeanAmplitude:             "0.9 pC"
+   ADC:                       -11.1927       #charge to adc factor
+   
+ } # icarus_photoelectronresponse_gaussian
+ 
+ 
+ #
+ # Single photoelectron response with exponential rise and a fall shapes.
+ # 
+ # Parameters are reworked from an ICARUS trigger note (not yet released as
+ # of April 2020), which come from data analysis from the BNL group.
+ # 
+ # In particular, raise and fall times are reported to be 1.4 and 3.2 ns for
+ # the PMT, and 1.8 and 4.2 ns including the cable distortion at CERN (10 m),
+ # which is not the setup of the actual ICARUS detector (37 m).
+ # The average gain is considered to be 7 x 10^6 (somehow lower than the nominal
+ # 10^7 which we had targetted).
+ # Attenuation from the cable is considered negligible.
+ # 
+ # The peak charge is computed starting from the charge of a photoelectron
+ # (-1.6 x 10^-7 pC), multiplied by the gain (7 x 10^6). At signal peak time,
+ # the current from that charge is -0.14 mA, i.e. a voltage drop on 50 ohm
+ # of -7.07 mV. In this parametrisation, we inject the gain and let the code
+ # compute the amplitude.
+ # The digitizer converts a range up to 2 volt with 14 bit, which translates into
+ # about 8.192 ADC/mV and 409.6 ADC/mA.
+ # In short, the peak signal is expected to be -7.07 mV, -0.14 mA, -57.93 ADC.
+ # 
+ # The integral of the shape is 191.407 ADC (time 0 to infinity, 2 ns sampling).
+ # 
+ icarus_photoelectronresponse_exponentials: {
+   
+   # run `lar --print-description AsymGaussPulseFunctionTool` for configuration
+   tool_type: AsymExpPulseFunctionTool
+   
    TransitTime:               "55.1 ns"
    RaiseTimeConstant:         "1.8 ns"
    FallTimeConstant:          "4.2 ns"
@@ -1908,7 +3289,7 @@
  # 
  icarus_photoelectronresponse_202202: {
    
-@@ -5677,44 +4688,12 @@
+   tool_type: SampledWaveformFunctionTool
    
    WaveformData: "Responses/SPR202202.txt"
    TransitTime:  "55.1 ns"
@@ -1954,7 +3335,28 @@
  # Custom photoelectron response.
  # 
  # This is just an example for an arbitrary function shape; the example tries to
-@@ -5743,9 +4722,7 @@
+ # reproduce an `AsymGaussPulseFunction`.
+ # The names of the parameters are arbitrary and their value must be numerical.
+ # 
+ icarus_photoelectronresponse_customexample: {
+   
+   # run `lar --print-description CustomPulseFunctionTool` for configuration
+   tool_type: CustomPulseFunctionTool
+   
+   ShapeFormula:
+     "[ADC] * [MeanAmplitude] * exp(-0.5*((x - [TransitTime])/((x < [TransitTime])? [RaiseTime]: [FallTime]))**2)"
+   PeakTime: "[TransitTime]"
+   Parameters: {
+     TransitTime:               55.1
+     RaiseTime:                 3.8
+     FallTime:                  13.7
+     MeanAmplitude:             0.9
+     ADC:                       -11.1927
+   } # parameters
+   
+ } # icarus_photoelectronresponse_customexample
+ 
+ 
  #
  # pick one
  #
@@ -1965,7 +3367,96 @@
  
  
  ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-@@ -5842,7 +4819,7 @@
+ ### Electronics noise configurations
+ ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ # pedestal noise generator tool configuration:
+ icarus_pmt_electronicsnoise_gauss: {
+   tool_type: PMTgausNoiseGeneratorTool
+   RMS:       @local::icarus_settings_opdet.NoiseRMS
+ }
+ 
+ icarus_pmt_electronicsnoise_gauss_fast: {
+   tool_type: PMTfastGausNoiseGeneratorTool
+   RMS:       @local::icarus_settings_opdet.NoiseRMS
+ }
+ 
+ icarus_pmt_electronicsnoise_nonoise: {
+   tool_type: PMTnoNoiseGeneratorTool
+ }
+ 
+ # icarus_pmt_electronicsnoise_standard is always the current favourite
+ icarus_pmt_electronicsnoise_standard: @local::icarus_pmt_electronicsnoise_gauss_fast
+ 
+ 
+ # pedestal generator tool configuration (uses the pedestal noise generator too):
+ icarus_pmt_pedestal_gaussnoise: {
+   tool_type: PMTconstantPedestalGeneratorTool
+   Pedestal:       @local::icarus_settings_opdet.NominalPedestal
+   NoiseGenerator: @local::icarus_pmt_electronicsnoise_gauss
+ } # icarus_pmt_pedestal_gaussnoise
+ 
+ icarus_pmt_pedestal_fastgaussnoise: {
+   @table::icarus_pmt_pedestal_gaussnoise
+   NoiseGenerator: @local::icarus_pmt_electronicsnoise_gauss_fast
+ } # icarus_pmt_pedestal_fastgaussnoise
+ 
+ icarus_pmt_pedestal_nonoise: {
+   @table::icarus_pmt_pedestal_gaussnoise
+   NoiseGenerator: @local::icarus_pmt_electronicsnoise_nonoise
+ } # icarus_pmt_pedestal_nonoise
+ 
+ icarus_pmt_pedestal_standard: @local::icarus_pmt_pedestal_fastgaussnoise
+ 
+ 
+ # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ ###
+ ### Configuration preset components
+ ###
+ icarus_pmtsimulation.disable_noise: {
+   Pedestal:                  @local::icarus_pmt_pedestal_nonoise
+   DarkNoiseRate:             "0 kHz"
+ } # icarus_pmtsimulation.disable_noise
+ 
+ 
+ ################################################################################
+ ###
+ ### The standard configuration (`icarus_pmtsimulationalg_standard`) is chosen
+ ### below.
+ ###
+ ###
+ 
+ 
+ ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ ### Configuration "2022":
+ ###  * based on SPR202202
+ ###  * gain: 9.7 x 10^6
+ ###  * electronics noise included
+ ###  * readout is fundamentally different from the real one: the hardwware readout
+ ###    collects channels in groups of 180 (full cryostat in Run1, may change in future)
+ ###    based on a trigger logic (channels above a O(10) p.e. threshold); the simulation
+ ###    instead does not assume a readout trigger logic and tries to read out every
+ ###    photoelectron (each channel independently, against a << 1 p.e. threshold);
+ ###    the part that is not included in the simulation but would be included in data
+ ###    is comprised only of noise (and exceptionally low response fluctuations of single
+ ###    photoelectrons), so post-processing can trim and extend the this simulation to
+ ###    reflect the real readout by removing the channels in the regions (cryostats)
+ ###    that would not be triggered, and generating the missing waveforms with noise.
+ ###    The single photoelectron response 202202 used in the simulation is 800 samples
+ ###    (1.6 us) long; since every single photoelectron "triggers" the simulation, each
+ ###    waveform will end with pure noise. With the current setting of a 4 us buffer
+ ###    we have about 1 us of noise in the pre-trigger buffer, 1.6 us of signal and then
+ ###    1.4 us of noise (additional photoelectrons in these 4 us would just effectively
+ ###    extend the "signal" part). All this considered, we keep the PMT readout buffer
+ ###    in the simulation 1+3 us, sizeably smaller than the 3+7 us used in the hardware
+ ###    for Run1, to save space (using 3+7, we would still have 1.6 us of signal,
+ ###    and the 3 us before and 5.4 us after it would still be pure noise).
+ ###    Likewise, we don't attempt to cover the full beam gate time like in hardware
+ ###    (7+21 us in Run1 settings), since all the signal will be included anyway.
+ ###    But we do force all 360 channels to take data at beam gate time ("only" for
+ ###    1+21 us around the beam gate opening though).
+ ###
+ 
+ icarus_pmtsimulationalg_202202_noise: {
  
    Pedestal:                  @local::icarus_pmt_pedestal_standard
    
@@ -1974,7 +3465,22 @@
    
    DarkNoiseRate:             "1.6 kHz"      # per channel, from CERN test stand measurement
  
-@@ -5865,13 +4842,10 @@
+   ## This is the readout window size for each "trigger" on the electronics
+   ReadoutWindowSize:         2000           # ticks (2 ns each --> 4 us)
+ 
+   ##fraction of readout window size that should come before the "trigger" on the electronics
+   PreTrigFraction:           0.25           # fraction (1+3 us)
+ 
+   ##Threshold in ADC counts for a PMT self-trigger.
+   # 15 ADC = 5x 3 ADC (RMS, see ElectronicsNoise above),~55% of standard SPR (4 mV, 33 ADC);
+   # number of noise samples above 15 ADC: ~206 samples for 2 ms x 360 channels (300 Hz)
+   # number of noise samples above 18 ADC: ~0.36 samples for 2 ms x 360 channels (0.5 Hz)
+   ##NOTE this is assumed to be positive-going and ABOVE BASELINE! Pulse polarity is corrected before determining trigger.
+   ThresholdADC:              18             # ADC counts
+   DiscrimAlgo:               AboveThreshold # keep all samples above threshold
+ 
+   PulsePolarity:             -1             #Pulse polarity (1 = positive, -1 = negative)
+   TriggerOffsetPMT:          "-1.0 ms"      # PMT enable gate start: time relative to trigger when readout begins
    ReadoutEnablePeriod:       "2.0 ms"       # PMT enable gate duration: time for which PMT readout is enabled
    CreateBeamGateTriggers:    true           #Option to create unbiased readout around beam spill
    BeamGateTriggerRepPeriod:  "2.0 us"       # Repetition period and number of repetitions for BeamGateTriggers:
@@ -1990,7 +3496,11 @@
    PMTspecs: {
      DynodeK:                   0.75           # gain on a PMT multiplication stage
                                                # is proportional to dV^k
-@@ -5883,13 +4857,6 @@
+     # relative multiplication stage resistors in Hamamatsu 5912,
+     # from their datasheet; if the resistor on first stage is 17.4 R, the one on
+     # the second stage is 3.4 R, etc. The value of R is not necessary.
+     # Only multiplication stages are included.
+     VoltageDistribution:    [ 17.4, 3.4, 5.0, 3.33, 1.67, 1.0, 1.2, 1.5, 2.2, 3.0 ]
      Gain:                   @local::icarus_settings_opdet.nominalPMTgain  # total typical PMT gain
    } # PMTspecs
  
@@ -2004,7 +3514,34 @@
  } # icarus_pmtsimulationalg_202202_noise
  
  
-@@ -5924,107 +4891,6 @@
+ icarus_pmtsimulationalg_202202_nonoise: {
+   @table::icarus_pmtsimulationalg_202202_noise
+   @table::icarus_pmtsimulation.disable_noise
+ }
+ 
+ icarus_pmtsimulationalg_202202: @local::icarus_pmtsimulationalg_202202_noise
+ 
+ 
+ ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ ### Configuration 202401patch:
+ ###  * explicitly based on the configuration "2022" below
+ ###  * gain and quantum efficiency adapted to reconciliate signal amplitude
+ ###    (SBN DocDB 34640)
+ ###  * gain updated to 7.5 x 10^6
+ ###  * threshold for digitization scaled down
+ ###
+ 
+ icarus_pmtsimulationalg_202401patch: {
+   @table::icarus_pmtsimulationalg_202202_noise
+   
+   ## Threshold in ADC counts for a PMT self-trigger
+   ## (actual readout simulation is still required downstream).
+   # 
+   # 15 ADC = 5x 3 ADC (RMS, see ElectronicsNoise above),~58% of standard SPR (3.2 mV, 26 ADC);
+   # number of noise samples above 15 ADC: ~206 samples for 2 ms x 360 channels (300 Hz), +~1 MB data
+   # number of noise samples above 18 ADC: ~0.36 samples for 2 ms x 360 channels (0.5 Hz), +~1 kB data
+   ThresholdADC:              15             # ADC counts
+   
  } # icarus_pmtsimulationalg_202401patch
  
  
@@ -2112,7 +3649,14 @@
  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  ###
  ### Legacy configuration, pre-2022
-@@ -6039,7 +4905,7 @@
+ ###
+ icarus_pmtsimulationalg_2018: {
+ 
+   Pedestal: {
+     Pedestal:                  14999.5
+     NoiseGenerator: {
+       tool_type:                 PMTfastGausNoiseGeneratorTool
+       RMS:                       3.0
      }
    } # Pedestal
    
@@ -2121,7 +3665,24 @@
    
    DarkNoiseRate:             "1.6 kHz"      # from CERN test stand measurement
  
-@@ -6064,10 +4930,7 @@
+   ##This is the readout window size for each "trigger" on the electronics
+   ReadoutWindowSize:         2000           #ticks (if 2ns each --> 4us)
+ 
+   ##fraction of readout window size that should come before the "trigger" on the electronics
+   PreTrigFraction:           0.25           # fraction
+ 
+   ##Threshold in ADC counts for a PMT self-trigger.
+   # 18 ADC = 6x 3 ADC (RMS, see ElectronicsNoise above),~35% of standard SPR (55 ADC);
+   # number of noise samples above 18 ADC: ~0.35 samples for 2 ms x 360 channels
+   ##NOTE this is assumed to be positive-going and ABOVE BASELINE! Pulse polarity is corrected before determining trigger.
+   ThresholdADC:              18             # ADC counts
+ 
+   PulsePolarity:             -1             #Pulse polarity (1 = positive, -1 = negative)
+   TriggerOffsetPMT:          "-1.0 ms"      #Time relative to trigger when readout begins
+   ReadoutEnablePeriod:       "2.0 ms"       #Time for which pmt readout is enabled
+   CreateBeamGateTriggers:    true           #Option to create unbiased readout around beam spill
+   BeamGateTriggerRepPeriod:  "2.0 us"       #Repetition Period for BeamGateTriggers
+   BeamGateTriggerNReps:      10             #Number of beamgate trigger reps to produce
    Saturation:                300            #in number of p.e. to see saturation effects in the signal
    QE:                        @local::icarus_opticalproperties.ScintPreScale # from opticalproperties_icarus.fcl
    FluctuateGain:             true           # apply per-photoelectron gain fluctuations
@@ -2133,7 +3694,36 @@
    PMTspecs: {
      DynodeK:                 0.75           # gain on a PMT multiplication stage
                                              # is proportional to dV^k
-@@ -6104,8 +4967,7 @@
+     # relative multiplication stage resistors in Hamamatsu 5912, from
+     # JINST 13 (2018) 10, P10030 (https://doi.org/10.1088/1748-0221/13/10/P10030);
+     # if the resistor on first stage is 17.4 R, the one on the second stage is 3.4 R,
+     # etc. The value of R is not necessary.
+     # Only multiplication stages are included.
+     VoltageDistribution:    [ 17.4, 3.4, 5.0, 3.33, 1.67, 1.0, 1.2, 1.5, 2.2, 3.0 ]
+     Gain:                   @local::icarus_settings_opdet.nominalPMTgain  # total typical PMT gain
+   } # PMTspecs
+ 
+ } # icarus_pmtsimulationalg_2018
+ 
+ 
+ icarus_pmtsimulationalg_2018_noise: @local::icarus_pmtsimulationalg_2018
+ 
+ 
+ # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ ###
+ ### Legacy no-noise configuration: `icarus_pmtsimulationalg_2018_nonoise`
+ ###
+ ###
+ icarus_pmtsimulationalg_2018_nonoise: {
+   @table::icarus_pmtsimulationalg_2018
+   @table::icarus_pmtsimulation.disable_noise
+ } # icarus_pmtsimulationalg_2018_nonoise
+ 
+ 
+ # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ ###
+ ### Configuration used for standard simulation
+ ###
  #
  # Includes noise.
  #
@@ -2143,7 +3733,67 @@
  
  
  # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-@@ -6173,7 +5035,7 @@
+ END_PROLOG
+ 
+ BEGIN_PROLOG
+ 
+ ################################################################################
+ ###  Beam settings
+ ################################################################################
+ 
+ BNB_settings: {
+ 
+   # also note the configuration `icarus_genie_BNB_base` in `genie_icarus_bnb.fcl`
+ 
+   spill_duration: "1.6 us"
+ 
+   batches_per_spill: 1
+ 
+   POT_per_batch: 5e12 # to be checked
+   
+   trigger_bits: 0x10
+ 
+ } # BNB_settings
+ 
+ #--- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ 
+ NuMI_settings: {
+ 
+   spill_duration: "9.5 us"
+ 
+   batches_per_spill: 12
+ 
+   POT_per_batch: 5e12 # to be checked
+   
+   trigger_bits: 0x20
+ 
+ } # NuMI_settings
+ 
+ 
+ ################################################################################
+ ###  Trigger gate builders
+ ################################################################################
+ ###
+ ### A "trigger gate" is a gate signal (i.e. open or closed vs. time) related
+ ### to a PMT channel and typically used for triggering.
+ ### 
+ ### We have a few algorithms available, and these are their standard
+ ### configurations.
+ ### Note that some of the parameters here are very hard to call "standard" in
+ ### that they are just a matter of choice: see e.g. the discrimination
+ ### thresholds.
+ ###
+ ###
+ ###
+ #
+ # icarus_triggergate_basic: basic configuration to be included in the full
+ #   algorithm configuration
+ # 
+ # It includes the threshold and a single "universal" baseline level.
+ # For Monte Carlo, it may be good to bind it to the simulated value
+ # (`icarus_pmtsimulationalg_standard.Baseline`)
+ #
+ # waveform baseline [ADC counts]
  icarus_triggergate_basic.Baseline: 15000
  
  # This is the primary PMT discrimination threshold, chosen for the hardware.
@@ -2152,7 +3802,187 @@
  
  # This is the primary PMT adder discrimination threshold (in ADC equivalent).
  icarus_triggergate_basic.SelectedAdderThreshold: 492  # 60 mV x (2^14 / 2 V) => 491.52 ADC#
-@@ -6361,21 +5223,8 @@
+ 
+ 
+ # thresholds for channel trigger gate opening [ADC counts]
+ # in this default, we have a 1-photoelectron threshold, a loose-but-reachable
+ # one, the selected one defined above, and a tight one.
+ # Roughly equivalent to the amplitudes of
+ # [ 0.6, 10.0, 13.5, 20.0 ] photoelectrons or
+ # [ 2.2, 37, 50, 75 ] mV;
+ icarus_triggergate_basic.ChannelThresholds:
+   [ 18, 300, @local::icarus_triggergate_basic.SelectedThreshold, 600 ]
+ 
+ 
+ # When a PMT signal crosses the discrimination threshold, the readout board
+ # (V1730B) will open a gate signal for some amount of time in order to evaluate
+ # the LVDS pair signal. This value determines that amount of time.
+ icarus_triggergate_basic.PMTdiscrGateWidth: "160 ns"
+ 
+ 
+ # adder signal emulation builds upon digitized waveforms;
+ # discrimination thresholds need to be compared to a SPR of ~3.75 mV (as above)
+ # that in an adder becomes ~3.7 mV x0.05 = 0.187 mV.
+ # The thresholds chosen here are:         [ 320,      533,     1067     ] photoelectrons or
+ #                                         [ "60 mV", "100 mV", "200 mV" ]
+ icarus_triggergate_basic.AdderThresholds: [ 492,      819,     1638     ]
+ 
+ 
+ #
+ # the pairing scheme is:
+ # 
+ #    ~50 ~50 ~50 ~50 ~50 ~50 ~50 ~50 ~50 ~50 ~50
+ #   | cm| cm| cm| cm| cm| cm| cm| cm| cm| cm| cm|
+ #   |   |   |   |   |   |   |   |   |   |   |   |
+ #   '   '   '   '   '   '   '   '   '   '   '   '
+ #      ,O   O.         ,O   O.         ,O   O.     ---------.
+ #     /       \       /       \       /       \              `~52 cm
+ #   O'         `O   O'         `O   O'         `O  ---------<
+ #                                                            `~52 cm
+ #       O---O          (O) (O)          O---O      ---------<'
+ #                                                            `~52 cm
+ #   O.         ,O   O.         ,O   O.         ,O  ---------<'
+ #     \       /       \       /       \       /              `~52 cm
+ #      `O   O'         `O   O'         `O   O'     ----------'
+ #
+ # replicated thrice per side per module;
+ # three rows below represent each of these units.
+ #
+ # The channel numbering scheme is:
+ #
+ #
+ #   y
+ # /\
+ # ||
+ # ||   |                              |                             |
+ # ||   |        4    7             14 | 17             24   27      |
+ # ||   |   1              9   11      |      19   21             29 |
+ # ||   |        3    6             13 | 16             23   26      |
+ # ||   |   0              8   10      |      18   20             28 |
+ # ||   |        2    5             12 | 15             22   25      |
+ # ||   |                              |                             |
+ # ||
+ # ##=====================================================================> z
+ # 
+ # 
+ # (patterns can be generated with the `LVDSpatterns.py` script distributed
+ #  in `icaruscode`)
+ #
+ icarus_trigger_channel_pairings: [
+ 
+   # behind C:0 S:0
+   [   0,  2 ], [   1,  4 ], [   3,  6 ], [   5,  8 ], [   7,  9 ], [  10, 12 ], [  11, 14 ], [  13 ],    
+   [  15, 18 ], [  16 ],     [  17, 19 ], [  20, 22 ], [  21, 24 ], [  23, 26 ], [  25, 28 ], [  27, 29 ],
+   [  30, 32 ], [  31, 34 ], [  33, 36 ], [  35, 38 ], [  37, 39 ], [  40, 42 ], [  41, 44 ], [  43 ],    
+   [  45, 48 ], [  46 ],     [  47, 49 ], [  50, 52 ], [  51, 54 ], [  53, 56 ], [  55, 58 ], [  57, 59 ],
+   [  60, 62 ], [  61, 64 ], [  63, 66 ], [  65, 68 ], [  67, 69 ], [  70, 72 ], [  71, 74 ], [  73 ],    
+   [  75, 78 ], [  76 ],     [  77, 79 ], [  80, 82 ], [  81, 84 ], [  83, 86 ], [  85, 88 ], [  87, 89 ],
+   
+   # behind C:0 S:1
+   [  90, 92 ], [  91, 94 ], [  93, 96 ], [  95, 98 ], [  97, 99 ], [ 100,102 ], [ 101,104 ], [ 103 ],    
+   [ 105,108 ], [ 106 ],     [ 107,109 ], [ 110,112 ], [ 111,114 ], [ 113,116 ], [ 115,118 ], [ 117,119 ],
+   [ 120,122 ], [ 121,124 ], [ 123,126 ], [ 125,128 ], [ 127,129 ], [ 130,132 ], [ 131,134 ], [ 133 ],    
+   [ 135,138 ], [ 136 ],     [ 137,139 ], [ 140,142 ], [ 141,144 ], [ 143,146 ], [ 145,148 ], [ 147,149 ],
+   [ 150,152 ], [ 151,154 ], [ 153,156 ], [ 155,158 ], [ 157,159 ], [ 160,162 ], [ 161,164 ], [ 163 ],    
+   [ 165,168 ], [ 166 ],     [ 167,169 ], [ 170,172 ], [ 171,174 ], [ 173,176 ], [ 175,178 ], [ 177,179 ],
+   
+   # behind C:1 S:0
+   [ 180,182 ], [ 181,184 ], [ 183,186 ], [ 185,188 ], [ 187,189 ], [ 190,192 ], [ 191,194 ], [ 193 ],    
+   [ 195,198 ], [ 196 ],     [ 197,199 ], [ 200,202 ], [ 201,204 ], [ 203,206 ], [ 205,208 ], [ 207,209 ],
+   [ 210,212 ], [ 211,214 ], [ 213,216 ], [ 215,218 ], [ 217,219 ], [ 220,222 ], [ 221,224 ], [ 223 ],    
+   [ 225,228 ], [ 226 ],     [ 227,229 ], [ 230,232 ], [ 231,234 ], [ 233,236 ], [ 235,238 ], [ 237,239 ],
+   [ 240,242 ], [ 241,244 ], [ 243,246 ], [ 245,248 ], [ 247,249 ], [ 250,252 ], [ 251,254 ], [ 253 ],    
+   [ 255,258 ], [ 256 ],     [ 257,259 ], [ 260,262 ], [ 261,264 ], [ 263,266 ], [ 265,268 ], [ 267,269 ],
+   
+   # behind C:1 S:1
+   [ 270,272 ], [ 271,274 ], [ 273,276 ], [ 275,278 ], [ 277,279 ], [ 280,282 ], [ 281,284 ], [ 283 ],    
+   [ 285,288 ], [ 286 ],     [ 287,289 ], [ 290,292 ], [ 291,294 ], [ 293,296 ], [ 295,298 ], [ 297,299 ],
+   [ 300,302 ], [ 301,304 ], [ 303,306 ], [ 305,308 ], [ 307,309 ], [ 310,312 ], [ 311,314 ], [ 313 ],    
+   [ 315,318 ], [ 316 ],     [ 317,319 ], [ 320,322 ], [ 321,324 ], [ 323,326 ], [ 325,328 ], [ 327,329 ],
+   [ 330,332 ], [ 331,334 ], [ 333,336 ], [ 335,338 ], [ 337,339 ], [ 340,342 ], [ 341,344 ], [ 343 ],    
+   [ 345,348 ], [ 346 ],     [ 347,349 ], [ 350,352 ], [ 351,354 ], [ 353,356 ], [ 355,358 ], [ 357,359 ]
+   
+   ]
+ 
+ 
+ ################################################################################
+ ### PMT channels with issues
+ ###
+ #
+ # the following PMT were found to have issues during commissioning
+ # on January 2021 (or earlier).
+ # See e.g. SBN DocDB 20696 (see plots on slide 7).
+ #
+ icarus_trigger_channel_ignore_202101: [
+    70, 106, 217,                     # PMT not working [SBN DocDB 20696]
+    54,  58,  67,  98, 112, 153, 254  # hot channels [SBN DocDB 20696] 
+ ]
+ 
+ # default selection of PMT channels to ignore
+ icarus_trigger_channel_ignore: @local::icarus_trigger_channel_ignore_202101
+ 
+ 
+ ################################################################################
+ ###
+ ### icarus_dynamictriggergate: variable length gates
+ ###
+ icarus_dynamictriggergate: {
+   
+   tool_type: DynamicTriggerGateBuilderTool
+   
+   ChannelThresholds: @local::icarus_triggergate_basic.ChannelThresholds
+   
+ } # icarus_dynamictriggergate
+ 
+ 
+ ################################################################################
+ ###
+ ### icarus_dynamictriggergate: fixed length gates
+ ###
+ icarus_fixedtriggergate: {
+   
+   tool_type: FixedTriggerGateBuilderTool
+   
+   ChannelThresholds: @local::icarus_triggergate_basic.ChannelThresholds
+   
+   # minimum duration of a trigger gate
+   GateDuration: @local::icarus_triggergate_basic.PMTdiscrGateWidth
+   
+ } # icarus_fixedtriggergate
+ 
+ 
+ 
+ ################################################################################
+ icarus_region_finder: {
+   
+   # waveform baseline [ADC counts]
+   Baseline: @local::icarus_triggergate_basic.Baseline
+   
+   # minimum sampled value for a region to start
+   EnablingThreshold: @local::icarus_triggergate_basic.ChannelThresholds[0]
+   
+   # sampled value below which a region ends (default: as `EnablingThreshold`)
+   # DisablingThreshold: 5
+   
+   # how many samples above threshold for a region to start
+   MinSamplesAboveThreshold: 3  # default
+   
+   # how many samples below threshold for a region to end
+   # (default: as `MinSamplesAboveThreshold`)
+   # MinSamplesBelowThreshold: 3
+   
+ } # icarus_region_finder
+ 
+ 
+ 
+ ################################################################################
+ ###  Trigger evaluation gates
+ # 
+ # Preset configurations are available in `beamgates_icarus.fcl` to help the
+ # workflow include the starting beam gate data product (there, its standard tag
+ # is also defined, but we can't refer to it directly here because that
+ # configuration file includes this one).
+ #
  # this configuration takes the configured beam gate duration
  # and creates extended gates to be used for trigger evaluation;
  # [20221104] the amount of extension needs to be verified with Run2 data
@@ -2175,7 +4005,8 @@
  
    module_type: FixBeamGateInfo
  
-@@ -6384,22 +5233,20 @@
+   BeamGateTag: beamgate
+ 
    Changes: [  # gates of type not included are left unchanged
      { # for BNB gates
        Select: { Types: [ "BNB" ] }
@@ -2204,7 +4035,15 @@
  
  
  ###
-@@ -6415,8 +5262,8 @@
+ ### enable gate for the trigger primitives
+ ###
+ 
+ #
+ # this gate is read from the simulation settings
+ #
+ icarus_enablegate_sim: {
+ 
+   module_type: WriteBeamGateInfo
    
    BeamGates: [
      {
@@ -2215,7 +4054,86 @@
      }
    ]
    
-@@ -6503,31 +5350,16 @@
+ } # icarus_enablegate_sim
+ 
+ 
+ icarus_enablegate: @local::icarus_enablegate_sim
+ 
+ 
+ ################################################################################
+ ###  Legacy configurations
+ ################################################################################
+ ###
+ ### this pairing scheme is equivalent to the one in
+ ### `icarus_trigger_channel_pairings` but coded with the old PMT mapping
+ ###
+ #
+ # The channel numbering scheme is:
+ #
+ #      50  44          30  24          10   4
+ #
+ #  56          40  36          20  16           0
+ #
+ #      52  46          32  26          12   6
+ #
+ #  58          42  38          22  18           2
+ #
+ #      54  48          34  28          14   8
+ #
+ icarus_trigger_channel_pairings_single_wire_geo: [
+ 
+   # behind C:0 S:0
+   [   0,  4 ], [   2,  8 ], [  12,  6 ], [  10, 16 ], [  14, 18 ], [  20, 24 ], [  22, 28 ], [  26 ],
+   [  30, 36 ], [  32 ],     [  34, 38 ], [  40, 44 ], [  42, 48 ], [  46, 52 ], [  50, 56 ], [  54, 58 ],
+   [  60, 64 ], [  62, 68 ], [  66, 72 ], [  70, 76 ], [  74, 78 ], [  80, 84 ], [  82, 88 ], [  86 ],
+   [  90, 96 ], [  92 ],     [  94, 98 ], [ 100,104 ], [ 106,112 ], [ 102,108 ], [ 110,116 ], [ 114,118 ],
+   [ 120,124 ], [ 122,128 ], [ 126,132 ], [ 130,136 ], [ 134,138 ], [ 140,144 ], [ 142,148 ], [ 146 ],
+   [ 150,156 ], [ 152 ],     [ 154,158 ], [ 160,164 ], [ 162,168 ], [ 166,172 ], [ 170,176 ], [ 174,178 ],
+   
+   # behind C:0 S:1
+   [   1,  5 ], [   3,  9 ], [  13,  7 ], [  11, 17 ], [  15, 19 ], [  21, 25 ], [  23, 29 ], [  27 ],
+   [  31, 37 ], [  33 ],     [  35, 39 ], [  41, 45 ], [  43, 49 ], [  47, 53 ], [  51, 57 ], [  55, 59 ],
+   [  61, 65 ], [  63, 69 ], [  67, 73 ], [  71, 77 ], [  75, 79 ], [  81, 85 ], [  83, 89 ], [  87 ],
+   [  91, 97 ], [  93 ],     [  95, 99 ], [ 101,105 ], [ 107,113 ], [ 103,109 ], [ 111,117 ], [ 115,119 ],
+   [ 121,125 ], [ 123,129 ], [ 127,133 ], [ 131,137 ], [ 135,139 ], [ 141,145 ], [ 143,149 ], [ 147 ],
+   [ 151,157 ], [ 153 ],     [ 155,159 ], [ 161,165 ], [ 163,169 ], [ 167,173 ], [ 171,177 ], [ 175,179 ],
+   
+   # behind C:1 S:0
+   [ 180,184 ], [ 182,188 ], [ 192,186 ], [ 190,196 ], [ 194,198 ], [ 200,204 ], [ 202,208 ], [ 206 ],
+   [ 210,216 ], [ 212 ],     [ 214,218 ], [ 220,224 ], [ 222,228 ], [ 226,232 ], [ 230,236 ], [ 234,238 ],
+   [ 240,244 ], [ 242,248 ], [ 246,252 ], [ 250,256 ], [ 254,258 ], [ 260,264 ], [ 262,268 ], [ 266 ],
+   [ 270,276 ], [ 272 ],     [ 274,278 ], [ 280,284 ], [ 286,292 ], [ 282,288 ], [ 290,296 ], [ 294,298 ],
+   [ 300,304 ], [ 302,308 ], [ 306,312 ], [ 310,316 ], [ 314,318 ], [ 320,324 ], [ 322,328 ], [ 326 ],
+   [ 330,336 ], [ 332 ],     [ 334,338 ], [ 340,344 ], [ 342,348 ], [ 346,352 ], [ 350,356 ], [ 354,358 ],
+   
+   # behind C:1 S:1
+   [ 181,185 ], [ 183,189 ], [ 193,187 ], [ 191,197 ], [ 195,199 ], [ 201,205 ], [ 203,209 ], [ 207 ],
+   [ 211,217 ], [ 213 ],     [ 215,219 ], [ 221,225 ], [ 223,229 ], [ 227,233 ], [ 231,237 ], [ 235,239 ],
+   [ 241,245 ], [ 243,249 ], [ 247,253 ], [ 251,257 ], [ 255,259 ], [ 261,265 ], [ 263,269 ], [ 267 ],
+   [ 271,277 ], [ 273 ],     [ 275,279 ], [ 281,285 ], [ 287,293 ], [ 283,289 ], [ 291,297 ], [ 295,299 ],
+   [ 301,305 ], [ 303,309 ], [ 307,313 ], [ 311,317 ], [ 315,319 ], [ 321,325 ], [ 323,329 ], [ 327 ],
+   [ 331,337 ], [ 333 ],     [ 335,339 ], [ 341,345 ], [ 343,349 ], [ 347,353 ], [ 351,357 ], [ 355,359 ]
+ 
+ ] # icarus_trigger_channel_pairings_single_wire_geo
+ 
+ 
+ ################################################################################
+ ###
+ ### Trigger patterns: definition of majority and a bit of topology of a trigger.
+ ###
+ 
+ # M1 pattern: any PMT anywhere
+ icarus_triggergate_basic.patterns.M1: {
+   inMainWindow: 1
+ }
+ 
+ icarus_triggergate_basic.patterns.S3: {
+   sumOfOppositeWindows: 3
+   inMainWindow:         2  # relevant only to disambiguate the location
+ }
+ 
+ icarus_triggergate_basic.patterns.S5: {
+   sumOfOppositeWindows: 5
    inMainWindow:         3  # relevant only to disambiguate the location
  }
  
@@ -2247,3 +4165,100 @@
  
  icarus_triggergate_basic.SelectedPattern: @local::icarus_triggergate_basic.patterns.S5
  icarus_triggergate_basic.SelectedPrimitivePattern: @local::icarus_triggergate_basic.patterns.S10
+ icarus_triggergate_basic.SelectedAdderPattern: @local::icarus_triggergate_basic.patterns.M1
+ 
+ 
+ 
+ END_PROLOG
+ 
+ BEGIN_PROLOG
+ 
+ # ------------------------------------------------------------------------------
+ #
+ # This is the name that downstream workflows should expect for the beam gate
+ # data product.
+ #
+ icarus_standardbeamgate_tag: beamgate
+ 
+ 
+ # ------------------------------------------------------------------------------
+ # 
+ # these two configurations create a beam gate data product with strictly the
+ # nominal beam specifications. They are intended for use in the workflow of
+ # event generators that do not generate beam gate information.
+ #
+ icarus_standardbeamgate_BNB: {
+ 
+   module_type: WriteBeamGateInfo
+   
+   BeamGates: [
+     {
+       Duration: @local::BNB_settings.spill_duration  # from trigger_icarus.fcl
+       Type: BNB
+     }
+   ]
+ 
+ } # icarus_standardbeamgate_BNB
+ 
+ 
+ icarus_standardbeamgate_NuMI: {
+ 
+   module_type: WriteBeamGateInfo
+   
+   BeamGates: [
+     {
+       Duration: @local::NuMI_settings.spill_duration  # from trigger_icarus.fcl
+       Type: NuMI
+     }
+   ]
+ 
+ } # icarus_standardbeamgate_NuMI
+ 
+ 
+ # ------------------------------------------------------------------------------
+ #
+ # This configuration is copying an existing beam gate data product (by default,
+ # with `generator` tag) into a new one with the same characteristics.
+ # The net effect is of "renaming" the beam gate, that is a useful trick for
+ # workflows.
+ # Any association is lost (the code may be extended to copy them too).
+ #
+ icarus_standardbeamgate_copy: {
+ 
+   module_type: FixBeamGateInfo
+   
+   BeamGateTag: generator
+   
+   Changes: [ {} ]  # no changes
+   
+ } # icarus_standardbeamgate_copy
+ 
+ 
+ # ------------------------------------------------------------------------------
+ 
+ END_PROLOG
+ 
+ 
+ process_name: GenGenie
+ 
+ 
+ services: {
+   
+   @table::icarus_gen_services
+   
+   IFDH:         {}
+   
+   # Load the service that manages root files for histograms.
+   TFileService: { fileName: "Supplemental-simulation_genie_icarus_numi_%tc-%p.root" }
+   
+ #  FileCatalogMetadata:  @local::art_file_catalog_mc
+   
+ } # services
+ 
+ 
+ source: {
+   module_type:     EmptyEvent
+   timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
+   maxEvents:       10          # Number of events to create
+   firstRun:        1           # Run number to use for this file
+   firstEvent:      1           # number of first event in the file
