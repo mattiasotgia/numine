@@ -66,3 +66,5 @@
 # physics.producers.mcophit.SimPhotonsProducer: "shifted"
 
 #include "stage0_run2_icarus_mc.fcl"
+
+physics.producers.simChannelROI.SimChannelLabelVec:  ["daq:simpleSC"]

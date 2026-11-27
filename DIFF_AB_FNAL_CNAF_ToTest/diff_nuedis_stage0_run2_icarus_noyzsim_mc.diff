@@ -1,6 +1,285 @@
---- CV_FNAL_10_31_00_01//nuedis_stage0_run2_icarus_noyzsim_mc.dump	2026-11-26 10:27:06.722297850 +0100
-+++ CV_CNAF_RicDev//nuedis_stage0_run2_icarus_noyzsim_mc.dump	2026-11-25 17:02:02.255809441 +0100
-@@ -493,201 +493,201 @@
+--- CV_FNAL_10_31_00_01/nuedis_stage0_run2_icarus_noyzsim_mc.dump	2026-11-27 05:31:20.770792703 -0600
++++ CV_CNAF_RicDev/nuedis_stage0_run2_icarus_noyzsim_mc.dump	2026-11-26 03:07:50.040879620 -0600
+@@ -1,273 +1,274 @@
+ # Produced from 'fhicl-dump' using:
+ #   Input  : fcl/cv/nuedis_stage0_run2_icarus_noyzsim_mc.fcl
+ #   Policy : cet::filepath_maker
+ #   Path   : "FHICL_FILE_PATH"
+ 
+ outputs: {
+    rootOutput: {
++      SelectEvents: [
++         "path"
++      ]
+       checkFileName: false
+       compressionLevel: 1
+       dataTier: "reconstructed"
+       fileName: "%ifb_%tc-%p.root"
+       fileProperties: {
+          maxInputFiles: 1
+       }
+       module_type: "RootOutput"
+       outputCommands: [
+          "keep *_*_*_*",
+          "drop *_daq*_*_*",
+          "drop raw::RawDigit*_*_*_*",
+          "drop raw::OpDetWaveform*_opdaq_*_*",
+          "drop *_MCDecodeTPCROI_*_*",
+          "drop *_decon1droi_*_*",
+          "drop recob::Wire*_roifinder*_*_*",
+-         "drop *_overlayOpWaveforms_*_*",
+-         "drop raw::OpDetWaveform*_shifted_*_*",
+-         "keep *_daq_simpleSC*_*",
+-         "keep *_daqPMT_*_*"
++         "keep *_daq_simpleSC*_*"
+       ]
+       saveMemoryObjectThreshold: 0
+    }
+ }
+ physics: {
+    analyzers: {
+       purityinfoana0: {
+          PrintInfo: false
+          PurityInfoLabel: "purityana0"
+          SelectEvents: [
+             "path"
+          ]
+          module_type: "TPCPurityInfoAna"
+       }
+       purityinfoana1: {
+          PrintInfo: false
+          PurityInfoLabel: "purityana1"
+          SelectEvents: [
+             "path"
+          ]
+          module_type: "TPCPurityInfoAna"
+       }
+       spanaE: {
+          Cryostat: 0
+          G4Producer: "largeant"
+          HitProducers: [
+             "gaushit1dTPCEE",
+             "gaushit1dTPCEW"
+          ]
+          SimChannelProducer: "daq:simpleSC"
+          WireProducers: [
+             "roifinder1d:PHYSCRATEDATATPCEE",
+             "roifinder1d:PHYSCRATEDATATPCEW"
+          ]
+          module_type: "SPAna"
+       }
+       spanaW: {
+          Cryostat: 1
+          G4Producer: "largeant"
+          HitProducers: [
+             "gaushit1dTPCWE",
+             "gaushit1dTPCWW"
+          ]
+          SimChannelProducer: "daq:simpleSC"
+          WireProducers: [
+             "roifinder1d:PHYSCRATEDATATPCWE",
+             "roifinder1d:PHYSCRATEDATATPCWW"
+          ]
+          module_type: "SPAna"
+       }
+    }
+    end_paths: [
+       "outana",
+       "streamROOT"
+    ]
+    filters: {
+       crtpmtmatchingfilter: {
+          BNBBeamGateMax: 2300
+          BNBBeamGateMin: -550
+          BNBinBeamMax: 1300
+          BNBinBeamMin: -300
+          CrtPmtModuleLabel: "crtpmt"
+          FilterLevel: "loose"
+          GlobalT0Offset: 1.599957e6
+          MatchBottomCRT: false
+          NuMIBeamGateMax: 10000
+          NuMIBeamGateMin: -550
+          NuMIinBeamMax: 9100
+          NuMIinBeamMin: -300
+          OutputTree: true
+          PMTADCThresh: 400
+          SpillOnly: false
+          TimeOfFlightInterval: 100
+          TriggerConfiguration: "triggerconfig"
+          TriggerLabel: "daqTrigger"
+          module_type: "FilterCRTPMTMatching"
+          nOpHitToTrigger: 5
+       }
+       filterdataintegrity: {
+          module_type: "FilterDataIntegrity"
+       }
+       flashfilterBNB: {
+          OpFlashProducerList: [
+             "opflashCryoE",
+             "opflashCryoW"
+          ]
+          WindowEndTime: 1.8
+          WindowStartTime: -2e-1
+          module_type: "FilterOpFlash"
+       }
+       flashfilterNuMI: {
+          OpFlashProducerList: [
+             "opflashCryoE",
+             "opflashCryoW"
+          ]
+          WindowEndTime: 9.8
+          WindowStartTime: -2e-1
+          module_type: "FilterOpFlash"
+       }
+       triggerfilterBNB: {
+          TriggerDataLabel: "daqTrigger"
+          TriggerType: "BNB"
+          module_type: "TriggerTypeFilter"
+       }
+       triggerfilterNuMI: {
+          TriggerDataLabel: "daqTrigger"
+          TriggerType: "NuMI"
+          module_type: "TriggerTypeFilter"
+       }
+       triggerfilterOffbeamBNB: {
+          TriggerDataLabel: "daqTrigger"
+          TriggerType: "OffbeamBNB"
+          module_type: "TriggerTypeFilter"
+       }
+       triggerfilterOffbeamNuMI: {
+          TriggerDataLabel: "daqTrigger"
+          TriggerType: "OffbeamNuMI"
+          module_type: "TriggerTypeFilter"
+       }
+       triggerfilterUnknown: {
+          TriggerDataLabel: "daqTrigger"
+          TriggerType: "Unknown"
+          module_type: "TriggerTypeFilter"
+       }
+    }
+    outana: [
+       "purityinfoana0",
+       "purityinfoana1"
+    ]
+    path: [
+       "pmtfixedthr",
+       "pmtlvdsgates",
+       "pmttriggerwindows",
+       "triggersimgates",
+       "emuTrigger",
+       "pmtbaselines",
+       "ophit",
+       "mcophit",
+       "opflashCryoE",
+       "opflashCryoW",
+       "MCDecodeTPCROI",
+       "decon1droi",
+       "roifinder1d",
+       "wire2channelroi",
+       "purityana0",
+       "purityana1",
++      "simChannelROI",
+       "crthit",
+       "crttrack",
+       "crtpmt"
+    ]
+    producers: {
+       MCDecodeTPCROI: {
+          CoherentGrouping: 64
+          DecoderTool: {
+             DenoiserType: "default"
+             FFTCutoffVals: [
+                [
+                   8,
+                   800
+                ],
+                [
+                   8,
+                   800
+                ],
+                [
+                   4,
+                   800
+                ]
+             ]
+             FFTSigmaVals: [
+                [
+                   1.5,
+                   20
+                ],
+                [
+                   1.5,
+                   20
+                ],
+                [
+                   1.5,
+                   20
+                ]
+             ]
+             FilterModeVec: [
+                "e",
+                "g",
+                "d"
+             ]
+             FilterWindow: 10
+             FragmentIDMap: [
+                [
+                   0,
+                   5132
+                ],
+                [
+                   1,
+                   5134
+                ],
+                [
+                   2,
+                   5136
+                ],
+                [
+                   6,
+                   5140
+                ],
+                [
+                   8,
+                   5390
+                ],
+                [
+                   9,
+                   5392
+                ]
+             ]
+             LowFreqCorrection: true
+             NSigmaForTrucation: 3.5
+             RemoveBadChannels: true
+             RemoveBadRMS: false
+             StructuringElement: 16
+             Threshold: [
+                20,
+                12,
+                12
+             ]
+             UseFFTFilter: false
+             fragment_id_offset: 0
+             tool_type: "TPCNoiseFilter1D"
+          }
+          DiagnosticOutput: false
+          FragmentsLabelVec: [
+             "daq:TPCWW",
+             "daq:TPCWE",
+             "daq:TPCEW",
+             "daq:TPCEE"
+          ]
+          OutInstanceLabelVec: [
+             "PHYSCRATEDATATPCWW",
+             "PHYSCRATEDATATPCWE",
+             "PHYSCRATEDATATPCEW",
+             "PHYSCRATEDATATPCEE"
+          ]
+          OutputCoherentPath: "Cor"
+          OutputCorrection: false
+          OutputRawWavePath: "RAW"
+          OutputRawWaveform: false
+@@ -492,201 +493,201 @@
                       Channel: 12306
                       ChannelIndex: 15
                       InstanceName: "EW"
@@ -2196,8 +2475,7 @@
              "All"
           ]
           SimChannelLabelVec: [
--            "merge"
-+            "daq:simpleSC"
+             "daq:simpleSC"
           ]
           WireModuleLabelVec: [
              "largeant"
