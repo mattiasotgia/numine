@@ -1,6 +1,103 @@
 --- CV_FNAL_10_31_00_01_EXPANDED//nuedis_filter_gen.expand	2026-11-26 10:27:06.777056411 +0100
 +++ CV_CNAF_RicDev_EXPANDED//nuedis_filter_gen.expand	2026-11-26 10:15:19.639876300 +0100
-@@ -1298,67 +1298,6 @@
+@@ -1201,261 +1201,200 @@
+ END_PROLOG
+ 
+ BEGIN_PROLOG
+ 
+ icarus_detproperties: {
+   @table::standard_detproperties
+ 
+   ElectronsToADC:            1.208041e-3     # in ADC/e; 6241.5 electrons = 1fC
+   Temperature:               87.5
+   Electronlifetime:          3000            # As agreed 3/17/22 to match measured value in East croystat
+   # Active volume E-field calculated based on SBN-doc-23259 (H. Carranza and Z. Williams) using Vp = 75150 (from M. Mooney)
+   Efield:                    [0.4938,0.733,0.933 ] #kV/cm to first,second,third wire planes
+ 
+   # Set this true to use the non-default "ICARUS+MicroBooNE" calcultaion for drift velocity
+   UseIcarusMicrobooneDriftModel: true
+ 
+   SternheimerA:              0.1956           # Ar Sternheimer parameter a.
+   SternheimerK:              3.0000           # Ar Sternheimer parameter k.
+   SternheimerX0:             0.2000           # Ar Sternheimer parameter x0.
+   SternheimerX1:             3.0000           # Ar Sternheimer parameter x0.
+   SternheimerCbar:           5.2146           # Ar Sternheimer parameter Cbar.
+ 
+   DriftVelFudgeFactor: 0.99733
+ 
+   NumberTimeSamples:         4096
+   TimeOffsetU:               0.
+   TimeOffsetV:               0.
+   TimeOffsetY:               0.
+   TimeOffsetZ:               0.
+   ReadOutWindowSize:         4096
+   InheritNumberTimeSamples:  true
+ 
+   SimpleBoundaryProcess:     false # relevant only when using full Optical simulation
+ 
+   IncludeInterPlanePitchInXTickOffsets: false # removed by deconvolution
+ 
+ } // icarus_detproperties
+ 
+ END_PROLOG
+ #
+ # File:    detectorclocks_icarus.fcl
+ # Purpose: Configuration of DetectorClocks service for ICARUS.
+ #
+ # Available configurations:
+ #
+ # * `icarus_detectorclocks`: standard ICARUS configuration
+ # * `icarus_detectorclocks+data_notiming`: readout all at the same time
+ #
+ #
+ 
+ 
+ BEGIN_PROLOG
+ 
+ 
+ #
+ # Standard ICARUS configuration
+ #
+ # Use as:
+ #     
+ #     services.DetectorClocksService: @local::icarus_detectorclocks
+ #     
+ #
+ icarus_detectorclocks: {
+     service_provider: "DetectorClocksServiceStandard"
+ 
+     TrigModuleName:    "daqTrigger"
+     InheritClockConfig: true
+     G4RefTime:        -1.5e3  # G4 time [us] where electronics clock counting start
+     TriggerOffsetTPC: -0.340e3 # Time offset for TPC readout start time w.r.t. trigger [us]
+     FramePeriod:       1638.4  # Frame period [us]; 4096 * 400 ns
+     ClockSpeedTPC:     2.5     # TPC clock speed in MHz;
+     ClockSpeedOptical: 500     # Optical clock speed in MHz
+     ClockSpeedTrigger: 16      # Trigger clock speed in MHz
+     ClockSpeedExternal:31.25   # External clock speed in MHz
+     DefaultTrigTime:   1.5e3  # Default trigger time in electronics clock [us]
+     DefaultBeamTime:   1.5e3  # Default beam gate time in electronics clock [us]
+     
+ } # icarus_detectorclocks
+ 
+ 
+ # ##############################################################################
+ #
+ # Data read out all at the same time
+ #
+ # Use as:
+ #     
+ #     services.DetectorClocksService: @local::icarus_detectorclocks_data_notiming
+ #     
+ #
+ icarus_detectorclocks_data_notiming: {
+     @table::icarus_detectorclocks
+ 
+     InheritClockConfig: false
+     G4RefTime:              0.0   # G4 time [us] where electronics clock counting start
+     TriggerOffsetTPC:       0.0   # Time offset for TPC readout start time w.r.t. trigger [us]
+     DefaultTrigTime:        0.0   # Default trigger time in electronics clock [us]
+     DefaultBeamTime:        0.0   # Default beam gate time in electronics clock [us]
      
  } # icarus_detectorclocks_data_notiming
  
@@ -68,7 +165,201 @@
  #
  #
  #
-@@ -1701,28 +1640,6 @@
+ 
+ END_PROLOG
+ 
+ 
+ BEGIN_PROLOG
+ 
+ 
+ ################################################################################
+ ###  icarus_basic_services
+ ###
+ #
+ # Standard ICARUS configuration of basic services, including message service,
+ # art services, geometry and properties, but not calibration services.
+ #
+ icarus_basic_services:
+ {
+     message:                             @local::icarus_message_services_interactive # from `messages_icarus.fcl`
+ 
+                                          @table::icarus_geometry_services
+ 
+     DetectorPropertiesService:           @local::icarus_detproperties  # from `detectorproperties_icarus.fcl`
+     LArPropertiesService:                @local::icarus_properties     # from `larproperties_icarus.fcl`
+     DetectorClocksService:               @local::icarus_detectorclocks # from `detectorclocks_icarus.fcl`
+ 
+ } # icarus_basic_services
+ 
+ 
+ END_PROLOG
+ 
+ 
+ BEGIN_PROLOG
+ 
+ 
+ FieldResponseTool:
+ {
+     tool_type:                FieldResponse
+     Plane:                    0
+     ResponseType:             0
+     SignalType:               0
+     FieldResponseFileName:    "t600_response"
+     FieldResponseFileVersion: "v0.0"
+     FieldResponseHistName:    "t600_response"
+     FieldResponseAmplitude:   1.
+     TimeCorrectionFactor:     1000. 
+ }
+ 
+ ElectronicsResponseTool:
+ {
+     tool_type:                ElectronicsResponse
+     Plane:                    0
+     FCperADCMicroS:           0.0321  # Scaling to match data, from electronics tests it was 0.027
+     ASICShapingTime:          1.3
+     ADCPerPCAtLowestASICGain: 5500.
+ }
+ 
+ ElectronicsResponseBesselApproxTool:
+ {
+     tool_type:                ElectronicsResponseBesselApprox
+     Plane:                    0
+     FCperADCMicroS:           0.0321  # Scaling to match data, from electronics tests it was 0.027
+     ASICShapingTime:          1.3
+     ADCPerPCAtLowestASICGain: 5500.
+     TimeOffset:               0.0 # note that 1.625 will produce a plot that matches electronics paper
+                                   # unfortunately, that leads to a time offset in the response we'd rather not have
+ }
+ 
+ FilterTool:
+ {
+     tool_type: Filter
+     Plane:                       0
+     #-----------------------------------------------------------------------------
+     #************* THIS BLOCK CONTAINS HISTORICAL CONFIGURATIONS *****************
+     # This is the original Wiener filter
+     #FilterFunction:               "(x>0.0)? (gaus(0)*exp(-0.5*pow(x/[3],[4]))): 0.0"
+     #FilterParametersVec:          [ 1.849030, 1.46, 1.33, 0.23, 4.89 ]
+     # This defines the gaussian filter
+     #FilterFunction:              "(x>0.0)*gaus"
+     #FilterParametersVec:         [1., 0., 0.1 ]  # Offset and sigma are MHz by the way the filter is constructed
+     #-----------------------------------------------------------------------------
+     # For MCC1.1 we use the following filter for all three planes
+     # The filter function is a mating of two gaussians to provide both low and high frequency filtering
+     # Note that as of release v08_00_00 the parameters are in units of MHz
+     FilterFunction:              "(x>0.0) ? ((1. - gaus(0)) * gaus(3)) : 0.0"
+     FilterParametersVec:         [1., 0., 4.0,   1., 0., 100.]
+     FilterWidthCorrectionFactor: 1.0
+ }
+ 
+ ResponseTool:
+ {
+     tool_type: Response
+     Plane:               0
+     Correction3D:        1.
+     TimeScaleFactor:     1.
+     UseEmpiricalOffsets: true
+     FieldResponse:       @local::FieldResponseTool
+     ElectronicsResponse: @local::ElectronicsResponseBesselApproxTool
+     Filter:              @local::FilterTool
+@@ -1604,304 +1543,259 @@
+ 
+ 
+ 
+ standard_siov_channelstatus_provider:
+ {
+   AlgName:       "SIOVChannelStatusProvider"
+   DatabaseRetrievalAlg: @local::standard_databaseretrievalalg
+   
+   UseDB: false
+   UseFile: false
+ }
+ 
+ standard_siov_channelstatus_service:
+ {
+   service_provider: SIOVChannelStatusService
+   ChannelStatusProvider: @local::standard_siov_channelstatus_provider 
+ }
+ 
+ END_PROLOG
+ # File:    calibration_database_PMT_TagSets_icarus.fcl
+ # Author:  M. Vicenzi (mvicenzi@bnl.gov), J. Kim (jae.sung.kim.3426@gmail.com)
+ # Date:    February 20, 2025
+ # Purpose: Tags definitions for the PMT timing calibration databases
+ 
+ BEGIN_PROLOG
+ 
+ # These are the standard tags for analyses on Run 1 data
+ # These tagged versions of the databases only contain tables relevant for Run 1
+ PMT_CalibrationTags_Run1: {
+   pmt_cables_delays_data:    "v1r0"  # tables for run>=0 (null) and run>=8046
+   pmt_laser_timing_data:     "v1r0"  # tables for run>=0 (null) and run>=8046
+   pmt_cosmics_timing_data:   "v1r0"  # tables for run>=0 (null) and run>=8046 
+ }
+ 
+ # These are the standard tags for analyses on Run 1 and Run 2 data (as of August 2023)
+ # These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+ # Notes: 
+ #  - No cosmics corrections are available for Run 2
+ #  - Laser and cable corrections do not cover the entire Run 2 period
+ PMT_CalibrationTags_Run2_August2023: {
+   pmt_cables_delays_data:    "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9773
+   pmt_laser_timing_data:     "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9773
+   pmt_cosmics_timing_data:   "v1r0"  # tables for run>=0 (null) and run>=8046 
+ }
+ 
+ # These are the standard tags for analyses on Run 1 and Run 2 data (as of September 2023)
+ # These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+ # Notes: 
+ #  - No cosmics corrections are available for Run 2
+ PMT_CalibrationTags_Run2_Sept2023: {
+   pmt_cables_delays_data:    "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+   pmt_laser_timing_data:     "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+   pmt_cosmics_timing_data:   "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9301 (null) 
+ }
+ 
+ # These are the standard tags for analyses on Run 1 and Run 2 data (as of December 2023)
+ # These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+ # Notes: 
+ #  - Updated cable delays with new phase offsets
+ #  - Full laser and cosmics corrections for all Run 2.
+ PMT_CalibrationTags_Run2_Dec2023: {
+   pmt_cables_delays_data:    "v2r3"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773 and run>=10369
+   pmt_laser_timing_data:     "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+   pmt_cosmics_timing_data:   "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773 
+ }
+ 
+ # These are the standard tags for analyses on Run 1, Run 2 and pre-Run 3 data (as of December 2023)
+ # These tagged versions of the databases contain tables relevant for Run 1, Run 2 and pre-Run 3.
+ # Notes: 
+ #   - New cable delays (mapping changes, upgrades to laser distribution)
+ #   - New laser table for the beginning of Run 3 (new signal cables)
+ PMT_CalibrationTags_Run3_Dec2023: {
+   pmt_cables_delays_data:    "v2r4"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773, run>=10369 and run>=10865
+   pmt_laser_timing_data:     "v2r2"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773 and run>=10908
+   pmt_cosmics_timing_data:   "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773 
+ }
+ 
+ # These are the standard tags for analyses on Run 1, Run 2, Run 3 and pre-Run 4 data (as of Feb 2025)
+ # These tagged versions of the databases contain tables relevant for Run 1, Run 2, Run 3 and pre-Run 4.
+ # Notes: 
+ #   - New cable delays for Run 4 (after summer 2024 laser and PPS changes)
+ #   - New laser tables up to final Run 4 gain equalization
+ #   - New cosmics corrections for Run 3, updates to Run 1,2 tables (more statistics)
+ PMT_CalibrationTags_Run3_Feb2025: {
+   pmt_cables_delays_data:    "v2r5"  # tables for run>=0 (null)
+                                      # Run 1: run>=8046
+                                      # Run 2: run>=9301, run>=9628, run>=9773
+                                      # Run 3: run>=10369, run>=10441, run>=10865
+                                      # Run 4: run>=12040, run>=12455, run>=12777
+   pmt_laser_timing_data:     "v2r3"  # tables for run>=0 (null)
+                                      # Run 1: run>=8046
+                                      # Run 2: run>=9301, run>=9628, run>=9773
+                                      # Run 3: run>=10908, run>=11590
+                                      # Run 4: run>=12058, run>=12837
+   pmt_cosmics_timing_data:   "v2r2"  # tables for run>=0 (null)
+                                      # Run 1: run>=8046
+                                      # Run 2: run>=9301, run>=9628, run>=9773
                                       # Run 3: run>=11590
  }
  
@@ -97,7 +388,22 @@
  END_PROLOG
  # File:    calibration_database_GlobalTags.fcl
  # Purpose: Collection of tag info for the TPC calibration database
-@@ -1745,7 +1662,7 @@
+ 
+ BEGIN_PROLOG
+ 
+ ## Valid for Run A,1, and 2
+ ## - Files decoded with release <v09_66_02 should use v3r1 
+ TPC_CalibrationTags_Oct2023: {
+ 
+   tpc_channelstatus_data: "v3r1"
+   tpc_elifetime_data: "v2r1"
+   tpc_dqdxcalibration_data: "v2r1"
+   tpc_yz_correction_data: "v2r1"
+ 
+ }
+ 
+ ## Valid for Run A,1, and 2
+ ## - tpc_channelstatus_data updated to v3r2, where we reverted back "flange=WE20M AND board=1 or 5" to "Good" status.
  ## - Files decoded with release >=v09_66_02 should use v3r2
  TPC_CalibrationTags_Feb2024: {
  
@@ -106,7 +412,7 @@
    tpc_elifetime_data: "v2r1"
    tpc_dqdxcalibration_data: "v2r1"
    tpc_yz_correction_data: "v2r1"
-@@ -1753,38 +1670,15 @@
+ 
  }
  
  ## TPC_CalibrationTags_Feb2024 but updating tpc_yz_correction_data to tpc_yz_correction_allplanes_data
@@ -146,7 +452,18 @@
  END_PROLOG
  # File:    calibration_database_GlobalTags.fcl
  # Purpose: Collection of tag info for the TPC calibration database
-@@ -1803,8 +1697,8 @@
+ 
+ BEGIN_PROLOG
+ 
+ ## Valid for Run A,1, and 2
+ CRT_CalibrationTags_Oct2023: {
+ 
+   crt_gain_reco_data: "v1r0"
+ 
+ }
+ 
+ END_PROLOG
+ 
  BEGIN_PROLOG
  
  ICARUS_Calibration_GlobalTags: {
@@ -156,4 +473,101 @@
 +  @table::PMT_CalibrationTags_Run3_Feb2025
    @table::CRT_CalibrationTags_Oct2023
  }
+ 
+ 
+ END_PROLOG
+ 
+ BEGIN_PROLOG
+ 
+ icarus_siov_channelstatus_service: @local::standard_siov_channelstatus_service
+ 
+ icarus_siov_channelstatus_service.service_provider:                                        SIOVChannelStatusICARUSService
+ icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.DBFolderName: "tpc_channelstatus_data"
+ icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.DBTag:        @local::ICARUS_Calibration_GlobalTags.tpc_channelstatus_data
+ icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.DBUrl:        "https://dbdata0vm.fnal.gov:9443/icarus_con_prod/app/"
+ icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.UseSQLite:    true
+ icarus_siov_channelstatus_service.ChannelStatusProvider.UseDB:                             true
+ 
+ END_PROLOG
+ 
+ 
+ BEGIN_PROLOG
+ 
+ # ##############################################################################
+ # ChannelStatusService: noisy and dead channels
+ # ------------------------------------------------------------------------------
+ #
+ # This configuration declare the channels all good.
+ #
+ # Use as:
+ #    
+ #    services.ChannelStatusService: @local::icarus_channelstatusservice
+ #    
+ # In the below, "standard" means no DB and a perfect Detector
+ # Change this to "icarus" to access the channel status DB
+ icarus_channelstatusservice: @local::icarus_siov_channelstatus_service # from `database_standard.fcl` (`larevt`)
+ 
+ 
+ # ##############################################################################
+ # DetPedestalService: TPC wire pedestal access
+ # ------------------------------------------------------------------------------
+ # the default implementation with default  configuration has no database access,
+ # and returns a fixed value no matter what.
+ # We could override that value here.
+ #
+ #Use as:
+ #    
+ #    services.DetPedestalService: @local::icarus_detpedestalservice
+ #
+ icarus_detpedestalservice: {
+ 
+   @table::standard_siov_detpedestal_service # from `database_standard.fcl` (`larevt`)
+ 
+   # DefaultCollMean: 400
+   # DefaultIndMean: 2048
+   
+ } # icarus_detpedestalservice
+ 
+ 
+ # ##############################################################################
+ # Configuration preset: enables all calibration services
+ #
+ icarus_calibration_services: {
+   
+   DetPedestalService:             @local::icarus_detpedestalservice
+   ChannelStatusService:           @local::icarus_channelstatusservice
+   # ElectronicsCalibService:        @local::icarus_electronicscalib_service
+ 
+ } # icarus_calibration_services:
+ 
+ 
+ # ##############################################################################
+ 
+ END_PROLOG
+ 
+ #
+ # File:    sam_icarus.fcl
+ # Purpose: Configuration for SAM database (metadata)
+ # Version: 1.1
+ #
+ # Changes:
+ # 20160721 (petrillo@fnal.gov) [v1.1]
+ #   added "extra" configuration
+ #
+ #
+ 
+ BEGIN_PROLOG
+ 
+ # Standard configurations for art's built-in FileCatalogMetadata service.
+ # Metadata fields are standard, but values are still icarus-specific.
+ art_file_catalog:
+ {
+   # Note sam application name is taken from "process_name" fcl parameter in main job file.
+   #applicationFamily:   "art"
+   #applicationVersion:  "v08_37_00"
+   group:               "icarus"
+   fileType:            "unknown"
+   runType:             "physics"
+ }
+ 
  

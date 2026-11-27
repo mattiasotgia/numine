@@ -1,6 +1,6 @@
 --- CV_FNAL_10_31_00_01_EXPANDED//nuedis_g4_step2.expand	2026-11-26 10:27:06.788317332 +0100
 +++ CV_CNAF_RicDev_EXPANDED//nuedis_g4_step2.expand	2026-11-26 10:15:19.755315145 +0100
-@@ -1,32 +1,14 @@
+@@ -1,235 +1,214 @@
 -# File:    icarus_larg4_defs.fcl
 -# Purpose: definitions for standard LArG4 jobs
 -#
@@ -43,7 +43,100 @@
  #
  # File:    services_icarus_simulation.fcl
  # Purpose: Configuration presets for simulation jobs in ICARUS.
-@@ -127,12 +109,9 @@
+ #
+ #
+ # This file defines a set of service configurations for ICARUS simulation.
+ # Simulation consists of 3 steps:
+ #
+ #  (0) event generator ... making a particle to inject into G4
+ #  (1) Geant4 ............ G4 particle tracking simulation in the detector
+ #  (2) readout ........... Readout electronics simulation (make waveforms)
+ #
+ # Fhicl configurations for each simulation steps above are:
+ # 
+ #  (0) icarus_gen_services
+ #  (1) icarus_g4_dark_services
+ #  (2) icarus_detsim_dark_services
+ #
+ #  (all) icarus_simulation_dark_services ... include all services in (0), (1), and (2).
+ #
+ # Above configurations do not include scintillation light or optical detector
+ # readout simulation. If you wish to include those, use followings:
+ #
+ #  (1*) icarus_g4_services
+ #  (2*) icarus_detsim_services
+ #
+ #  (all*) icarus_simulation_services, icarus_legacy_services_v08_50_00
+ #
+ # 
+ # Avaialble presets:
+ # * `icarus_gen_service` (internally used): basic services plus magnetic field
+ # * `icarus_g4_dark_services`: G4 simulation services without optical system
+ # * `icarus_detsim_dark_services`: digitization services without optical system
+ #
+ 
+ BEGIN_PROLOG
+ 
+ #for now the parameter sets for the different experiments are all the same
+ 
+ standard_largeantparameters:
+ {
+  OpticalSimVerbosity:      0       #verbosity of optical simulation, soon to be depricated
+  ParticleKineticEnergyCut: 0.01e-3  #in GeV
+  StoreTrajectories:        true
+  VisualizationEnergyCut:   10.e-3  #depricated, in GeV
+  VisualizeNeutrals:        false   #depricated
+  UseCustomPhysics:         false   #Whether to use a custom list of physics processes or the default
+  ModifyProtonCut:          false   #Whether to modify the default proton cut
+  NewProtonCut:             0.0     #new ProtonCut value, ModifyProtonCut must be set to set new value
+  KeepEMShowerDaughters:    false   #save secondary, tertiary, etc particles in EM showers
+  LongitudinalDiffusion:    6.2e-9  #in cm^2/ns
+  TransverseDiffusion:      16.3e-9 #in cm^2/ns
+  ElectronClusterSize:      600.0   #number of ionization electrons to drift in a unit
+  MinNumberOfElCluster:     0	   #minimum number of electron clusters
+  EnabledPhysics:           [ "Em", "SynchrotronAndGN", "Ion", "Hadron",
+                              "Decay", "HadronElastic", "Stopping", "NeutronTrackingCut" ]
+  CosmogenicK0Bias:         0 # 0 is off. N is the number of secondaries to produce.
+  CosmogenicXSMNBiasOn:     0 # 0 is off. 1 works. 2 still in development.
+  CosmogenicXSMNBiasFactor: 1 # Not more than 5-ish cuz of numerical instabilities.
+  DisableWireplanes:        false #if set true, charge drift simulation does not run - used for optical sim jobs OR just when you don't wanna drift the e's.
+  SkipWireSignalInTPCs:     []    # put here TPC id's which should not receive ionization electrons - used to simulate TPC geom volumes which are actually dead LAr volumes in protoDUNE
+  UseModBoxRecomb:          true  # use Modified Box recombination instead of Birks
+  UseEllipsModBoxRecomb:    false # use Ellipsoid Modified Box recomination instead of Birks
+  UseModLarqlRecomb:        false # use LArQL recombination corrections (dependence on EF)
+ 
+  #* Recombination factor coefficients come from Nucl.Instrum.Meth.A523:275-286,2004
+  #* * @f$ dE/dx @f$ is given by the voxel energy deposition, but have to convert it to MeV/cm from GeV/voxel width
+  #* * electric field: @f$ E @f$ in kV/cm
+  #* * @f$ R = A/(1 + (dE/dx)*k/E) @f$
+  #* * @f$ A = 0.800 \pm 0.003 @f$
+  #* * @f$ k = 0.0486 @f$ needs to be scaled with Electric field
+  RecombA: 0.800      #< _A_ constant.
+  Recombk: 0.0486     #< _k_ constant, in g/(MeV cm&sup2;)*kV/cm.
+ 
+  #* Recombination factor coefficients come from Nucl.Instrum.Meth.A523:275-286,2004
+  #* * @f$ dE/dx @f$ is given by the voxel energy deposition, but have to convert it to MeV/cm from GeV/voxel width
+  #* * electric field: @f$ E @f$ in kV/cm
+  #* * `kModBoxB` needs to be scaled with the electric field.
+  ModBoxA: 0.930
+  ModBoxB: 0.212
+ 
+  #* Recombination factor coefficients come from Gray Putnam: https://arxiv.org/abs/2407.12969
+  #* * @f$ dE/dx @f$ is given by the voxel energy deposition, but have to convert it to MeV/cm from GeV/voxel width
+  #* * electric field: @f$ E @f$ in kV/cm
+  #* * `EllipsModBoxB` needs to be scaled with the electric field.
+  EllipsModBoxA: 0.904 # +/- 0.008
+  EllipsModBoxB: 0.204 # +/- 0.008
+  EllipsModBoxR: 1.25  # +/- 0.02
+ 
+  #* Recombination factor coefficients for LArQL
+  #* https://doi.org/10.1088/1748-0221/17/07/C07009
+  #* * @f$ dE/dx @f$ is given by the energy deposition in MeV/cm
+  #* * electric field: @f$ E @f$ in kV/cm
+  LarqlChi0A: 0.00338427
+  LarqlChi0B: -6.57037
+  LarqlChi0C: 1.88418
+  LarqlChi0D: 0.000129379
   LarqlAlpha: 0.0372
   LarqlBeta: 0.0124
  
@@ -57,7 +150,201 @@
  
    #* ion+excitation work function in eV
    #* https://doi.org/10.1016/0168-9002(90)90011-T
-@@ -1648,67 +1627,6 @@
+  Wph: 19.5
+ 
+  # The following parameters specify details of wireplanes or similar
+  # areas with optically parameterized transmissions (Ben J 2013)
+ 
+  #  volume names to be associated with an optical wireplane model
+  OpticalParamVolumes:      ["volTPCPlaneVert_PV"]
+ 
+  #  specification of which model to use for each volume
+  OpticalParamModels:       ["OverlaidWireplanes"]
+ 
+  # orientation of each wireplane set
+  #  0 = Xdrift, 1 = Ydrift, 2 = Zdrift
+  OpticalParamOrientations: [0]
+ 
+  # This a set of floats which is specific to the particular model used.
+  # For overlaid wireplanes, should be a vector of vectors of
+  #                                 [plane angle, pitch/mm, wire diameter/mm]
+  #
+  # This format is chosen to allow for future extensions to the model
+  #  for, eg, DUNE wireplane development.
+  #
+  OpticalParamParameters:   [ [ [60,  3, 0.15],
+  	 		       [-60, 3, 0.15],
+                                [0,   3, 0.15] ] ]
+  UseLitePhotons: false
+ }
+ 
+ jp250L_largeantparameters:     @local::standard_largeantparameters
+ bo_largeantparameters:         @local::standard_largeantparameters
+ argoneut_largeantparameters:   @local::standard_largeantparameters
+ # The following line is already in simulationservices_microboone.fcl
+ # and so it should not also be included here, for clarity's sake.
+ #microboone_largeantparameters: @local::standard_largeantparameters
+ dune35t_largeantparameters:    @local::standard_largeantparameters
+ dunefd_largeantparameters:   @local::standard_largeantparameters
+ 
+ standard_larvoxelcalculator:
+ {
+  VoxelSizeX:     0.03    #in cm
+  VoxelSizeY:     0.03    #in cm
+  VoxelSizeZ:     0.03    #in cm
+  VoxelSizeT:     5000.0  #in ns
+  VoxelOffsetX:   0.0     #in cm
+  VoxelOffsetY:   0.0     #in cm
+  VoxelOffsetZ:   0.0     #in cm
+  VoxelOffsetT:   -2500.0 #in ns
+  VoxelEnergyCut: 1.e-6   #in GeV
+ }
+ 
+ bo_larvoxelcalculator:         @local::standard_larvoxelcalculator
+ jp250L_larvoxelcalculator:     @local::standard_larvoxelcalculator
+ argoneut_larvoxelcalculator:   @local::standard_larvoxelcalculator
+ # The following line is already in simulationservices_microboone.fcl
+ # and so it should not also be included here, for clarity's sake.
+ #microboone_larvoxelcalculator: @local::standard_larvoxelcalculator
+ dune35t_larvoxelcalculator:    @local::standard_larvoxelcalculator
+ dunefd_larvoxelcalculator:     @local::standard_larvoxelcalculator
+ 
+ END_PROLOG
+ BEGIN_PROLOG
+ 
+ PIProv: {
+   G4ModuleLabel: "largeant"
+   EveIdCalculator: "EmEveIdCalculator"
+ }
+ standard_particleinventoryservice: {
+   ParticleInventory: @local::PIProv
+ }
+ 
+ jp250L_particleinventoryservice:     @local::standard_particleinventoryservice
+ bo_particleinventoryservice:         @local::standard_particleinventoryservice
+ argoneut_particleinventoryservice:   @local::standard_particleinventoryservice
+ microboone_particleinventoryservice: @local::standard_particleinventoryservice
+ #dune35t_particleinventoryservice:    @local::standard_particleinventoryservice
+ #dunefd_particleinventoryservice:     @local::standard_particleinventoryservice
+ 
+ END_PROLOG
+ 
+ 
+ 
+ BEGIN_PROLOG
+ 
+ providerBKConf:{
+  G4ModuleLabel:            "largeant" # module that produced the sim::Particle objects
+  SimChannelModuleLabel:    "largeant" # module that produced the sim::SimChannel objects, if not provided defaults to using the G4ModuleLabel
+  MinimumHitEnergyFraction: 0.1        # minimum fraction of energy a G4 trackID contributes to a hit to be 
+                                       # counted in hit based efficiency and purity calculations
+ }
+ 
+ standard_backtrackerservice:
+ 
+ {
+  BackTracker: @local::providerBKConf
+ }
+ 
+ jp250L_backtrackerservice:     @local::standard_backtrackerservice
+@@ -1551,261 +1530,200 @@
+ END_PROLOG
+ 
+ BEGIN_PROLOG
+ 
+ icarus_detproperties: {
+   @table::standard_detproperties
+ 
+   ElectronsToADC:            1.208041e-3     # in ADC/e; 6241.5 electrons = 1fC
+   Temperature:               87.5
+   Electronlifetime:          3000            # As agreed 3/17/22 to match measured value in East croystat
+   # Active volume E-field calculated based on SBN-doc-23259 (H. Carranza and Z. Williams) using Vp = 75150 (from M. Mooney)
+   Efield:                    [0.4938,0.733,0.933 ] #kV/cm to first,second,third wire planes
+ 
+   # Set this true to use the non-default "ICARUS+MicroBooNE" calcultaion for drift velocity
+   UseIcarusMicrobooneDriftModel: true
+ 
+   SternheimerA:              0.1956           # Ar Sternheimer parameter a.
+   SternheimerK:              3.0000           # Ar Sternheimer parameter k.
+   SternheimerX0:             0.2000           # Ar Sternheimer parameter x0.
+   SternheimerX1:             3.0000           # Ar Sternheimer parameter x0.
+   SternheimerCbar:           5.2146           # Ar Sternheimer parameter Cbar.
+ 
+   DriftVelFudgeFactor: 0.99733
+ 
+   NumberTimeSamples:         4096
+   TimeOffsetU:               0.
+   TimeOffsetV:               0.
+   TimeOffsetY:               0.
+   TimeOffsetZ:               0.
+   ReadOutWindowSize:         4096
+   InheritNumberTimeSamples:  true
+ 
+   SimpleBoundaryProcess:     false # relevant only when using full Optical simulation
+ 
+   IncludeInterPlanePitchInXTickOffsets: false # removed by deconvolution
+ 
+ } // icarus_detproperties
+ 
+ END_PROLOG
+ #
+ # File:    detectorclocks_icarus.fcl
+ # Purpose: Configuration of DetectorClocks service for ICARUS.
+ #
+ # Available configurations:
+ #
+ # * `icarus_detectorclocks`: standard ICARUS configuration
+ # * `icarus_detectorclocks+data_notiming`: readout all at the same time
+ #
+ #
+ 
+ 
+ BEGIN_PROLOG
+ 
+ 
+ #
+ # Standard ICARUS configuration
+ #
+ # Use as:
+ #     
+ #     services.DetectorClocksService: @local::icarus_detectorclocks
+ #     
+ #
+ icarus_detectorclocks: {
+     service_provider: "DetectorClocksServiceStandard"
+ 
+     TrigModuleName:    "daqTrigger"
+     InheritClockConfig: true
+     G4RefTime:        -1.5e3  # G4 time [us] where electronics clock counting start
+     TriggerOffsetTPC: -0.340e3 # Time offset for TPC readout start time w.r.t. trigger [us]
+     FramePeriod:       1638.4  # Frame period [us]; 4096 * 400 ns
+     ClockSpeedTPC:     2.5     # TPC clock speed in MHz;
+     ClockSpeedOptical: 500     # Optical clock speed in MHz
+     ClockSpeedTrigger: 16      # Trigger clock speed in MHz
+     ClockSpeedExternal:31.25   # External clock speed in MHz
+     DefaultTrigTime:   1.5e3  # Default trigger time in electronics clock [us]
+     DefaultBeamTime:   1.5e3  # Default beam gate time in electronics clock [us]
+     
+ } # icarus_detectorclocks
+ 
+ 
+ # ##############################################################################
+ #
+ # Data read out all at the same time
+ #
+ # Use as:
+ #     
+ #     services.DetectorClocksService: @local::icarus_detectorclocks_data_notiming
+ #     
+ #
+ icarus_detectorclocks_data_notiming: {
+     @table::icarus_detectorclocks
+ 
+     InheritClockConfig: false
+     G4RefTime:              0.0   # G4 time [us] where electronics clock counting start
+     TriggerOffsetTPC:       0.0   # Time offset for TPC readout start time w.r.t. trigger [us]
+     DefaultTrigTime:        0.0   # Default trigger time in electronics clock [us]
+     DefaultBeamTime:        0.0   # Default beam gate time in electronics clock [us]
      
  } # icarus_detectorclocks_data_notiming
  
@@ -125,7 +412,201 @@
  #
  #
  #
-@@ -2051,28 +1969,6 @@
+ 
+ END_PROLOG
+ 
+ 
+ BEGIN_PROLOG
+ 
+ 
+ ################################################################################
+ ###  icarus_basic_services
+ ###
+ #
+ # Standard ICARUS configuration of basic services, including message service,
+ # art services, geometry and properties, but not calibration services.
+ #
+ icarus_basic_services:
+ {
+     message:                             @local::icarus_message_services_interactive # from `messages_icarus.fcl`
+ 
+                                          @table::icarus_geometry_services
+ 
+     DetectorPropertiesService:           @local::icarus_detproperties  # from `detectorproperties_icarus.fcl`
+     LArPropertiesService:                @local::icarus_properties     # from `larproperties_icarus.fcl`
+     DetectorClocksService:               @local::icarus_detectorclocks # from `detectorclocks_icarus.fcl`
+ 
+ } # icarus_basic_services
+ 
+ 
+ END_PROLOG
+ 
+ 
+ BEGIN_PROLOG
+ 
+ 
+ FieldResponseTool:
+ {
+     tool_type:                FieldResponse
+     Plane:                    0
+     ResponseType:             0
+     SignalType:               0
+     FieldResponseFileName:    "t600_response"
+     FieldResponseFileVersion: "v0.0"
+     FieldResponseHistName:    "t600_response"
+     FieldResponseAmplitude:   1.
+     TimeCorrectionFactor:     1000. 
+ }
+ 
+ ElectronicsResponseTool:
+ {
+     tool_type:                ElectronicsResponse
+     Plane:                    0
+     FCperADCMicroS:           0.0321  # Scaling to match data, from electronics tests it was 0.027
+     ASICShapingTime:          1.3
+     ADCPerPCAtLowestASICGain: 5500.
+ }
+ 
+ ElectronicsResponseBesselApproxTool:
+ {
+     tool_type:                ElectronicsResponseBesselApprox
+     Plane:                    0
+     FCperADCMicroS:           0.0321  # Scaling to match data, from electronics tests it was 0.027
+     ASICShapingTime:          1.3
+     ADCPerPCAtLowestASICGain: 5500.
+     TimeOffset:               0.0 # note that 1.625 will produce a plot that matches electronics paper
+                                   # unfortunately, that leads to a time offset in the response we'd rather not have
+ }
+ 
+ FilterTool:
+ {
+     tool_type: Filter
+     Plane:                       0
+     #-----------------------------------------------------------------------------
+     #************* THIS BLOCK CONTAINS HISTORICAL CONFIGURATIONS *****************
+     # This is the original Wiener filter
+     #FilterFunction:               "(x>0.0)? (gaus(0)*exp(-0.5*pow(x/[3],[4]))): 0.0"
+     #FilterParametersVec:          [ 1.849030, 1.46, 1.33, 0.23, 4.89 ]
+     # This defines the gaussian filter
+     #FilterFunction:              "(x>0.0)*gaus"
+     #FilterParametersVec:         [1., 0., 0.1 ]  # Offset and sigma are MHz by the way the filter is constructed
+     #-----------------------------------------------------------------------------
+     # For MCC1.1 we use the following filter for all three planes
+     # The filter function is a mating of two gaussians to provide both low and high frequency filtering
+     # Note that as of release v08_00_00 the parameters are in units of MHz
+     FilterFunction:              "(x>0.0) ? ((1. - gaus(0)) * gaus(3)) : 0.0"
+     FilterParametersVec:         [1., 0., 4.0,   1., 0., 100.]
+     FilterWidthCorrectionFactor: 1.0
+ }
+ 
+ ResponseTool:
+ {
+     tool_type: Response
+     Plane:               0
+     Correction3D:        1.
+     TimeScaleFactor:     1.
+     UseEmpiricalOffsets: true
+     FieldResponse:       @local::FieldResponseTool
+     ElectronicsResponse: @local::ElectronicsResponseBesselApproxTool
+     Filter:              @local::FilterTool
+@@ -1954,304 +1872,259 @@
+ 
+ 
+ 
+ standard_siov_channelstatus_provider:
+ {
+   AlgName:       "SIOVChannelStatusProvider"
+   DatabaseRetrievalAlg: @local::standard_databaseretrievalalg
+   
+   UseDB: false
+   UseFile: false
+ }
+ 
+ standard_siov_channelstatus_service:
+ {
+   service_provider: SIOVChannelStatusService
+   ChannelStatusProvider: @local::standard_siov_channelstatus_provider 
+ }
+ 
+ END_PROLOG
+ # File:    calibration_database_PMT_TagSets_icarus.fcl
+ # Author:  M. Vicenzi (mvicenzi@bnl.gov), J. Kim (jae.sung.kim.3426@gmail.com)
+ # Date:    February 20, 2025
+ # Purpose: Tags definitions for the PMT timing calibration databases
+ 
+ BEGIN_PROLOG
+ 
+ # These are the standard tags for analyses on Run 1 data
+ # These tagged versions of the databases only contain tables relevant for Run 1
+ PMT_CalibrationTags_Run1: {
+   pmt_cables_delays_data:    "v1r0"  # tables for run>=0 (null) and run>=8046
+   pmt_laser_timing_data:     "v1r0"  # tables for run>=0 (null) and run>=8046
+   pmt_cosmics_timing_data:   "v1r0"  # tables for run>=0 (null) and run>=8046 
+ }
+ 
+ # These are the standard tags for analyses on Run 1 and Run 2 data (as of August 2023)
+ # These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+ # Notes: 
+ #  - No cosmics corrections are available for Run 2
+ #  - Laser and cable corrections do not cover the entire Run 2 period
+ PMT_CalibrationTags_Run2_August2023: {
+   pmt_cables_delays_data:    "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9773
+   pmt_laser_timing_data:     "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9773
+   pmt_cosmics_timing_data:   "v1r0"  # tables for run>=0 (null) and run>=8046 
+ }
+ 
+ # These are the standard tags for analyses on Run 1 and Run 2 data (as of September 2023)
+ # These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+ # Notes: 
+ #  - No cosmics corrections are available for Run 2
+ PMT_CalibrationTags_Run2_Sept2023: {
+   pmt_cables_delays_data:    "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+   pmt_laser_timing_data:     "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+   pmt_cosmics_timing_data:   "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9301 (null) 
+ }
+ 
+ # These are the standard tags for analyses on Run 1 and Run 2 data (as of December 2023)
+ # These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+ # Notes: 
+ #  - Updated cable delays with new phase offsets
+ #  - Full laser and cosmics corrections for all Run 2.
+ PMT_CalibrationTags_Run2_Dec2023: {
+   pmt_cables_delays_data:    "v2r3"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773 and run>=10369
+   pmt_laser_timing_data:     "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+   pmt_cosmics_timing_data:   "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773 
+ }
+ 
+ # These are the standard tags for analyses on Run 1, Run 2 and pre-Run 3 data (as of December 2023)
+ # These tagged versions of the databases contain tables relevant for Run 1, Run 2 and pre-Run 3.
+ # Notes: 
+ #   - New cable delays (mapping changes, upgrades to laser distribution)
+ #   - New laser table for the beginning of Run 3 (new signal cables)
+ PMT_CalibrationTags_Run3_Dec2023: {
+   pmt_cables_delays_data:    "v2r4"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773, run>=10369 and run>=10865
+   pmt_laser_timing_data:     "v2r2"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773 and run>=10908
+   pmt_cosmics_timing_data:   "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773 
+ }
+ 
+ # These are the standard tags for analyses on Run 1, Run 2, Run 3 and pre-Run 4 data (as of Feb 2025)
+ # These tagged versions of the databases contain tables relevant for Run 1, Run 2, Run 3 and pre-Run 4.
+ # Notes: 
+ #   - New cable delays for Run 4 (after summer 2024 laser and PPS changes)
+ #   - New laser tables up to final Run 4 gain equalization
+ #   - New cosmics corrections for Run 3, updates to Run 1,2 tables (more statistics)
+ PMT_CalibrationTags_Run3_Feb2025: {
+   pmt_cables_delays_data:    "v2r5"  # tables for run>=0 (null)
+                                      # Run 1: run>=8046
+                                      # Run 2: run>=9301, run>=9628, run>=9773
+                                      # Run 3: run>=10369, run>=10441, run>=10865
+                                      # Run 4: run>=12040, run>=12455, run>=12777
+   pmt_laser_timing_data:     "v2r3"  # tables for run>=0 (null)
+                                      # Run 1: run>=8046
+                                      # Run 2: run>=9301, run>=9628, run>=9773
+                                      # Run 3: run>=10908, run>=11590
+                                      # Run 4: run>=12058, run>=12837
+   pmt_cosmics_timing_data:   "v2r2"  # tables for run>=0 (null)
+                                      # Run 1: run>=8046
+                                      # Run 2: run>=9301, run>=9628, run>=9773
                                       # Run 3: run>=11590
  }
  
@@ -154,7 +635,22 @@
  END_PROLOG
  # File:    calibration_database_GlobalTags.fcl
  # Purpose: Collection of tag info for the TPC calibration database
-@@ -2095,7 +1991,7 @@
+ 
+ BEGIN_PROLOG
+ 
+ ## Valid for Run A,1, and 2
+ ## - Files decoded with release <v09_66_02 should use v3r1 
+ TPC_CalibrationTags_Oct2023: {
+ 
+   tpc_channelstatus_data: "v3r1"
+   tpc_elifetime_data: "v2r1"
+   tpc_dqdxcalibration_data: "v2r1"
+   tpc_yz_correction_data: "v2r1"
+ 
+ }
+ 
+ ## Valid for Run A,1, and 2
+ ## - tpc_channelstatus_data updated to v3r2, where we reverted back "flange=WE20M AND board=1 or 5" to "Good" status.
  ## - Files decoded with release >=v09_66_02 should use v3r2
  TPC_CalibrationTags_Feb2024: {
  
@@ -163,7 +659,7 @@
    tpc_elifetime_data: "v2r1"
    tpc_dqdxcalibration_data: "v2r1"
    tpc_yz_correction_data: "v2r1"
-@@ -2103,38 +1999,15 @@
+ 
  }
  
  ## TPC_CalibrationTags_Feb2024 but updating tpc_yz_correction_data to tpc_yz_correction_allplanes_data
@@ -203,7 +699,18 @@
  END_PROLOG
  # File:    calibration_database_GlobalTags.fcl
  # Purpose: Collection of tag info for the TPC calibration database
-@@ -2153,8 +2026,8 @@
+ 
+ BEGIN_PROLOG
+ 
+ ## Valid for Run A,1, and 2
+ CRT_CalibrationTags_Oct2023: {
+ 
+   crt_gain_reco_data: "v1r0"
+ 
+ }
+ 
+ END_PROLOG
+ 
  BEGIN_PROLOG
  
  ICARUS_Calibration_GlobalTags: {
@@ -214,7 +721,201 @@
    @table::CRT_CalibrationTags_Oct2023
  }
  
-@@ -2569,28 +2442,6 @@
+ 
+ END_PROLOG
+ 
+ BEGIN_PROLOG
+ 
+ icarus_siov_channelstatus_service: @local::standard_siov_channelstatus_service
+ 
+ icarus_siov_channelstatus_service.service_provider:                                        SIOVChannelStatusICARUSService
+ icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.DBFolderName: "tpc_channelstatus_data"
+ icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.DBTag:        @local::ICARUS_Calibration_GlobalTags.tpc_channelstatus_data
+ icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.DBUrl:        "https://dbdata0vm.fnal.gov:9443/icarus_con_prod/app/"
+ icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.UseSQLite:    true
+ icarus_siov_channelstatus_service.ChannelStatusProvider.UseDB:                             true
+ 
+ END_PROLOG
+ 
+ 
+ BEGIN_PROLOG
+ 
+ # ##############################################################################
+ # ChannelStatusService: noisy and dead channels
+ # ------------------------------------------------------------------------------
+ #
+ # This configuration declare the channels all good.
+ #
+ # Use as:
+ #    
+ #    services.ChannelStatusService: @local::icarus_channelstatusservice
+ #    
+ # In the below, "standard" means no DB and a perfect Detector
+ # Change this to "icarus" to access the channel status DB
+ icarus_channelstatusservice: @local::icarus_siov_channelstatus_service # from `database_standard.fcl` (`larevt`)
+ 
+ 
+ # ##############################################################################
+ # DetPedestalService: TPC wire pedestal access
+ # ------------------------------------------------------------------------------
+ # the default implementation with default  configuration has no database access,
+ # and returns a fixed value no matter what.
+ # We could override that value here.
+ #
+ #Use as:
+ #    
+ #    services.DetPedestalService: @local::icarus_detpedestalservice
+ #
+ icarus_detpedestalservice: {
+ 
+   @table::standard_siov_detpedestal_service # from `database_standard.fcl` (`larevt`)
+ 
+   # DefaultCollMean: 400
+   # DefaultIndMean: 2048
+   
+ } # icarus_detpedestalservice
+ 
+ 
+ # ##############################################################################
+ # Configuration preset: enables all calibration services
+ #
+ icarus_calibration_services: {
+   
+   DetPedestalService:             @local::icarus_detpedestalservice
+   ChannelStatusService:           @local::icarus_channelstatusservice
+   # ElectronicsCalibService:        @local::icarus_electronicscalib_service
+ 
+ } # icarus_calibration_services:
+ 
+ 
+ # ##############################################################################
+ 
+ END_PROLOG
+ 
+ #
+ # File:    sam_icarus.fcl
+ # Purpose: Configuration for SAM database (metadata)
+ # Version: 1.1
+ #
+ # Changes:
+ # 20160721 (petrillo@fnal.gov) [v1.1]
+ #   added "extra" configuration
+ #
+ #
+ 
+ BEGIN_PROLOG
+ 
+ # Standard configurations for art's built-in FileCatalogMetadata service.
+ # Metadata fields are standard, but values are still icarus-specific.
+ art_file_catalog:
+ {
+   # Note sam application name is taken from "process_name" fcl parameter in main job file.
+   #applicationFamily:   "art"
+   #applicationVersion:  "v08_37_00"
+   group:               "icarus"
+   fileType:            "unknown"
+   runType:             "physics"
+ }
+ 
+ 
+@@ -2472,304 +2345,259 @@
+ 
+ 
+ 
+ standard_siov_channelstatus_provider:
+ {
+   AlgName:       "SIOVChannelStatusProvider"
+   DatabaseRetrievalAlg: @local::standard_databaseretrievalalg
+   
+   UseDB: false
+   UseFile: false
+ }
+ 
+ standard_siov_channelstatus_service:
+ {
+   service_provider: SIOVChannelStatusService
+   ChannelStatusProvider: @local::standard_siov_channelstatus_provider 
+ }
+ 
+ END_PROLOG
+ # File:    calibration_database_PMT_TagSets_icarus.fcl
+ # Author:  M. Vicenzi (mvicenzi@bnl.gov), J. Kim (jae.sung.kim.3426@gmail.com)
+ # Date:    February 20, 2025
+ # Purpose: Tags definitions for the PMT timing calibration databases
+ 
+ BEGIN_PROLOG
+ 
+ # These are the standard tags for analyses on Run 1 data
+ # These tagged versions of the databases only contain tables relevant for Run 1
+ PMT_CalibrationTags_Run1: {
+   pmt_cables_delays_data:    "v1r0"  # tables for run>=0 (null) and run>=8046
+   pmt_laser_timing_data:     "v1r0"  # tables for run>=0 (null) and run>=8046
+   pmt_cosmics_timing_data:   "v1r0"  # tables for run>=0 (null) and run>=8046 
+ }
+ 
+ # These are the standard tags for analyses on Run 1 and Run 2 data (as of August 2023)
+ # These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+ # Notes: 
+ #  - No cosmics corrections are available for Run 2
+ #  - Laser and cable corrections do not cover the entire Run 2 period
+ PMT_CalibrationTags_Run2_August2023: {
+   pmt_cables_delays_data:    "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9773
+   pmt_laser_timing_data:     "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9773
+   pmt_cosmics_timing_data:   "v1r0"  # tables for run>=0 (null) and run>=8046 
+ }
+ 
+ # These are the standard tags for analyses on Run 1 and Run 2 data (as of September 2023)
+ # These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+ # Notes: 
+ #  - No cosmics corrections are available for Run 2
+ PMT_CalibrationTags_Run2_Sept2023: {
+   pmt_cables_delays_data:    "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+   pmt_laser_timing_data:     "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+   pmt_cosmics_timing_data:   "v2r0"  # tables for run>=0 (null), run>=8046 and run>=9301 (null) 
+ }
+ 
+ # These are the standard tags for analyses on Run 1 and Run 2 data (as of December 2023)
+ # These tagged versions of the databases contain tables relevant for Run 1 and Run 2.
+ # Notes: 
+ #  - Updated cable delays with new phase offsets
+ #  - Full laser and cosmics corrections for all Run 2.
+ PMT_CalibrationTags_Run2_Dec2023: {
+   pmt_cables_delays_data:    "v2r3"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773 and run>=10369
+   pmt_laser_timing_data:     "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773
+   pmt_cosmics_timing_data:   "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773 
+ }
+ 
+ # These are the standard tags for analyses on Run 1, Run 2 and pre-Run 3 data (as of December 2023)
+ # These tagged versions of the databases contain tables relevant for Run 1, Run 2 and pre-Run 3.
+ # Notes: 
+ #   - New cable delays (mapping changes, upgrades to laser distribution)
+ #   - New laser table for the beginning of Run 3 (new signal cables)
+ PMT_CalibrationTags_Run3_Dec2023: {
+   pmt_cables_delays_data:    "v2r4"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773, run>=10369 and run>=10865
+   pmt_laser_timing_data:     "v2r2"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628, run>=9773 and run>=10908
+   pmt_cosmics_timing_data:   "v2r1"  # tables for run>=0 (null), run>=8046, run>=9301, run>=9628 and run>=9773 
+ }
+ 
+ # These are the standard tags for analyses on Run 1, Run 2, Run 3 and pre-Run 4 data (as of Feb 2025)
+ # These tagged versions of the databases contain tables relevant for Run 1, Run 2, Run 3 and pre-Run 4.
+ # Notes: 
+ #   - New cable delays for Run 4 (after summer 2024 laser and PPS changes)
+ #   - New laser tables up to final Run 4 gain equalization
+ #   - New cosmics corrections for Run 3, updates to Run 1,2 tables (more statistics)
+ PMT_CalibrationTags_Run3_Feb2025: {
+   pmt_cables_delays_data:    "v2r5"  # tables for run>=0 (null)
+                                      # Run 1: run>=8046
+                                      # Run 2: run>=9301, run>=9628, run>=9773
+                                      # Run 3: run>=10369, run>=10441, run>=10865
+                                      # Run 4: run>=12040, run>=12455, run>=12777
+   pmt_laser_timing_data:     "v2r3"  # tables for run>=0 (null)
+                                      # Run 1: run>=8046
+                                      # Run 2: run>=9301, run>=9628, run>=9773
+                                      # Run 3: run>=10908, run>=11590
+                                      # Run 4: run>=12058, run>=12837
+   pmt_cosmics_timing_data:   "v2r2"  # tables for run>=0 (null)
+                                      # Run 1: run>=8046
+                                      # Run 2: run>=9301, run>=9628, run>=9773
                                       # Run 3: run>=11590
  }
  
@@ -243,7 +944,22 @@
  END_PROLOG
  # File:    calibration_database_GlobalTags.fcl
  # Purpose: Collection of tag info for the TPC calibration database
-@@ -2613,7 +2464,7 @@
+ 
+ BEGIN_PROLOG
+ 
+ ## Valid for Run A,1, and 2
+ ## - Files decoded with release <v09_66_02 should use v3r1 
+ TPC_CalibrationTags_Oct2023: {
+ 
+   tpc_channelstatus_data: "v3r1"
+   tpc_elifetime_data: "v2r1"
+   tpc_dqdxcalibration_data: "v2r1"
+   tpc_yz_correction_data: "v2r1"
+ 
+ }
+ 
+ ## Valid for Run A,1, and 2
+ ## - tpc_channelstatus_data updated to v3r2, where we reverted back "flange=WE20M AND board=1 or 5" to "Good" status.
  ## - Files decoded with release >=v09_66_02 should use v3r2
  TPC_CalibrationTags_Feb2024: {
  
@@ -252,7 +968,7 @@
    tpc_elifetime_data: "v2r1"
    tpc_dqdxcalibration_data: "v2r1"
    tpc_yz_correction_data: "v2r1"
-@@ -2621,38 +2472,15 @@
+ 
  }
  
  ## TPC_CalibrationTags_Feb2024 but updating tpc_yz_correction_data to tpc_yz_correction_allplanes_data
@@ -292,7 +1008,18 @@
  END_PROLOG
  # File:    calibration_database_GlobalTags.fcl
  # Purpose: Collection of tag info for the TPC calibration database
-@@ -2671,8 +2499,8 @@
+ 
+ BEGIN_PROLOG
+ 
+ ## Valid for Run A,1, and 2
+ CRT_CalibrationTags_Oct2023: {
+ 
+   crt_gain_reco_data: "v1r0"
+ 
+ }
+ 
+ END_PROLOG
+ 
  BEGIN_PROLOG
  
  ICARUS_Calibration_GlobalTags: {
@@ -303,7 +1030,201 @@
    @table::CRT_CalibrationTags_Oct2023
  }
  
-@@ -3741,420 +3569,6 @@
+ 
+ END_PROLOG
+ 
+ BEGIN_PROLOG
+ 
+ icarus_siov_channelstatus_service: @local::standard_siov_channelstatus_service
+ 
+ icarus_siov_channelstatus_service.service_provider:                                        SIOVChannelStatusICARUSService
+ icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.DBFolderName: "tpc_channelstatus_data"
+ icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.DBTag:        @local::ICARUS_Calibration_GlobalTags.tpc_channelstatus_data
+ icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.DBUrl:        "https://dbdata0vm.fnal.gov:9443/icarus_con_prod/app/"
+ icarus_siov_channelstatus_service.ChannelStatusProvider.DatabaseRetrievalAlg.UseSQLite:    true
+ icarus_siov_channelstatus_service.ChannelStatusProvider.UseDB:                             true
+ 
+ END_PROLOG
+ 
+ 
+ BEGIN_PROLOG
+ 
+ # ##############################################################################
+ # ChannelStatusService: noisy and dead channels
+ # ------------------------------------------------------------------------------
+ #
+ # This configuration declare the channels all good.
+ #
+ # Use as:
+ #    
+ #    services.ChannelStatusService: @local::icarus_channelstatusservice
+ #    
+ # In the below, "standard" means no DB and a perfect Detector
+ # Change this to "icarus" to access the channel status DB
+ icarus_channelstatusservice: @local::icarus_siov_channelstatus_service # from `database_standard.fcl` (`larevt`)
+ 
+ 
+ # ##############################################################################
+ # DetPedestalService: TPC wire pedestal access
+ # ------------------------------------------------------------------------------
+ # the default implementation with default  configuration has no database access,
+ # and returns a fixed value no matter what.
+ # We could override that value here.
+ #
+ #Use as:
+ #    
+ #    services.DetPedestalService: @local::icarus_detpedestalservice
+ #
+ icarus_detpedestalservice: {
+ 
+   @table::standard_siov_detpedestal_service # from `database_standard.fcl` (`larevt`)
+ 
+   # DefaultCollMean: 400
+   # DefaultIndMean: 2048
+   
+ } # icarus_detpedestalservice
+ 
+ 
+ # ##############################################################################
+ # Configuration preset: enables all calibration services
+ #
+ icarus_calibration_services: {
+   
+   DetPedestalService:             @local::icarus_detpedestalservice
+   ChannelStatusService:           @local::icarus_channelstatusservice
+   # ElectronicsCalibService:        @local::icarus_electronicscalib_service
+ 
+ } # icarus_calibration_services:
+ 
+ 
+ # ##############################################################################
+ 
+ END_PROLOG
+ 
+ BEGIN_PROLOG
+ 
+ 
+ FieldResponseTool:
+ {
+     tool_type:                FieldResponse
+     Plane:                    0
+     ResponseType:             0
+     SignalType:               0
+     FieldResponseFileName:    "t600_response"
+     FieldResponseFileVersion: "v0.0"
+     FieldResponseHistName:    "t600_response"
+     FieldResponseAmplitude:   1.
+     TimeCorrectionFactor:     1000. 
+ }
+ 
+ ElectronicsResponseTool:
+ {
+     tool_type:                ElectronicsResponse
+     Plane:                    0
+     FCperADCMicroS:           0.0321  # Scaling to match data, from electronics tests it was 0.027
+     ASICShapingTime:          1.3
+     ADCPerPCAtLowestASICGain: 5500.
+ }
+ 
+ ElectronicsResponseBesselApproxTool:
+@@ -3644,700 +3472,280 @@
+ # until icaruscode v08_50_00.
+ # It is part of `icarus_legacy_services` configuration, and it should not
+ # be used by itself since it requires a specific geometry and channel mapping.
+ # Use as:
+ #     
+ #     services: @local::icarus_legacy_services
+ #     
+ # This configuration is almost frozen (i.e. it would be frozen except that it
+ # relies on `standard_library_vuv_prop_timing_photonvisibilityservice` which
+ # we are not reproducing here).
+ #
+ icarus_legacy_photonvisibilityservice_v08_50_00: @local::icarus_photonvisibilityservice_noPMTremapping
+ 
+ 
+ 
+ # ----------------------------------------------------------------------------
+ #
+ # This configuration fits a previous photon library (August 2018) which
+ # was current until `icaruscode` `v09_00_01`.
+ # 
+ # The library was generated with the "old" PMT channel mapping, but now you
+ # are going to run it with the new one, so a remapping is needed,
+ # which is coded in this configuration.
+ # For the single wire geometry, this does not apply and the legac...ier
+ # configuration is needed.
+ # Use as:
+ #     
+ #     services.PhotonVisibilityService: @local::icarus_photonvisibilityservice_2018
+ #     
+ # This configuration is almost self-contained (i.e. it would be self-contained
+ # except that it relies on
+ # `standard_library_vuv_prop_timing_photonvisibilityservice` which we are not
+ # reproducing here).
+ #
+ icarus_photonvisibilityservice_2018: {
+   @table::standard_library_vuv_prop_timing_photonvisibilityservice # TODO copy the old configuration from LArSoft into ICARUS and refer it here
+ 
+   LibraryFile:     "PhotonLibrary/PhotonLibrary-20180801.root"
+   UseCryoBoundary: false
+   
+   XMin: -395      # Was -391 in old geometry
+   XMax: -45       # Was -41  in old geometry
+   YMin: -215.2    # Was -210 in old geometry
+   YMax:  174.8    # Was -180 in old geometry
+   ZMin: -995
+   ZMax:  965
+   NX:     70
+   NY:     78
+   NZ:    392
+ 
+   IncludePropTime: true
+   
+   Mapping: {
+     tool_type: ICARUSPhotonMappingTransformations
+     
+     # use this mapping only with photon visibility maps generated before
+     # v08_50_01 when using split wire geometry;
+     # it expresses that the values in the photon map for the library channel c
+     # it now should be associated to channel CryostatChannelRemap[c] instead
+     CryostatChannelRemap: [
+       
+       179,  89, 178,  88, 177,  87, 176,  86, 175,  85, 174,  84, 173,  83, 172,
+        82, 171,  81, 170,  80, 169,  79, 168,  78, 167,  77, 166,  76, 165,  75,
+       164,  74, 163,  73, 162,  72, 161,  71, 160,  70, 159,  69, 158,  68, 157,
+        67, 156,  66, 155,  65, 154,  64, 153,  63, 152,  62, 151,  61, 150,  60,
+       149,  59, 148,  58, 147,  57, 146,  56, 145,  55, 144,  54, 143,  53, 142,
+        52, 141,  51, 140,  50, 139,  49, 138,  48, 137,  47, 136,  46, 135,  45,
+       134,  44, 133,  43, 132,  42, 131,  41, 130,  40, 129,  39, 128,  38, 127,
+        37, 126,  36, 125,  35, 124,  34, 123,  33, 122,  32, 121,  31, 120,  30,
+       119,  29, 118,  28, 117,  27, 116,  26, 115,  25, 114,  24, 113,  23, 112,
+        22, 111,  21, 110,  20, 109,  19, 108,  18, 107,  17, 106,  16, 105,  15,
+       104,  14, 103,  13, 102,  12, 101,  11, 100,  10,  99,   9,  98,   8,  97,
+         7,  96,   6,  95,   5,  94,   4,  93,   3,  92,   2,  91,   1,  90,   0
+       
+     ]
+     
+   } # Mapping
+ 
+ } # icarus_photonvisibilityservice_2018
+ 
+ 
+ 
+ ###############################################################################
+ ###
+ ### Default configuration
+ ###
+ #
+ # This is the configuration used by the "standard" ICARUS job configurations.
+ # Use as:
+ #     
+ #     services.PhotonVisibilityService: @local::icarus_photonvisibilityservice
+ #     
+ #
+ icarus_photonvisibilityservice: @local::icarus_photonvisibilityservice_mapped
+ 
+ 
+ ###############################################################################
  
  
  END_PROLOG
@@ -724,7 +1645,12 @@
  
  BEGIN_PROLOG
  
-@@ -4167,8 +3581,6 @@
+ #
+ # First define services w/o optical simulation
+ #
+ 
+ # Define icarus_gen_services ... (0)
+ icarus_gen_services: {
    
    @table::icarus_common_services
    
@@ -733,7 +1659,7 @@
  }
  
  
-@@ -4176,8 +3588,7 @@
+ # this is mostly a helper
  icarus_simulation_basic_services: {
    
                                             @table::icarus_common_services
@@ -743,7 +1669,23 @@
      LArG4Parameters:                       @local::icarus_largeantparameters
      LArVoxelCalculator:                    @local::icarus_larvoxelcalculator
      SpaceChargeService:                    @local::icarus_spacecharge
-@@ -4201,8 +3612,6 @@
+     
+ } # icarus_simulation_basic_services
+ 
+ 
+ # Define icarus_g4_dark_services ... (1)
+ icarus_g4_dark_services: {
+     
+     @table::icarus_simulation_basic_services
+ 
+     MagneticField:                         @local::no_mag_larsoft
+     
+ } # icarus_g4_dark_services
+ 
+ 
+ # Define icarus_detsim_dark_services ... (2)
+ icarus_detsim_dark_services: {
+   
    # (it turns out they are the same ones needed for the inverse operation...)
    @table::icarus_wirecalibration_services
    
@@ -752,7 +1694,32 @@
  } # icarus_detsim_dark_services
  
  
-@@ -4235,12 +3644,11 @@
+ # Define icarus_simulation_dark ... (all) = (0) + (1) + (2)
+ icarus_simulation_dark_services: {
+     
+     @table::icarus_simulation_basic_services
+     
+     # SignalShapingServiceICARUS:      @local::icarus_signalshapingservice
+     # DetPedestalService:              @local::icarus_detpedestalservice
+     # ChannelStatusService:            @local::icarus_channelstatus_service
+     # ElectronicsCalibService:         @local::icarus_electronicscalib_service
+     
+ } # icarus_simulation_dark_services
+ 
+ 
+ #
+ # Define optical simulation included ones
+ #
+ 
+ # Define icarus_g4_services ... (1*)
+ icarus_g4_services: {
+   
+     @table::icarus_g4_dark_services
+     
+     PhotonVisibilityService: @local::icarus_photonvisibilityservice
+ 
+ } # icarus_g4_services
+ 
  
  # Define icarus_detsim_services ... (2*)
  icarus_detsim_services: {
@@ -769,7 +1736,201 @@
  } # icarus_detsim_services
  
  
-@@ -4744,18 +4152,113 @@
+ # Define icarus_simulation_services ... (all*) = (1*) + (2) + (2*)
+ icarus_simulation_services: {
+     
+     @table::icarus_simulation_dark_services
+     
+     PhotonVisibilityService:         @local::icarus_photonvisibilityservice
+     # PmtGainService:                  @local::icarus_pmtgain_service
+ 
+ } # icarus_simulation_services
+ 
+ 
+ ################################################################################
+ 
+ END_PROLOG
+ #
+ # File:    geometry_icarus.fcl
+ # Purpose: Configuration of LArSoft geometry and geometry service for ICARUS.
+ #
+ #
+ # Suggested usage
+ # ----------------
+ #
+ # Unless there are special needs, the geometry configuration should be included
+ # via a configuration bundle.
+ # The default one is called `icarus_geometry_services`.
+ # To use it in a complete configuration:
+ #
+ #     services: {
+ #       # ...
+ #       @table::icarus_geometry_services  # from geometry_icarus.fcl
+ #       # ...
+ #     } # services
+ #
+ # To add it to a preexisting configuration, overwriting any existing geometry
+ # configuration:
+ #
+ #     services: {
+ #       @table::services
+ #       @table::icarus_geometry_services  # from geometry_icarus.fcl
+ #     } # services
+ #
+ #
+ # Options
+ # --------
+ #
+ # Currently the following configuration is provided:
+ #
+ # * `icarus_geometry_services`: current default configuration, the "standard"
+ #      of the experiment with a concrete overburden
+ # 
+ # Since the documentation is often not updated, check the definitions below
+ # to see which are the current defaults.
+ #
+ #
+ # Configuration for unit tests
+ # -----------------------------
+ #
+ # The "service" configuration `icarus_unit_test_geometry` includes a
+ # configuration of ICARUS geometry suitable for tests that use the LArSoft unit
+ # test service helpers. It should be loaded in place of `icarus_geometry` in the
+ # `services.Geometry` configuration table.
+ #
+ #
+ # Legacy options
+ # ---------------
+ # 
+ # Some older configurations are still kept (but not officially supported).
+ # See the "Legacy configurations" section below.
+ #
+ #
+ # Notes
+ # ------
+ # 
+ # A special policy in ICARUS is to have a copy of the channel mapping algorithm
+ # configuration in the `Geometry` service configuration.
+ # This is required by the off-art geometry loading utilities in ICARUS.
+ # One day LArSoft will also support something like that and that will become
+ # the only location of the channel mapping configuration.
+ #
+ #
+ # Changes
+ # --------
+ #
+ # 20200709 (petrillo@slac.stanford.edu)
+ #   adopted split wire geometry fixed by
+ #   Alessandro Menegolli (alessandro.menegolli@unipv.it)
+ # 20220505 (petrillo@slac.stanford.edu)
+ #   geometry default changed to include overburden
+ # 20220523 (petrillo@slac.stanford.edu)
+ #   new geometry (20220518) with CRT changes;
+ #   no configuration for no-overburden detector;
+ #   legacy (`icarus_v3`) configurations added;
+ #   configurations renamed ("icarus_standard_geometry")
+ # 20250206 (Kyle Knoepfel, petrillo@slac.stanford.edu, et al)
+ #   updates for LArSoft v10
+ #
+ 
+@@ -4647,239 +4055,352 @@
+ # Physics List
+ #
+ icarus_physics_list_fastoptical:
+ {
+   PhysicsListName: "QGSP_BERT_HP"
+   DumpList: true
+   enableNeutronLimit: false
+   NeutronTimeLimit: 0.0
+   NeutronKinELimit: 0.0
+   enableStepLimit: true
+   enableOptical: false
+   enableCerenkov: false
+   CerenkovStackPhotons: false
+   CerenkovMaxNumPhotons: 100
+   CerenkovMaxBetaChange: 10.0
+   enableScintillation: false
+   ScintillationStackPhotons: false
+   ScintillationByParticleType: false
+   ScintillationTrackInfo: false
+   ScintillationTrackSecondariesFirst: false
+   enableAbsorption: false
+   enableRayleigh: false
+   enableMieHG: false
+   enableBoundary: false
+   enableWLS: false
+   BoundaryInvokeSD: false
+   Verbosity: 1
+   WLSProfile: delta
+ }
+ 
+ 
+ #
+ # Particle List Action
+ #
+ icarus_particle_list_action:
+ {
+   service_type: "ParticleListActionService"
+   EnergyCut: 1e-2                          # Kinetic Energy cut, note Geant4 assumes this is in MeV.
+                                            # So: 1e-2 MeV = 10 KeV: we are applying a 10 keV cut.
+   keepEMShowerDaughters: false             # If false, does not store electromagnetic shower daughter
+                                            # particles in the MCParticles data product.
+   storeTrajectories: true
+   KeepDroppedParticlesInVolumes: ["volTPCActive"] 
+   keepGenTrajectories: ["generator"]       # list of generator labels for which we want to store
+                                            # trajectory points.
+   keepOnlyPrimaryFullTrajectories: false   # (defaults to false in larg4) If set to true, only
+                                            # the particles with MCTruth process == "primary" and
+                                            # their descendants will have the full set of trajetory
+                                            # points stored. Particles descending from primaries with
+                                            # MCTruth process != "primary" will not have a full set
+                                            # of trajectory points stored -- only their start and
+                                            # end points. This filter only applies to the generator
+                                            # labels listed in the keepGenTrajectories. E.g, for the
+                                            # beam generator, no "primaryBackground" particles or their
+                                            # descendants would have a full set of traj. points. if
+                                            # this is set to true.
+   SparsifyTrajectories: true               # call SparsifyTrajectory() method on MCParticles with full trajectories
+                                            # being stored. This helps reduce memory usage in the root output stage
+                                            # if there are many trajectory points.
+   SparsifyMargin: 0.015      # required when SparsifyTrajectories is set to true
+   KeepTransportation: true   # When sparsifying: forces steps with the 'Transportation' process to be saved
+                              # Can be useful to keep the first step in the active volume
+   KeepSecondToLast: true     # Sparsifying could cut out the penultimate step point, which holds the correct info
+                              # of the end of the track (the final step is defined to have 0 kinetic energy)
+                              # This forces that true penultimate point to be saved, thus preserving the info
+ }
+ 
+ #
+ # The LArG4 Detector
+ #
+ icarus_larg4detector:
+ {
+   category      : "world"
+   gdmlFileName_ : @local::icarus_standard_geometry.GDML
+ #  volumeNames   : ["volTPCActive" # list of volumes for which the stepLimit should be set
+ #                 #, "volCryostat"
+ #                 #, "volTPCPlaneY"
+ #                 #, "volTPCPlaneU"
+ #                 #, "volTPCPlaneV"
+ #                 #, "volTPC0"
+ #                  ]
+ #  stepLimits    : [0.3]#, 0.3, 0.3, 0.3, 0.3, 0.3] # corresponding stepLimits in mm for the volumes in the volumeNames list
+ }
+ 
+ #
+ # The LArG4 Services
+ #
+ icarus_larg4_services:
+ {
+   DetectorHolder:    {}
+   ActionHolder:      {}
+   PhysicsListHolder: {}
+ 
+   MCTruthEventAction: {service_type: "MCTruthEventActionService"}
+   ParticleListAction: @local::icarus_particle_list_action
+   PhysicsList:        @local::icarus_physics_list_fastoptical
+   LArG4Detector:      @local::icarus_larg4detector
  }
  
  END_PROLOG
@@ -890,7 +2051,27 @@
  // scinitllationtime_tool.fcl
  // Oct. 10 2019 Wei Mu
  BEGIN_PROLOG
-@@ -4783,6 +4286,24 @@
+ 
+ ScintTimeLAr:
+ {
+     tool_type: ScintTimeLAr
+     LogLevel:         1
+     FastRisingTime:   0.0            // rising time of fast scintillation
+     FastDecayTime:    6.0            // decay time of fast scintillation
+     SlowRisingTime:   0.0            // rising time of slow scintillation
+     SlowDecayTime:    1600.0         // decay time of slow scintillation
+ }
+ 
+ END_PROLOG
+ 
+ BEGIN_PROLOG
+ 
+ icarus_ionandscint:
+ {
+     module_type: "IonAndScint"
+     Instances:   "LArG4DetectorServicevolTPCActive;LArG4DetectorServicevolTPCPlaneU;LArG4DetectorServicevolTPCPlaneV;LArG4DetectorServicevolTPCPlaneY" # separated by semicolon
+     ISCalcAlg:   "Correlated"
+     SavePriorSCE: true
  }
  
  END_PROLOG
@@ -915,7 +2096,201 @@
  // scinitllationtime_tool.fcl
  // Oct. 10 2019 Wei Mu
  BEGIN_PROLOG
-@@ -5356,7 +4877,7 @@
+ 
+ ScintTimeLAr:
+ {
+     tool_type: ScintTimeLAr
+     LogLevel:         1
+     FastRisingTime:   0.0            // rising time of fast scintillation
+     FastDecayTime:    6.0            // decay time of fast scintillation
+     SlowRisingTime:   0.0            // rising time of slow scintillation
+     SlowDecayTime:    1600.0         // decay time of slow scintillation
+ }
+ 
+ END_PROLOG
+ 
+ BEGIN_PROLOG
+ 
+ standard_pdfastsim_pvs:
+ {
+   module_type:            "PDFastSimPVS"
+   SimulationLabel:        "IonAndScint"
+   DoSlowComponent:        true
+   ScintTimeTool:          @local::ScintTimeLAr
+ }
+ 
+ 
+ END_PROLOG
+ #
+ # File:    photon_propagation_timing_icarus.fcl
+ # Purpose: parameters of the time of arrival to PMT of scintillation light
+ # Date:    20201002
+ # Author:  Patrick Green (data),
+ #          Gianluca Petrillo (petrillo@slac.stanford.edu) (packaging)
+ # 
+ # The time of arrivals of scintillation photons to PMT is parametrized with
+ # a Landau or (Landau plus Exponential) functional form, as function of the
+ # displacement between the scintillation point and the PMT.
+ # In particular, both the modulus of the displacement (distance) and the
+ # incident angle on the PMT are relevant.
+ # The parametrization currently covers only the hemispace the PMT face,
+ # while light from behind (which must incur major scattering in order to hit
+ # the sensitive surface of the hemispherical PMT) is not included.
+ # 
+ # ICARUS does not have reflective foils or wavelength shifters inside
+ # the detector volume (apart from the coating on the PMT), so all the light is
+ # at wavelength aroudn 128 nm (VUV): the visible/reflected components are not
+ # present and not needed.
+ # 
+ # The content of this file includes:
+ # 
+ # * photon_propagation_timing_icarus: the parametrization of choice of ICARUS;
+ #     defined as alias of another parametrization
+ # * photon_propagation_timing_icarus_protodune: settings for ProtoDUNE,
+ #     imported from opticalsimparameterisations_dune.fcl of dunetpc repository
+ #     tag v09_05_00; these values were plugged in there by Patrick Green
+ #     (SBND, DUNE) on September 23, 2020.
+ # * photon_propagation_timing_icarus_v09_05_00: settings for SBND, modified
+ #     to correctly extrapolate to ICARUS distances; these values were the
+ #     default settings in LArSoft v09_05_00, and they have been recommended
+ #     for ICARUS by Patrick Green and Diego Garcia Gamez (SBND), with the
+ #     belief that ICARUS-derived parameetrs will not relevantly differ.
+ #
+ 
+ BEGIN_PROLOG
+ 
+ ################################################################################
+ ###  photon_propagation_timing_icarus_protodune: ProtoDUNE, Sept. 2020
+ ################################################################################
+ 
+ ###
+ ### VUV light: parameters of the Landau + Exponential (<= 400 cm) and Landau (> 400 cm) models;
+ ### 
+ ### The parameters are distance (30 distances. 0 to 725 cm in 30x 25 cm steps)
+ ### and incident angle (2 angle spans, 0--45 and 45--90 degrees)
+ ###
+ 
+ #
+ # angular bin size
+ #
+ angle_bin_timing_icarus_protodune: 45 # degrees
+ 
+ #
+ # Distance in cm from "Landau + Expo" -> "Single Landau" model
+ #
+ inflexion_point_distance_icarus_protodune: 400.0 # cm
+ 
+ 
+ # ---------------------
+ #   Landau parameters
+ # ------------------------------------------------------------------------------------------------------
+ Distances_landau_icarus_protodune: [ # cm
+             0,        25,        50,        75,       100,       125,       150,       175,
+           200,       225,       250,       275,       300,       325,       350,       375,
+           400,       425,       450,       475,       500,       525,       550,       575,
+           600,       625,       650,       675,       700,       725
+ ]
+ 
+ # ------------------------------------------------------------------------------------------------------
+ Norm_over_entries_icarus_protodune: [
+@@ -5259,4689 +4780,260 @@
+ 		[	[126.237, 133.998, 140.403, 146.168, 150.601, 155.466, 156.39, 157.403, 162.758, 161.648],
+ 			[128.138, 136.133, 142.206, 147.985, 153.284, 156.167, 160.598, 162.771, 164.584, 163.997],
+ 			[133.806, 141.375, 147.856, 152.848, 158.234, 160.793, 164.829, 164.129, 169.376, 168.286],
+ 			[132.637, 140.57, 147.406, 151.75, 156.099, 160.353, 162.947, 165.174, 166.656, 166.734],
+ 			[130.847, 138.784, 145.106, 150.963, 155.084, 158.991, 161.935, 164.596, 166.148, 166.383],
+ 			[127.26, 134.345, 141.726, 146.923, 151.455, 154.986, 157.498, 160.633, 162.228, 163.082]
+ 		],
+ 		[	[126.237, 133.998, 140.403, 146.168, 150.601, 155.466, 156.39, 157.403, 162.758, 161.648],
+ 			[128.138, 136.133, 142.206, 147.985, 153.284, 156.167, 160.598, 162.771, 164.584, 163.997],
+ 			[133.806, 141.375, 147.856, 152.848, 158.234, 160.793, 164.829, 164.129, 169.376, 168.286],
+ 			[132.637, 140.57, 147.406, 151.75, 156.099, 160.353, 162.947, 165.174, 166.656, 166.734],
+ 			[130.847, 138.784, 145.106, 150.963, 155.084, 158.991, 161.935, 164.596, 166.148, 166.383],
+ 			[127.26, 134.345, 141.726, 146.923, 151.455, 154.986, 157.498, 160.633, 162.228, 163.082]
+ 		] ]
+ 
+   Tau_ICARUS: [
+ 		[	[3.37773, 5.67524, 4.23857, 4.04827, 3.50598, 3.09153, 2.82991, 2.74153, 2.50424, 2.51098],
+ 			[3.42384, 5.76302, 4.24915, 3.99481, 3.47452, 2.92546, 2.74473, 2.57978, 2.43933, 2.41633],
+ 			[3.3234, 5.65588, 3.72343, 3.50578, 2.97039, 2.46387, 2.34442, 2.20104, 2.08184, 2.07292],
+ 			[3.09768, 4.77873, 3.25213, 3.11725, 2.58829, 2.11184, 2.03799, 1.87696, 1.86368, 1.82172],
+ 			[2.83897, 4.59257, 2.99183, 2.89601, 2.44985, 1.81676, 1.69844, 1.67326, 1.64045, 1.62682],
+ 			[2.24195, 3.62967, 2.38022, 2.21063, 1.77588, 1.69214, 0.975968, 1.11193, 1.29554, 1.27876]
+ 		],
+ 		[	[3.41297, 5.95886, 4.39599, 4.1988, 3.58909, 3.11005, 2.91525, 2.74339, 2.64943, 2.52263],
+ 			[3.45504, 5.95178, 4.34456, 4.17342, 3.48337, 3.054, 2.8128, 2.60983, 2.51229, 2.48704],
+ 			[3.35757, 5.83494, 3.81424, 3.6331, 3.01154, 2.50273, 2.39638, 2.18084, 2.15704, 2.08133],
+ 			[3.23112, 5.22438, 3.43076, 3.30744, 2.69743, 2.16353, 2.09492, 1.94232, 1.853, 1.88973],
+ 			[2.87672, 4.81873, 3.14107, 3.0108, 2.49182, 1.85505, 1.81588, 1.70546, 1.66224, 1.64217],
+ 			[2.41847, 4.23497, 2.48155, 2.50752, 2.00871, 1.50138, 1.33433, 1.29673, 1.36109, 1.36027]
+ 		],
+ 		[	[3.51225, 6.19679, 4.72908, 4.49082, 3.66667, 3.30587, 3.03423, 2.77513, 2.67516, 2.61675],
+ 			[3.51704, 6.07228, 4.64436, 4.41025, 3.59614, 3.19848, 2.93285, 2.67327, 2.5368, 2.5385],
+ 			[3.50964, 5.51796, 4.20475, 4.01172, 3.14469, 2.75958, 2.58262, 2.3296, 2.24272, 2.19922],
+ 			[3.23421, 4.89865, 3.74765, 3.52677, 2.76721, 2.38141, 2.28118, 2.04523, 2.00265, 1.91851],
+ 			[2.93819, 4.61545, 3.48217, 3.27706, 2.57221, 2.11197, 2.04526, 1.84741, 1.77289, 1.7419],
+ 			[2.38026, 4.14456, 2.72722, 2.60646, 2.01861, 1.53543, 1.48663, 1.37924, 1.32047, 1.29723]
+ 		],
+ 		[	[6.4584, 6.81789, 5.23841, 4.71468, 3.93022, 3.62204, 3.08621, 2.84607, 2.77384, 2.66418],
+ 			[5.69945, 6.50649, 5.11628, 4.59747, 3.77208, 3.47841, 2.99785, 2.71059, 2.61914, 2.61192],
+ 			[5.11601, 5.81431, 4.73139, 4.24668, 3.42459, 3.12305, 2.75533, 2.48413, 2.38089, 2.37636],
+ 			[4.64392, 5.11341, 4.2487, 3.82068, 3.11183, 2.78096, 2.4599, 2.23122, 2.17768, 2.12872],
+ 			[3.76892, 4.63917, 3.92189, 3.50733, 2.76486, 2.45824, 2.20454, 1.97289, 1.89508, 1.90504],
+ 			[2.60969, 3.81077, 3.22217, 2.87626, 2.26577, 1.89226, 1.70091, 1.5454, 1.52499, 1.49217]
+ 		],
+ 		[	[7.98137, 11.8903, 5.89993, 5.44383, 4.21656, 3.75399, 3.22818, 2.91275, 2.77715, 2.73681],
+ 			[8.17119, 11.7947, 6.0833, 5.54124, 4.17976, 3.79177, 3.21898, 2.9156, 2.77822, 2.70759],
+ 			[7.24128, 10.3503, 5.51381, 4.98346, 3.92027, 3.63101, 3.07344, 2.76202, 2.64124, 2.59486],
+ 			[6.35025, 7.74736, 4.83283, 4.42004, 3.53543, 3.27141, 2.78187, 2.49664, 2.41864, 2.37423],
+ 			[5.18985, 6.44826, 4.4504, 4.04286, 3.19083, 2.95287, 2.49538, 2.23093, 2.16525, 2.15358],
+ 			[4.1528, 4.93534, 3.73414, 3.47409, 2.65761, 2.41434, 2.04314, 1.82511, 1.80785, 1.76681]
+ 		],
+ 		[	[5.82314, 10.5088, 8.39185, 6.94545, 3.98804, 3.75549, 3.28186, 2.9109, 2.70377, 2.67178],
+ 			[6.74817, 13.4954, 10.5046, 9.16714, 4.77805, 4.27457, 3.56114, 3.24013, 2.9388, 2.90071],
+ 			[7.28422, 13.0955, 10.8966, 8.45688, 5.5568, 4.70011, 3.64741, 3.25593, 3.0012, 2.95399],
+ 			[6.87267, 12.2464, 8.56654, 6.47212, 4.66347, 4.11222, 3.38328, 3.02702, 2.85428, 2.78282],
+ 			[6.51522, 10.7341, 6.25556, 5.10716, 3.96247, 3.61264, 3.08214, 2.78129, 2.6048, 2.59514],
+ 			[6.22582, 7.23888, 4.82071, 4.272, 3.45411, 3.0887, 2.60353, 2.35789, 2.31151, 2.28667]
+ 		],
+ 		[	[5.82314, 10.5088, 8.39185, 6.94545, 3.98804, 3.75549, 3.28186, 2.9109, 2.70377, 2.67178],
+ 			[6.74817, 13.4954, 10.5046, 9.16714, 4.77805, 4.27457, 3.56114, 3.24013, 2.9388, 2.90071],
+ 			[13.7947, 13.4404, 11.7965, 11.3239, 8.28857, 5.80406, 3.91979, 3.45336, 3.21981, 3.15334],
+ 			[12.2469, 13.1488, 11.6768, 11.05, 7.62147, 5.77695, 4.07048, 3.44591, 3.21365, 3.1508],
+ 			[10.9941, 13.1968, 10.7938, 9.98867, 6.47435, 5.12157, 3.85559, 3.39796, 3.15723, 3.10781],
+ 			[7.55675, 11.9677, 8.81276, 7.06091, 4.85345, 4.24957, 3.45344, 3.12578, 2.86344, 2.84666]
+ 		],
+ 		[	[5.82314, 10.5088, 8.39185, 6.94545, 3.98804, 3.75549, 3.28186, 2.9109, 2.70377, 2.67178],
+ 			[6.74817, 13.4954, 10.5046, 9.16714, 4.77805, 4.27457, 3.56114, 3.24013, 2.9388, 2.90071],
+ 			[13.7947, 13.4404, 11.7965, 11.3239, 8.28857, 5.80406, 3.91979, 3.45336, 3.21981, 3.15334],
+ 			[12.2469, 13.1488, 11.6768, 11.05, 7.62147, 5.77695, 4.07048, 3.44591, 3.21365, 3.1508],
+ 			[10.9941, 13.1968, 10.7938, 9.98867, 6.47435, 5.12157, 3.85559, 3.39796, 3.15723, 3.10781],
+ 			[7.55675, 11.9677, 8.81276, 7.06091, 4.85345, 4.24957, 3.45344, 3.12578, 2.86344, 2.84666]
+ 		],
+ 		[	[5.82314, 10.5088, 8.39185, 6.94545, 3.98804, 3.75549, 3.28186, 2.9109, 2.70377, 2.67178],
+ 			[6.74817, 13.4954, 10.5046, 9.16714, 4.77805, 4.27457, 3.56114, 3.24013, 2.9388, 2.90071],
+ 			[13.7947, 13.4404, 11.7965, 11.3239, 8.28857, 5.80406, 3.91979, 3.45336, 3.21981, 3.15334],
+ 			[12.2469, 13.1488, 11.6768, 11.05, 7.62147, 5.77695, 4.07048, 3.44591, 3.21365, 3.1508],
+ 			[10.9941, 13.1968, 10.7938, 9.98867, 6.47435, 5.12157, 3.85559, 3.39796, 3.15723, 3.10781],
+ 			[7.55675, 11.9677, 8.81276, 7.06091, 4.85345, 4.24957, 3.45344, 3.12578, 2.86344, 2.84666]
+ 		] ]
+ 
+ icarus_vis_timing_parameterization:
+ {
+   # Timing parameterisation:
+   #
+   # Smearing parameters
+   Distances_refl: @local::Distances_refl_ICARUS
+   Distances_radial_refl: @local::Distances_radial_refl_ICARUS
+   Cut_off: @local::Cut_off_ICARUS
+   Tau: @local::Tau_ICARUS
+ 
+   # vis velocity in cm/ns
+   vis_vmean: 23.99
+ 
+   # angular bin size in deg, must correspond to parameterisation set
+   angle_bin_timing_vis: 10
+ }
+ 
  # standard configuration
  icarus_pdfastsim_pvs:                     @local::standard_pdfastsim_pvs
  
@@ -924,7 +2299,9 @@
  icarus_pdfastsim_pvs.IncludePropTime: true
  icarus_pdfastsim_pvs.ScintTimeTool.SlowDecayTime: 1300.0
  
-@@ -5366,21 +4887,13 @@
+ # propagation times
+ icarus_pdfastsim_pvs.VUVTiming: 			@local::photon_propagation_timing_icarus
+ icarus_pdfastsim_pvs.VISTiming: 			@local::icarus_vis_timing_parameterization
  
  
  END_PROLOG
@@ -950,7 +2327,11 @@
  }
  
  END_PROLOG
-@@ -5392,30 +4905,9 @@
+ BEGIN_PROLOG
+ 
+ sbn_largeant_info_reducer: {
+ 	module_type: "G4InfoReducer"
+ 	SimEnergyDepositLabel: "largeant:TPCActive"
  	VoxelSizeX: 0.3
  	VoxelSizeY: 0.3
  	VoxelSizeZ: 0.3
@@ -981,7 +2362,12 @@
  END_PROLOG
  BEGIN_PROLOG
  
-@@ -5428,4492 +4920,92 @@
+ simplemerge : {
+   module_type: "SimpleMerge"
+   InputSourcesLabels: ["largeant", "largeant:droppedMCParticles"]
+   ResetMotherIDs : [10000000,20000000]  
+   #ResetMotherIDs: [ 0 ]
+ }
  
  END_PROLOG
  
@@ -5521,3 +6907,31 @@
  
  services.ParticleListAction.keepGenTrajectories: ["cosmgen","generator"]
  services.ParticleListAction.EnergyCut: 5e-1
+ # services.ParticleListAction.KeepParticlesInVolumes: [ "volCryostat" ] #not supported yet
+ services.ParticleListAction.SparsifyTrajectories: false
+ 
+ #
+ # settings to enable space charge simulation and corrections
+ #
+ 
+ services.SpaceChargeService.EnableSimSpatialSCE: true
+ services.SpaceChargeService.EnableSimEfieldSCE: true
+ services.SpaceChargeService.is2DdriftSimHack: true
+ 
+ services.SpaceChargeService.RepresentationType: "Voxelized_TH3"
+ 
+ services.SpaceChargeService.InputFilename: 'SCEoffsets/SCEoffsets_ICARUS_E500_voxelTH3.root'
+ #services.SpaceChargeService.InputFilename: 'SCEoffsets/SCEoffsets_ICARUS_E500_voxelTH3_2DSigSimHack.root'
+ #services.SpaceChargeService.InputFilename: 'users/rlazur/SCEoffsets/SCEoffsets_ICARUS_E500_voxelTH3.root' #if icarus_data not up to date
+ 
+ physics.simulate: [ rns
+   , ionization
+   , pdfastsim
+   , simdrift
+   , sedlite
+   # , mcreco
+   , genericcrt
+   , simplemerge
+   ]
+ 
+ process_name: G4Step2

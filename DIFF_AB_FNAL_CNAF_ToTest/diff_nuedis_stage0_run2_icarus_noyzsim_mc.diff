@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 --- CV_FNAL_10_31_00_01/nuedis_stage0_run2_icarus_noyzsim_mc.dump	2026-11-27 03:38:41.617366366 -0600
 +++ CV_CNAF_RicDev/nuedis_stage0_run2_icarus_noyzsim_mc.dump	2026-11-26 03:07:50.040879620 -0600
 @@ -1,273 +1,274 @@
@@ -280,6 +281,11 @@
           OutputRawWavePath: "RAW"
           OutputRawWaveform: false
 @@ -492,201 +493,201 @@
+=======
+--- CV_FNAL_10_31_00_01//nuedis_stage0_run2_icarus_noyzsim_mc.dump	2026-11-26 10:27:06.722297850 +0100
++++ CV_CNAF_RicDev//nuedis_stage0_run2_icarus_noyzsim_mc.dump	2026-11-25 17:02:02.255809441 +0100
+@@ -493,201 +493,201 @@
+>>>>>>> origin/main
                       Channel: 12306
                       ChannelIndex: 15
                       InstanceName: "EW"
