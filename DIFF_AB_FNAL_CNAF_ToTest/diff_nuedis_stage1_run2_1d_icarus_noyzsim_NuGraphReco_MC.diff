@@ -1,5 +1,5 @@
---- CV_FNAL_10_31_00_01//nuedis_stage1_run2_1d_icarus_noyzsim_NuGraphReco_MC.dump	2026-11-25 17:03:15.585797112 +0100
-+++ CV_CNAF_RicDev//nuedis_stage1_run2_1d_icarus_noyzsim_NuGraphReco_MC.dump	2026-11-25 17:02:02.611127544 +0100
+--- CV_FNAL_10_31_00_01/nuedis_stage1_run2_1d_icarus_noyzsim_NuGraphReco_MC.dump	2026-11-27 03:38:42.202387103 -0600
++++ CV_CNAF_RicDev/nuedis_stage1_run2_1d_icarus_noyzsim_NuGraphReco_MC.dump	2026-11-26 03:07:50.041879656 -0600
 @@ -1,1401 +1,1255 @@
  # Produced from 'fhicl-dump' using:
  #   Input  : fcl/cv/nuedis_stage1_run2_1d_icarus_noyzsim_NuGraphReco_MC.fcl
@@ -1787,30 +1787,24 @@
           HitFinderToolVec: {
              CandidateHitsPlane0: {
                 Plane: 0
--               RoiThreshold: 5
-+               RoiThreshold: 9
+                RoiThreshold: 9
                 tool_type: "CandHitStandard"
              }
              CandidateHitsPlane1: {
                 Plane: 1
--               RoiThreshold: 5
-+               RoiThreshold: 9.5
+                RoiThreshold: 9.5
                 tool_type: "CandHitStandard"
              }
              CandidateHitsPlane2: {
                 Plane: 2
--               RoiThreshold: 5
-+               RoiThreshold: 9
+                RoiThreshold: 9
                 tool_type: "CandHitStandard"
              }
           }
           LongMaxHits: [
--            1,
--            1,
--            1
-+            25,
-+            25,
-+            25
+             25,
+             25,
+             25
           ]
           LongPulseWidth: [
              10,
@@ -1874,30 +1868,24 @@
           HitFinderToolVec: {
              CandidateHitsPlane0: {
                 Plane: 0
--               RoiThreshold: 5
-+               RoiThreshold: 9
+                RoiThreshold: 9
                 tool_type: "CandHitStandard"
              }
              CandidateHitsPlane1: {
                 Plane: 1
--               RoiThreshold: 5
-+               RoiThreshold: 9.5
+                RoiThreshold: 9.5
                 tool_type: "CandHitStandard"
              }
              CandidateHitsPlane2: {
                 Plane: 2
--               RoiThreshold: 5
-+               RoiThreshold: 9
+                RoiThreshold: 9
                 tool_type: "CandHitStandard"
              }
           }
           LongMaxHits: [
--            1,
--            1,
--            1
-+            25,
-+            25,
-+            25
+             25,
+             25,
+             25
           ]
           LongPulseWidth: [
              10,
@@ -1961,30 +1949,24 @@
           HitFinderToolVec: {
              CandidateHitsPlane0: {
                 Plane: 0
--               RoiThreshold: 5
-+               RoiThreshold: 9
+                RoiThreshold: 9
                 tool_type: "CandHitStandard"
              }
              CandidateHitsPlane1: {
                 Plane: 1
--               RoiThreshold: 5
-+               RoiThreshold: 9.5
+                RoiThreshold: 9.5
                 tool_type: "CandHitStandard"
              }
              CandidateHitsPlane2: {
                 Plane: 2
--               RoiThreshold: 5
-+               RoiThreshold: 9
+                RoiThreshold: 9
                 tool_type: "CandHitStandard"
              }
           }
           LongMaxHits: [
--            1,
--            1,
--            1
-+            25,
-+            25,
-+            25
+             25,
+             25,
+             25
           ]
           LongPulseWidth: [
              10,
@@ -2048,30 +2030,24 @@
           HitFinderToolVec: {
              CandidateHitsPlane0: {
                 Plane: 0
--               RoiThreshold: 5
-+               RoiThreshold: 9
+                RoiThreshold: 9
                 tool_type: "CandHitStandard"
              }
              CandidateHitsPlane1: {
                 Plane: 1
--               RoiThreshold: 5
-+               RoiThreshold: 9.5
+                RoiThreshold: 9.5
                 tool_type: "CandHitStandard"
              }
              CandidateHitsPlane2: {
                 Plane: 2
--               RoiThreshold: 5
-+               RoiThreshold: 9
+                RoiThreshold: 9
                 tool_type: "CandHitStandard"
              }
           }
           LongMaxHits: [
--            1,
--            1,
--            1
-+            25,
-+            25,
-+            25
+             25,
+             25,
+             25
           ]
           LongPulseWidth: [
              10,
@@ -2487,17 +2463,20 @@
           HitFinderToolVec: {
              CandidateHitsPlane0: {
                 Plane: 0
-                RoiThreshold: 5
+-               RoiThreshold: 9
++               RoiThreshold: 5
                 tool_type: "CandHitStandard"
              }
              CandidateHitsPlane1: {
                 Plane: 1
-                RoiThreshold: 5
+-               RoiThreshold: 9.5
++               RoiThreshold: 5
                 tool_type: "CandHitStandard"
              }
              CandidateHitsPlane2: {
                 Plane: 2
-                RoiThreshold: 5
+-               RoiThreshold: 9
++               RoiThreshold: 5
                 tool_type: "CandHitStandard"
              }
           }
@@ -2572,17 +2551,20 @@
           HitFinderToolVec: {
              CandidateHitsPlane0: {
                 Plane: 0
-                RoiThreshold: 5
+-               RoiThreshold: 9
++               RoiThreshold: 5
                 tool_type: "CandHitStandard"
              }
              CandidateHitsPlane1: {
                 Plane: 1
-                RoiThreshold: 5
+-               RoiThreshold: 9.5
++               RoiThreshold: 5
                 tool_type: "CandHitStandard"
              }
              CandidateHitsPlane2: {
                 Plane: 2
-                RoiThreshold: 5
+-               RoiThreshold: 9
++               RoiThreshold: 5
                 tool_type: "CandHitStandard"
              }
           }
@@ -2657,17 +2639,20 @@
           HitFinderToolVec: {
              CandidateHitsPlane0: {
                 Plane: 0
-                RoiThreshold: 5
+-               RoiThreshold: 9
++               RoiThreshold: 5
                 tool_type: "CandHitStandard"
              }
              CandidateHitsPlane1: {
                 Plane: 1
-                RoiThreshold: 5
+-               RoiThreshold: 9.5
++               RoiThreshold: 5
                 tool_type: "CandHitStandard"
              }
              CandidateHitsPlane2: {
                 Plane: 2
-                RoiThreshold: 5
+-               RoiThreshold: 9
++               RoiThreshold: 5
                 tool_type: "CandHitStandard"
              }
           }
@@ -2742,17 +2727,20 @@
           HitFinderToolVec: {
              CandidateHitsPlane0: {
                 Plane: 0
-                RoiThreshold: 5
+-               RoiThreshold: 9
++               RoiThreshold: 5
                 tool_type: "CandHitStandard"
              }
              CandidateHitsPlane1: {
                 Plane: 1
-                RoiThreshold: 5
+-               RoiThreshold: 9.5
++               RoiThreshold: 5
                 tool_type: "CandHitStandard"
              }
              CandidateHitsPlane2: {
                 Plane: 2
-                RoiThreshold: 5
+-               RoiThreshold: 9
++               RoiThreshold: 5
                 tool_type: "CandHitStandard"
              }
           }
