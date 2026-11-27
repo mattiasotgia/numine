@@ -22,11 +22,10 @@
 # physics.producers.cluster3DCryoW.Hit3DBuilderAlg.HitFinderTagVec: ["gaushit1dTPCWW", "gaushit1dTPCWE"]
 # physics.producers.cluster3DCryoE.Hit3DBuilderAlg.HitFinderTagVec: ["gaushit1dTPCEW", "gaushit1dTPCEE"]
 
-# ## no yz simulation
-# services.BackTrackerService.BackTracker.SimChannelModuleLabel: "daq:simpleSC"
-# physics.analyzers.caloskimE.SimChannelproducer: "daq:simpleSC"
-# physics.analyzers.caloskimW.SimChannelproducer: "daq:simpleSC"
-# physics.producers.mcreco.SimChannelLabel: "shifted"
-
 #include "stage1_run2_1d_icarus_NuGraphReco_MC.fcl"
 
+## Removing the YZ simulation
+services.BackTrackerService.BackTracker.SimChannelModuleLabel: "daq:simpleSC"
+physics.analyzers.caloskimE.SimChannelproducer: "daq:simpleSC"
+physics.analyzers.caloskimW.SimChannelproducer: "daq:simpleSC"
+physics.producers.mcreco.SimChannelLabel: "shifted"

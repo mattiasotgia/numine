@@ -125,7 +125,7 @@ physics: {
          SideCRTDistanceCut_stopping: 100
          SideCRTDistanceCut_throughgoing: 100
          SilenceMissingDataProducts: true
-         SimChannelproducer: "merge"
+         SimChannelproducer: "daq:simpleSC"
          TRKproducer: "pandoraTrackGausCryoE"
          TopCRTDistanceCut_stopping: 100
          TopCRTDistanceCut_throughgoing: 100
@@ -204,7 +204,7 @@ physics: {
          SideCRTDistanceCut_stopping: 100
          SideCRTDistanceCut_throughgoing: 100
          SilenceMissingDataProducts: true
-         SimChannelproducer: "merge"
+         SimChannelproducer: "daq:simpleSC"
          TRKproducer: "pandoraTrackGausCryoW"
          TopCRTDistanceCut_stopping: 60
          TopCRTDistanceCut_throughgoing: 50
@@ -3229,7 +3229,7 @@ physics: {
          MCTrackRecoAlg: {
             DebugMode: false
          }
-         SimChannelLabel: "filtersed"
+         SimChannelLabel: "shifted"
          UseSimEnergyDeposit: false
          UseSimEnergyDepositLite: true
          module_type: "MCReco"
@@ -3903,7 +3903,7 @@ services: {
       BackTracker: {
          G4ModuleLabel: "largeant"
          MinimumHitEnergyFraction: 1e-1
-         SimChannelModuleLabel: "merge"
+         SimChannelModuleLabel: "daq:simpleSC"
       }
    }
    ChannelStatusService: {

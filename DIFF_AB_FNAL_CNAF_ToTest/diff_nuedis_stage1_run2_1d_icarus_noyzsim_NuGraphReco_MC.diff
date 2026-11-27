@@ -1,4 +1,4 @@
---- CV_FNAL_10_31_00_01/nuedis_stage1_run2_1d_icarus_noyzsim_NuGraphReco_MC.dump	2026-11-27 05:50:18.839205462 -0600
+--- CV_FNAL_10_31_00_01/nuedis_stage1_run2_1d_icarus_noyzsim_NuGraphReco_MC.dump	2026-11-27 05:52:30.987899098 -0600
 +++ CV_CNAF_RicDev/nuedis_stage1_run2_1d_icarus_noyzsim_NuGraphReco_MC.dump	2026-11-26 03:07:50.041879656 -0600
 @@ -1,1401 +1,1255 @@
  # Produced from 'fhicl-dump' using:
@@ -129,8 +129,7 @@
           SideCRTDistanceCut_stopping: 100
           SideCRTDistanceCut_throughgoing: 100
           SilenceMissingDataProducts: true
--         SimChannelproducer: "merge"
-+         SimChannelproducer: "daq:simpleSC"
+          SimChannelproducer: "daq:simpleSC"
           TRKproducer: "pandoraTrackGausCryoE"
           TopCRTDistanceCut_stopping: 100
           TopCRTDistanceCut_throughgoing: 100
@@ -210,8 +209,7 @@
           SideCRTDistanceCut_stopping: 100
           SideCRTDistanceCut_throughgoing: 100
           SilenceMissingDataProducts: true
--         SimChannelproducer: "merge"
-+         SimChannelproducer: "daq:simpleSC"
+          SimChannelproducer: "daq:simpleSC"
           TRKproducer: "pandoraTrackGausCryoW"
           TopCRTDistanceCut_stopping: 60
           TopCRTDistanceCut_throughgoing: 50
@@ -2905,8 +2903,7 @@
           MCTrackRecoAlg: {
              DebugMode: false
           }
--         SimChannelLabel: "filtersed"
-+         SimChannelLabel: "shifted"
+          SimChannelLabel: "shifted"
           UseSimEnergyDeposit: false
           UseSimEnergyDepositLite: true
           module_type: "MCReco"
@@ -3591,8 +3588,7 @@
        BackTracker: {
           G4ModuleLabel: "largeant"
           MinimumHitEnergyFraction: 1e-1
--         SimChannelModuleLabel: "merge"
-+         SimChannelModuleLabel: "daq:simpleSC"
+          SimChannelModuleLabel: "daq:simpleSC"
        }
     }
     ChannelStatusService: {
