@@ -1,4 +1,4 @@
---- CV_FNAL_10_31_00_01/nuedis_cafmakerjob_icarus_detsim2d_systtools_and_fluxwgt_noyzsim_NuGraphReco_HitsInCAFs.dump	2026-11-27 05:31:19.966764152 -0600
+--- CV_FNAL_10_31_00_01/nuedis_cafmakerjob_icarus_detsim2d_systtools_and_fluxwgt_noyzsim_NuGraphReco_HitsInCAFs.dump	2026-11-27 05:50:17.760167140 -0600
 +++ CV_CNAF_RicDev/nuedis_cafmakerjob_icarus_detsim2d_systtools_and_fluxwgt_noyzsim_NuGraphReco_HitsInCAFs.dump	2026-11-26 03:07:50.017878803 -0600
 @@ -1,208 +1,271 @@
  # Produced from 'fhicl-dump' using:

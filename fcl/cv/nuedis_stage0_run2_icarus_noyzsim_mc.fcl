@@ -67,4 +67,4 @@
 
 #include "stage0_run2_icarus_mc.fcl"
 
-physics.producers.simChannelROI.SimChannelLabelVec:  ["daq:simpleSC"]
+# physics.producers.simChannelROI.SimChannelLabelVec:  ["daq:simpleSC"]

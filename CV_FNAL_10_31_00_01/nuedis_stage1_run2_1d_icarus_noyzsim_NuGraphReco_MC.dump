@@ -125,7 +125,7 @@ physics: {
          SideCRTDistanceCut_stopping: 100
          SideCRTDistanceCut_throughgoing: 100
          SilenceMissingDataProducts: true
-         SimChannelproducer: "daq:simpleSC"
+         SimChannelproducer: "merge"
          TRKproducer: "pandoraTrackGausCryoE"
          TopCRTDistanceCut_stopping: 100
          TopCRTDistanceCut_throughgoing: 100
@@ -204,7 +204,7 @@ physics: {
          SideCRTDistanceCut_stopping: 100
          SideCRTDistanceCut_throughgoing: 100
          SilenceMissingDataProducts: true
-         SimChannelproducer: "daq:simpleSC"
+         SimChannelproducer: "merge"
          TRKproducer: "pandoraTrackGausCryoW"
          TopCRTDistanceCut_stopping: 60
          TopCRTDistanceCut_throughgoing: 50
@@ -3229,7 +3229,7 @@ physics: {
          MCTrackRecoAlg: {
             DebugMode: false
          }
-         SimChannelLabel: "shifted"
+         SimChannelLabel: "filtersed"
          UseSimEnergyDeposit: false
          UseSimEnergyDepositLite: true
          module_type: "MCReco"
@@ -3333,8 +3333,8 @@ physics: {
             DeltaPeakTimeSig: 1.75
             EnableMonitoring: true
             HitFinderTagVec: [
-               "gaushit2dTPCEW",
-               "gaushit2dTPCEE"
+               "gaushit1dTPCEW",
+               "gaushit1dTPCEE"
             ]
             HitWidthScaleFactor: 3
             LongHitsStretchFactor: 1.5
@@ -3467,8 +3467,8 @@ physics: {
             DeltaPeakTimeSig: 1.75
             EnableMonitoring: true
             HitFinderTagVec: [
-               "gaushit2dTPCWW",
-               "gaushit2dTPCWE"
+               "gaushit1dTPCWW",
+               "gaushit1dTPCWE"
             ]
             HitWidthScaleFactor: 3
             LongHitsStretchFactor: 1.5
@@ -3879,7 +3879,8 @@ physics: {
       "caloskimCalorimetryCryoE",
       "caloskimCalorimetryCryoW",
       "mcassociationsGausCryoE",
-      "mcassociationsGausCryoW"
+      "mcassociationsGausCryoW",
+      "mcreco"
    ]
    stream1: [
       "out1"
@@ -3902,7 +3903,7 @@ services: {
       BackTracker: {
          G4ModuleLabel: "largeant"
          MinimumHitEnergyFraction: 1e-1
-         SimChannelModuleLabel: "daq:simpleSC"
+         SimChannelModuleLabel: "merge"
       }
    }
    ChannelStatusService: {

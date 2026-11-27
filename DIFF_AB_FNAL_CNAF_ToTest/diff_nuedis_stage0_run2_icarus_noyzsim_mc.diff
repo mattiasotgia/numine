@@ -1,4 +1,4 @@
---- CV_FNAL_10_31_00_01/nuedis_stage0_run2_icarus_noyzsim_mc.dump	2026-11-27 05:31:20.770792703 -0600
+--- CV_FNAL_10_31_00_01/nuedis_stage0_run2_icarus_noyzsim_mc.dump	2026-11-27 05:50:18.612197400 -0600
 +++ CV_CNAF_RicDev/nuedis_stage0_run2_icarus_noyzsim_mc.dump	2026-11-26 03:07:50.040879620 -0600
 @@ -1,273 +1,274 @@
  # Produced from 'fhicl-dump' using:
@@ -2475,7 +2475,8 @@
              "All"
           ]
           SimChannelLabelVec: [
-             "daq:simpleSC"
+-            "merge"
++            "daq:simpleSC"
           ]
           WireModuleLabelVec: [
              "largeant"
